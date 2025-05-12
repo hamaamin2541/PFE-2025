@@ -1,0 +1,57 @@
+/* messages.css */
+.messages-container {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* Sidebar unique */
+.sidebar {
+  width: 250px;
+  padding-right: 20px;
+  border-right: 1px solid #e0e0e0;
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar button {
+  width: 100%;
+}
+
+/* Liste des messages */
+.message-list {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+/* Contenu du message sélectionné */
+.message-content {
+  flex-grow: 2;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.message-body p {
+  font-size: 16px;
+}
+
+/* Avatar */
+.avatar img {
+  border-radius: 50%;
+}
+
+/* Utilisation de Bootstrap pour la réactivité */
+@media (max-width: 767px) {
+  .d-flex {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .message-content {
+    margin-top: 20px;
+  }
+}

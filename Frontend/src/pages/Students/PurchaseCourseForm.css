@@ -1,0 +1,82 @@
+
+/* Style général du fond */
+body {
+    background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Carte principale */
+  .card {
+    border-radius: 20px;
+    background-color: #ffffff;
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.01);
+  }
+  
+  /* Titre principal */
+  .card h3 {
+    font-weight: 700;
+    color: #0d6efd;
+  }
+  
+  /* Nom du cours */
+  .card h5 {
+    font-weight: 600;
+    color: #343a40;
+  }
+  
+  /* Labels */
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  /* Inputs */
+  .form-control, .form-select {
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    transition: border 0.2s ease-in-out;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+  
+  /* Bouton submit */
+  .btn-primary {
+    border-radius: 30px;
+    padding: 10px;
+    font-weight: 600;
+    background-color: #0d6efd;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #084298;
+  }
+  
+  /* Texte d’erreur */
+  .text-danger {
+    font-size: 0.9rem;
+  }
+  
+  /* Message PayPal */
+  .alert-info {
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+  
+  /* Animation légère au bouton */
+  button[type="submit"] {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  button[type="submit"]:hover {
+    transform: scale(1.02);
+  }
+  

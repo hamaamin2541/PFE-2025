@@ -1,0 +1,14 @@
+/* تأثيرات hover على الأزرار */
+.btn-hover-effect {
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  
+  .btn-hover-effect:hover {
+    background-color: #28a745; /* تغيير اللون عند المرور بالماوس */
+    transform: scale(1.05); /* تكبير الأزرار قليلاً */
+  }
+  
+  .btn-hover-effect:focus {
+    outline: none; /* إزالة حدود التركيز */
+  }
+  

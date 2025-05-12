@@ -1,0 +1,257 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 60px);
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 280px;
+  z-index: 1500;
+  margin-top: 0;
+}
+
+.main-content {
+  margin-left: 280px;
+  margin-top: 60px;
+  background-color: #f8f9fa;
+}
+
+.nav-pills .nav-link {
+  color: #495057;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  text-align: left;
+  padding: 10px 15px;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #4361ee;
+  color: white;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+  background-color: #f0f0f0;
+}
+
+.topbar {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar-container {
+  width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.search-bar {
+  padding-left: 35px;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.notification-icon {
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #f72585;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-name {
+  font-weight: 500;
+}
+
+.profile img {
+  object-fit: cover;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.table {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.progress {
+  background-color: #e9ecef;
+}
+
+
+
+
+
+/* DashboardStudent.css */
+
+/* Global styles */
+.overview-container {
+  padding: 30px;
+  background-color: #f8f9fa;
+}
+
+.overview-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+/* Cards */
+.overview-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  background-color: white;
+  transition: transform 0.2s ease;
+}
+
+.overview-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-icon {
+  background-color: #f1f3f5;
+  padding: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: 15px;
+  color: #007bff;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+}
+
+.card-text {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.activity-progress {
+  margin-top: 15px;
+}
+
+/* Summary Cards */
+.overview-summary-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.overview-summary-card .card-title {
+  font-size: 18px;
+  color: #333;
+}
+
+.overview-summary-card .card-text {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Layout */
+@media (max-width: 767px) {
+  .overview-container {
+    padding: 15px;
+  }
+
+  .overview-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .overview-card,
+  .overview-summary-card {
+    margin-bottom: 15px;
+  }
+}
+.text-muted {
+  --bs-text-opacity: 1;
+  color: rgb(230, 230, 230) !important;
+}
+
+/* Notification styles */
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 300px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
