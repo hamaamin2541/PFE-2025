@@ -17,12 +17,27 @@ const StarRating = () => {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/ratings`);
-        if (response.data.success) {
+        // Utiliser un timeout pour éviter que la requête ne bloque trop longtemps
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await axios.get(`${API_BASE_URL}/api/ratings`, {
+          signal: controller.signal
+        }).catch(error => {
+          if (error.name === 'AbortError' || error.code === 'ERR_NETWORK') {
+            console.warn('Connexion au serveur impossible, utilisation des valeurs par défaut');
+            return { data: { success: false } };
+          }
+          throw error;
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.data && response.data.success) {
           setAverageRating(response.data.averageRating || 0);
           setTotalRatings(response.data.totalRatings || 0);
         } else {
-          console.warn('La requête a réussi mais avec un statut de succès false:', response.data);
+          console.warn('Utilisation des valeurs par défaut pour les notes');
           // Valeurs par défaut en cas d'erreur
           setAverageRating(4.5);
           setTotalRatings(120);
@@ -59,69 +74,77 @@ const StarRating = () => {
     localStorage.setItem('userRating', ratingValue.toString());
     setHasRated(true);
 
+    // Mettre à jour les statistiques localement immédiatement
+    updateLocalStats(ratingValue);
+
+    // Afficher le message de remerciement immédiatement
+    setMessage('Merci pour votre note !');
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+    }, 3000);
+
     // Si l'utilisateur est connecté, envoyer la note au serveur
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     try {
+      // Utiliser un timeout pour éviter que la requête ne bloque trop longtemps
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       if (user && user._id) {
         // Envoyer la note au serveur
         const response = await axios.post(`${API_BASE_URL}/api/ratings`, {
           userId: user._id,
           rating: ratingValue
+        }, {
+          signal: controller.signal
+        }).catch(error => {
+          if (error.name === 'AbortError' || error.code === 'ERR_NETWORK') {
+            console.warn('Connexion au serveur impossible, la note est enregistrée localement');
+            return { data: { success: false } };
+          }
+          throw error;
         });
 
+        clearTimeout(timeoutId);
+
         if (response.data && response.data.success) {
-          // Mettre à jour les statistiques
+          // Mettre à jour les statistiques avec les données du serveur
           setAverageRating(response.data.averageRating || 0);
           setTotalRatings(response.data.totalRatings || 0);
-          setMessage('Merci pour votre note !');
-        } else {
-          console.warn('La requête a réussi mais avec un statut de succès false:', response.data);
-          // Simuler une mise à jour des statistiques
-          updateLocalStats(ratingValue);
-          setMessage('Merci pour votre note !');
         }
       } else {
-        // Pour les utilisateurs non connectés, simuler l'enregistrement
+        // Pour les utilisateurs non connectés
         try {
           // Tenter d'envoyer une note anonyme
           const response = await axios.post(`${API_BASE_URL}/api/ratings`, {
             rating: ratingValue
+          }, {
+            signal: controller.signal
+          }).catch(error => {
+            if (error.name === 'AbortError' || error.code === 'ERR_NETWORK') {
+              console.warn('Connexion au serveur impossible, la note est enregistrée localement');
+              return { data: { success: false } };
+            }
+            throw error;
           });
 
+          clearTimeout(timeoutId);
+
           if (response.data && response.data.success) {
-            // Mettre à jour les statistiques
+            // Mettre à jour les statistiques avec les données du serveur
             setAverageRating(response.data.averageRating || 0);
             setTotalRatings(response.data.totalRatings || 0);
-          } else {
-            // Simuler une mise à jour des statistiques
-            updateLocalStats(ratingValue);
           }
         } catch (anonymousError) {
           console.warn('Erreur lors de l\'envoi de la note anonyme:', anonymousError);
-          // Simuler une mise à jour des statistiques
-          updateLocalStats(ratingValue);
+          // La mise à jour locale a déjà été faite
         }
-
-        setMessage('Merci pour votre note !');
       }
-
-      setShowMessage(true);
-      setTimeout(() => {
-        setShowMessage(false);
-      }, 3000);
-
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement de la note:', error);
-      // Même en cas d'erreur, nous gardons la note de l'utilisateur localement
-      // et simulons une mise à jour des statistiques
-      updateLocalStats(ratingValue);
-
-      setMessage('Votre note a été enregistrée localement.');
-      setShowMessage(true);
-      setTimeout(() => {
-        setShowMessage(false);
-      }, 3000);
+      // La mise à jour locale a déjà été faite
     }
   };
 

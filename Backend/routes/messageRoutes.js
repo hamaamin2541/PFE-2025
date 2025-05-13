@@ -1,11 +1,12 @@
 import express from 'express';
 import { protect } from '../middleware/auth.js';
-import { 
-  sendMessage, 
-  getMessages, 
-  markAsRead, 
+import {
+  sendMessage,
+  getMessages,
+  markAsRead,
   moveToTrash,
-  toggleStarred
+  toggleStarred,
+  getUnreadCount
 } from '../controllers/messageController.js';
 
 const router = express.Router();
@@ -18,6 +19,9 @@ router.post('/', sendMessage);
 
 // Get messages for the current user
 router.get('/', getMessages);
+
+// Get count of unread messages
+router.get('/unread/count', getUnreadCount);
 
 // Mark message as read
 router.put('/:messageId/read', markAsRead);

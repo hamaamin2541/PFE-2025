@@ -230,3 +230,27 @@ export const toggleStarred = async (req, res) => {
     });
   }
 };
+
+// Get count of unread messages
+export const getUnreadCount = async (req, res) => {
+  try {
+    // Count unread messages in the user's inbox
+    const count = await Message.countDocuments({
+      recipient: req.user._id,
+      folder: 'inbox',
+      read: false
+    });
+
+    res.status(200).json({
+      success: true,
+      count
+    });
+  } catch (error) {
+    console.error('Error counting unread messages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error counting unread messages',
+      error: error.message
+    });
+  }
+};

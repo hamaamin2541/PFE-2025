@@ -104,8 +104,8 @@ export const updateFormation = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Formation not found' });
     }
 
-    // Check if the user is the formation creator
-    if (formation.teacher.toString() !== req.user._id.toString()) {
+    // Check if the user is the formation creator or an admin
+    if (req.user.role !== 'admin' && formation.teacher.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this formation' });
     }
 
@@ -207,8 +207,8 @@ export const deleteFormation = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Formation not found' });
     }
 
-    // Check if the user is the formation creator
-    if (formation.teacher.toString() !== req.user._id.toString()) {
+    // Check if the user is the formation creator or an admin
+    if (req.user.role !== 'admin' && formation.teacher.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this formation' });
     }
 

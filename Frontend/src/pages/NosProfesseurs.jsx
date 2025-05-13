@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config/api';
-import { Row, Col, Card, Button, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Button, Alert, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './NosProfesseurs.css';
 import FAQ from '../components/FAQ';
+import TeacherRating from '../components/Rating/TeacherRating';
 
 function NosProfesseurs() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ function NosProfesseurs() {
   const [videoAdvice, setVideoAdvice] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   const handleContactTeacher = (teacherId) => {
     // Check if user is logged in
@@ -36,6 +39,16 @@ function NosProfesseurs() {
 
     // Redirect to messages page with teacher ID
     navigate('/dashboard-student', { state: { activeTab: 'messages', teacherId } });
+  };
+
+  const handleRateTeacher = (teacher) => {
+    setSelectedTeacher(teacher);
+    setShowRatingModal(true);
+  };
+
+  const handleCloseRatingModal = () => {
+    setShowRatingModal(false);
+    setSelectedTeacher(null);
   };
 
   useEffect(() => {
@@ -323,22 +336,31 @@ function NosProfesseurs() {
                     {teacher.specialty || 'Enseignant'} • {teacher.experience || 'Expérimenté'}
                   </Card.Subtitle>
                   <Card.Text>{teacher.bio || 'Professeur dévoué à l\'enseignement'}</Card.Text>
-                  {(() => {
-                    // Get current user data from localStorage
-                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                    const isOwnProfile = userData._id === teacher._id;
+                  <div className="d-flex gap-2">
+                    {(() => {
+                      // Get current user data from localStorage
+                      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                      const isOwnProfile = userData._id === teacher._id;
 
-                    return (
-                      <Button
-                        variant={isOwnProfile ? "outline-secondary" : "outline-primary"}
-                        onClick={() => handleContactTeacher(teacher._id)}
-                        disabled={isOwnProfile}
-                        title={isOwnProfile ? "Vous ne pouvez pas vous contacter vous-même" : "Contacter ce professeur"}
-                      >
-                        {isOwnProfile ? "Votre profil" : "Contacter"}
-                      </Button>
-                    );
-                  })()}
+                      return (
+                        <Button
+                          variant={isOwnProfile ? "outline-secondary" : "outline-primary"}
+                          onClick={() => handleContactTeacher(teacher._id)}
+                          disabled={isOwnProfile}
+                          title={isOwnProfile ? "Vous ne pouvez pas vous contacter vous-même" : "Contacter ce professeur"}
+                        >
+                          {isOwnProfile ? "Votre profil" : "Contacter"}
+                        </Button>
+                      );
+                    })()}
+                    <Button
+                      variant="outline-warning"
+                      onClick={() => handleRateTeacher(teacher)}
+                      title="Noter ce professeur"
+                    >
+                      Noter
+                    </Button>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
@@ -372,6 +394,31 @@ function NosProfesseurs() {
 
       <FAQ />
     </div>
+      {/* Modal de notation du professeur */}
+      <Modal show={showRatingModal} onHide={handleCloseRatingModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Noter {selectedTeacher?.fullName || 'le professeur'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedTeacher && (
+            <div className="text-center mb-4">
+              <img
+                src={`${API_BASE_URL}/${selectedTeacher.profileImage}`}
+                alt={selectedTeacher.fullName}
+                className="rounded-circle mb-3"
+                style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                onError={(e) => {
+                  e.target.src = '/images/default-profile.jpg';
+                }}
+              />
+              <h5>{selectedTeacher.fullName}</h5>
+              <p className="text-muted">{selectedTeacher.specialty || 'Enseignant'}</p>
+
+              <TeacherRating teacherId={selectedTeacher._id} />
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
     </>
   );
 }

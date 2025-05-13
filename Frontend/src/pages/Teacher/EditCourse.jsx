@@ -3,6 +3,7 @@ import { Container, Form, Button, Alert, Row, Col, Card, Badge } from 'react-boo
 import { useParams, useNavigate } from 'react-router-dom';
 import { Upload, Video, BookOpen, FileText, Image as ImageIcon, File, X, Plus } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 
 const EditCourse = () => {
   const { id } = useParams();
@@ -32,7 +33,7 @@ const EditCourse = () => {
     const fetchCourse = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/courses/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/courses/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -81,7 +82,7 @@ const EditCourse = () => {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/courses/${id}`,
+        `${API_BASE_URL}/api/courses/${id}`,
         formData,
         {
           headers: {
@@ -395,7 +396,7 @@ const EditCourse = () => {
                   </div>
                   {(course?.coverImagePreview || course?.coverImage) && (
                     <img
-                      src={course.coverImagePreview || `http://localhost:5000/${course.coverImage}`}
+                      src={course.coverImagePreview || `${API_BASE_URL}/${course.coverImage}`}
                       alt="Preview"
                       className="img-fluid mt-2"
                       style={{ maxHeight: '200px' }}

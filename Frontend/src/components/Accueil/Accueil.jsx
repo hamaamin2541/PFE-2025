@@ -9,15 +9,51 @@ import Time from '../../Assets/time.jpeg';
 import Acces from '../../Assets/accessibilite.jpeg';
 import FAQ from '../FAQ';
 import StarRating from '../Rating/StarRating';
+import TestimonialForm from '../Testimonial/TestimonialForm';
+import ReclamationForm from '../Reclamation/ReclamationForm';
+import { isAuthenticated } from '../../utils/authUtils';
+import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 import {
-  FaGraduationCap, FaBook, FaUsers, FaStar,
+  FaGraduationCap, FaBook, FaUsers, FaStar, FaCommentAlt,
   FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaYoutube,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle
 } from 'react-icons/fa';
 
 function Accueil() {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState({ days: 2, hours: 8, minutes: 45, seconds: 30 });
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
+  const [showTestimonialForm, setShowTestimonialForm] = useState(false);
+  const [showReclamationForm, setShowReclamationForm] = useState(false);
+  const [testimonialsList, setTestimonialsList] = useState([]);
+
+  // Vérifier si l'utilisateur est connecté
+  useEffect(() => {
+    // Vérifier l'état d'authentification au chargement
+    setUserAuthenticated(isAuthenticated());
+
+    // Fonction pour vérifier l'état d'authentification
+    const checkAuthStatus = () => {
+      setUserAuthenticated(isAuthenticated());
+    };
+
+    // Écouter les changements dans le localStorage
+    window.addEventListener('storage', checkAuthStatus);
+
+    // Écouter un événement personnalisé pour l'authentification
+    const handleAuthEvent = () => {
+      setUserAuthenticated(isAuthenticated());
+    };
+
+    window.addEventListener('auth-change', handleAuthEvent);
+
+    // Nettoyer les écouteurs d'événements
+    return () => {
+      window.removeEventListener('storage', checkAuthStatus);
+      window.removeEventListener('auth-change', handleAuthEvent);
+    };
+  }, []);
 
   // Effet pour le compte à rebours
   useEffect(() => {
@@ -64,33 +100,75 @@ function Accueil() {
     navigate('/register');
   };
 
-  // Données pour les témoignages
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sophie Martin",
-      role: "Étudiante en informatique",
-      avatar: Picture1,
-      rating: 5,
-      text: "Les cours sont très bien structurés et les enseignants sont toujours disponibles pour répondre à mes questions. J'ai pu acquérir de nouvelles compétences rapidement."
-    },
-    {
-      id: 2,
-      name: "Thomas Dubois",
-      role: "Professionnel en reconversion",
-      avatar: Picture2,
-      rating: 4,
-      text: "Grâce à cette plateforme, j'ai pu me reconvertir dans le domaine du développement web. La flexibilité des cours m'a permis de continuer à travailler tout en étudiant."
-    },
-    {
-      id: 3,
-      name: "Amina Benali",
-      role: "Étudiante en marketing",
-      avatar: Picture1,
-      rating: 5,
-      text: "J'ai adoré les cours de marketing digital. Le contenu est à jour avec les dernières tendances et les exercices pratiques m'ont beaucoup aidée."
-    }
-  ];
+  // Fetch testimonials from the backend
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/testimonials/approved`);
+
+        if (response.data.success) {
+          // Map the testimonials to match our frontend format
+          const formattedTestimonials = response.data.data.map(testimonial => ({
+            id: testimonial._id,
+            name: testimonial.name,
+            role: testimonial.role,
+            text: testimonial.message,
+            rating: testimonial.rating,
+            avatar: testimonial.avatar || "https://randomuser.me/api/portraits/men/32.jpg",
+            date: new Date(testimonial.createdAt)
+          }));
+
+          setTestimonialsList(formattedTestimonials);
+        } else {
+          console.error('Failed to fetch testimonials:', response.data.message);
+          // Use fallback testimonials if fetch fails
+          setTestimonialsList([
+            {
+              id: 1,
+              name: "Sophie Martin",
+              role: "Étudiante en informatique",
+              avatar: Picture1,
+              rating: 5,
+              text: "Les cours sont très bien structurés et les enseignants sont toujours disponibles pour répondre à mes questions. J'ai pu acquérir de nouvelles compétences rapidement."
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+        // Use fallback testimonials if fetch fails
+        setTestimonialsList([
+          {
+            id: 1,
+            name: "Sophie Martin",
+            role: "Étudiante en informatique",
+            avatar: Picture1,
+            rating: 5,
+            text: "Les cours sont très bien structurés et les enseignants sont toujours disponibles pour répondre à mes questions. J'ai pu acquérir de nouvelles compétences rapidement."
+          }
+        ]);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
+  // Handle new testimonial submission
+  const handleTestimonialSubmit = (newTestimonial) => {
+    // Format the testimonial to match our display format
+    const formattedTestimonial = {
+      id: newTestimonial.id || Date.now(),
+      name: newTestimonial.name,
+      role: newTestimonial.role,
+      text: newTestimonial.text || newTestimonial.message,
+      rating: newTestimonial.rating,
+      avatar: newTestimonial.avatar || "https://randomuser.me/api/portraits/men/32.jpg",
+      isNew: true, // Flag to highlight the new testimonial
+      date: new Date()
+    };
+
+    // Add the new testimonial to the beginning of the list
+    setTestimonialsList(prevTestimonials => [formattedTestimonial, ...prevTestimonials]);
+  };
 
   // Données pour les statistiques
   const stats = [
@@ -126,7 +204,9 @@ function Accueil() {
               <div className="countdown-label">Secondes</div>
             </div>
           </div>
-          <button className="promo-btn" onClick={goToRegister}>En profiter maintenant</button>
+          {!userAuthenticated && (
+            <button className="promo-btn" onClick={goToRegister}>En profiter maintenant</button>
+          )}
         </div>
       </div>
 
@@ -135,9 +215,11 @@ function Accueil() {
         <div className="hero-content">
           <h1>Apprenez en ligne facilement, partout et à tout moment</h1>
           <p>Rejoignez une communauté dynamique et développez vos compétences.</p>
-          <div className="hero-buttons">
-            <button className="btn-secondary" onClick={goToRegister}>Rejoindre un cours</button>
-          </div>
+          {!userAuthenticated && (
+            <div className="hero-buttons">
+              <button className="btn-secondary" onClick={goToRegister}>Rejoindre un cours</button>
+            </div>
+          )}
           <div className="hero-features">
             <span>✅ Formateurs experts</span>
             <span>✅ Vidéos premium</span>
@@ -199,11 +281,14 @@ function Accueil() {
         <h2 className="text-center">Ce que disent nos étudiants</h2>
         <div className="testimonial-carousel">
           <div className="row">
-            {testimonials.map(testimonial => (
+            {testimonialsList.map(testimonial => (
               <div className="col-md-4 mb-4" key={testimonial.id}>
-                <div className="testimonial-card">
+                <div className={`testimonial-card ${testimonial.isNew ? 'new-testimonial' : ''}`}>
                   <div className="testimonial-content">
                     <p>{testimonial.text}</p>
+                    {testimonial.isNew && (
+                      <span className="new-badge">Nouveau</span>
+                    )}
                   </div>
                   <div className="testimonial-author">
                     <img
@@ -226,6 +311,26 @@ function Accueil() {
             ))}
           </div>
         </div>
+
+        {/* Bouton pour partager un témoignage */}
+        <div className="text-center mt-5 mb-4">
+          <div className="testimonial-button-container">
+            <button
+              className="btn-testimonial"
+              onClick={() => setShowTestimonialForm(true)}
+            >
+              <FaCommentAlt className="me-2" /> Partagez votre expérience
+            </button>
+          </div>
+          <p className="mt-3 text-muted">Nous aimerions connaître votre avis sur notre plateforme</p>
+        </div>
+
+        {/* Modal pour le formulaire de témoignage */}
+        <TestimonialForm
+          show={showTestimonialForm}
+          handleClose={() => setShowTestimonialForm(false)}
+          onTestimonialSubmit={handleTestimonialSubmit}
+        />
       </section>
 
       {/* Section Partenaires */}
@@ -247,9 +352,15 @@ function Accueil() {
       {/* Section d'Appel à l'Action */}
       <section className="cta">
         <h2>Prêt à commencer votre parcours d'apprentissage ?</h2>
-        <button className="btn-primary" onClick={goToRegister}>
-          S'inscrire maintenant
-        </button>
+        {!userAuthenticated ? (
+          <button className="btn-primary" onClick={goToRegister}>
+            S'inscrire maintenant
+          </button>
+        ) : (
+          <button className="btn-primary" onClick={() => navigate('/dashboard-student')}>
+            Accéder à mon espace
+          </button>
+        )}
       </section>
 
       {/* Section Évaluation */}
@@ -257,6 +368,32 @@ function Accueil() {
         <h2 className="text-center">Votre avis compte</h2>
         <p className="text-center mb-5">Aidez-nous à améliorer notre plateforme en partageant votre expérience</p>
         <StarRating />
+      </section>
+
+      {/* Section Réclamation */}
+      <section className="reclamation-section">
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-md-8 text-center">
+              <h2 className="section-title">Besoin d'aide ou rencontrez un problème ?</h2>
+              <p className="section-subtitle mb-4">
+                Notre équipe est à votre écoute pour résoudre tout problème que vous pourriez rencontrer.
+              </p>
+              <button
+                className="btn-reclamation"
+                onClick={() => setShowReclamationForm(true)}
+              >
+                <FaExclamationTriangle className="me-2" /> Soumettre une réclamation
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal pour le formulaire de réclamation */}
+        <ReclamationForm
+          show={showReclamationForm}
+          handleClose={() => setShowReclamationForm(false)}
+        />
       </section>
 
       {/* Section FAQ */}
@@ -280,46 +417,26 @@ function Accueil() {
               </div>
             </div>
 
-            <div className="col-md-2 mb-4">
-              <h5 className="footer-title">Liens rapides</h5>
-              <ul className="footer-links">
-                <li><a href="#">Accueil</a></li>
-                <li><a href="#">Cours</a></li>
-                <li><a href="#">Formations</a></li>
-                <li><a href="#">Tests</a></li>
-                <li><a href="#">Professeurs</a></li>
-              </ul>
-            </div>
+  
 
             <div className="col-md-3 mb-4">
               <h5 className="footer-title">Contactez-nous</h5>
               <div className="contact-info">
                 <p><FaMapMarkerAlt className="me-2" /> 123 Rue de l'Éducation, Tunis</p>
-                <p><FaPhone className="me-2" /> +216 71 123 456</p>
-                <p><FaEnvelope className="me-2" /> contact@welearn.com</p>
+                <p><FaPhone className="me-2" /> +216 27 405 306</p>
+                <p><FaEnvelope className="me-2" /> lamarimedamin1@gmail.com</p>
                 <p><FaClock className="me-2" /> Lun-Ven: 9h-18h</p>
               </div>
             </div>
 
-            <div className="col-md-3 mb-4">
-              <h5 className="footer-title">Newsletter</h5>
-              <p>Inscrivez-vous pour recevoir nos dernières actualités et offres spéciales.</p>
-              <div className="newsletter-form">
-                <input type="email" className="form-control mb-2" placeholder="Votre email" />
-                <button type="submit" className="btn btn-primary">S'abonner</button>
-              </div>
-            </div>
+  
           </div>
 
           <hr className="footer-divider" />
 
           <div className="footer-bottom">
             <p className="footer-copyright">© {new Date().getFullYear()} We Learn. Tous droits réservés.</p>
-            <div className="footer-legal-links">
-              <a href="#">Conditions d'utilisation</a>
-              <a href="#">Politique de confidentialité</a>
-              <a href="#">Cookies</a>
-            </div>
+        
           </div>
         </div>
       </footer>

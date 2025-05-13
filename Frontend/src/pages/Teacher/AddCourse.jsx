@@ -187,7 +187,7 @@ const AddCourse = () => {
         formData.append('sections', JSON.stringify(sections));
       }
 
-      const response = await axios.post('http://localhost:5000/api/courses', formData, {
+      const response = await axios.post('http://localhost:5001/api/courses', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

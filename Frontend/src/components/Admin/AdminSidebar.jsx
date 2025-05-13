@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BookOpen, MessageSquare, AlertTriangle,
   BarChart2, FileText, Settings, LogOut, ChevronDown, ChevronRight,
@@ -9,6 +9,7 @@ import { Collapse } from 'react-bootstrap';
 
 const AdminSidebar = ({ onLogout }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({
     content: false,
     reports: false
@@ -65,7 +66,11 @@ const AdminSidebar = ({ onLogout }) => {
             <li className="sidebar-menu-item">
               <div
                 className={`sidebar-menu-link ${isMenuActive(['/admin/courses', '/admin/tests', '/admin/formations']) ? 'active-parent' : ''}`}
-                onClick={() => toggleMenu('content')}
+                onClick={() => {
+                  toggleMenu('content');
+                  // Navigate to courses page when clicking on the main menu item
+                  navigate('/admin/courses');
+                }}
               >
                 <div className="sidebar-menu-link-content">
                   <BookOpen size={18} className="sidebar-menu-icon" />

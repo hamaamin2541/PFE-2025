@@ -19,9 +19,6 @@ router.use('/teacher-courses', protect, authorize('teacher'));
 router.get('/teacher-courses', getCoursesByTeacher);
 router.get('/teacher/courses/count', getCourseCount);
 
-// Get teacher's courses
-router.get('/teacher-courses', protect, authorize('teacher'), getTeacherCourses);
-
 // Get single course - accessible to both students and teachers
 router.get('/:id', protect, getCourseById);
 

@@ -333,7 +333,12 @@ export const getTeacherAnalytics = async (req, res) => {
             { test: { $in: testIds } },
             { formation: { $in: formationIds } }
           ]
-        }).populate('user').sort({ enrollmentDate: -1 }),
+        })
+        .populate('user')
+        .populate('course')
+        .populate('test')
+        .populate('formation')
+        .sort({ enrollmentDate: -1 }),
         User.findById(teacherId).populate('ratings')
       ]);
     } catch (queryError) {
@@ -378,15 +383,36 @@ export const getTeacherAnalytics = async (req, res) => {
     let totalRatings = 0;
     let ratingCount = 0;
 
-    // Process courses
+    // Calculate total revenue from enrollments (sum of all sales)
+    enrollments.forEach(enrollment => {
+      // Find the price based on the item type
+      let price = 0;
+      if (enrollment.itemType === 'course' && enrollment.course) {
+        // Use the populated course object directly
+        price = enrollment.course.price || 0;
+      } else if (enrollment.itemType === 'test' && enrollment.test) {
+        // Use the populated test object directly
+        price = enrollment.test.price || 0;
+      } else if (enrollment.itemType === 'formation' && enrollment.formation) {
+        // Use the populated formation object directly
+        price = enrollment.formation.price || 0;
+      }
+
+      // Add to total revenue
+      stats.totalRevenue += price;
+
+      // Add unique student to the set
+      if (enrollment.user && enrollment.user._id) {
+        uniqueStudentIds.add(enrollment.user._id.toString());
+      }
+    });
+
+    // Process courses for views and ratings
     courses.forEach(course => {
-      // Add unique students to the set
+      // Add unique students to the set (as a backup)
       course.students?.forEach(student => {
         uniqueStudentIds.add(student._id.toString());
       });
-
-      // Calculate revenue
-      stats.totalRevenue += (course.price * (course.students?.length || 0));
 
       // Calculate average rating
       course.ratings?.forEach(rating => {
@@ -407,7 +433,7 @@ export const getTeacherAnalytics = async (req, res) => {
       });
     });
 
-    // Process tests
+    // Process tests for unique students (as a backup)
     tests.forEach(test => {
       // Add unique participants to the set
       test.participants?.forEach(participant => {
@@ -415,22 +441,14 @@ export const getTeacherAnalytics = async (req, res) => {
           uniqueStudentIds.add(participant.user._id.toString());
         }
       });
-
-      // If tests have a price, add to revenue (assuming price field exists)
-      if (test.price) {
-        stats.totalRevenue += (test.price * (test.participants?.length || 0));
-      }
     });
 
-    // Process formations
+    // Process formations for unique students (as a backup)
     formations.forEach(formation => {
       // Add unique students to the set
       formation.students?.forEach(student => {
         uniqueStudentIds.add(student._id.toString());
       });
-
-      // Add revenue from formations
-      stats.totalRevenue += (formation.price * (formation.students?.length || 0));
     });
 
     // Set the total unique students count
@@ -454,72 +472,145 @@ export const getTeacherAnalytics = async (req, res) => {
       { name: 'Formations', value: stats.totalFormations }
     ];
 
+    // Get revenue period from query params (default to full year)
+    const revenuePeriod = req.query.revenuePeriod || 'year';
+
     // Generate revenue data by month
     const revenueByMonth = {};
-    const currentYear = new Date().getFullYear();
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
 
-    // Initialize all months with zero revenue
+    // Initialize months based on selected period
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    months.forEach(month => {
+    let monthsToShow = [];
+
+    if (revenuePeriod === '3months') {
+      // Last 3 months
+      for (let i = 2; i >= 0; i--) {
+        const monthIndex = (currentMonth - i + 12) % 12;
+        monthsToShow.push(months[monthIndex]);
+      }
+    } else if (revenuePeriod === '6months') {
+      // Last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const monthIndex = (currentMonth - i + 12) % 12;
+        monthsToShow.push(months[monthIndex]);
+      }
+    } else {
+      // Full year
+      monthsToShow = [...months];
+    }
+
+    // Initialize all selected months with zero revenue
+    monthsToShow.forEach(month => {
       revenueByMonth[month] = 0;
     });
+
+    // Calculate start date based on period
+    let startDate = new Date();
+    if (revenuePeriod === '3months') {
+      startDate.setMonth(startDate.getMonth() - 3);
+    } else if (revenuePeriod === '6months') {
+      startDate.setMonth(startDate.getMonth() - 6);
+    } else {
+      startDate = new Date(currentYear, 0, 1); // Start of year
+    }
 
     // Process enrollments to calculate revenue by month
     enrollments.forEach(enrollment => {
       if (enrollment.enrollmentDate) {
         const enrollmentDate = new Date(enrollment.enrollmentDate);
-        // Only consider enrollments from the current year
-        if (enrollmentDate.getFullYear() === currentYear) {
+        // Only consider enrollments from the selected period
+        if (enrollmentDate >= startDate) {
           const monthIndex = enrollmentDate.getMonth();
           const monthName = months[monthIndex];
 
-          // Find the price based on the item type
-          let price = 0;
-          if (enrollment.itemType === 'course' && enrollment.course) {
-            const course = courses.find(c => c._id.toString() === enrollment.course.toString());
-            price = course ? course.price : 0;
-          } else if (enrollment.itemType === 'test' && enrollment.test) {
-            const test = tests.find(t => t._id.toString() === enrollment.test.toString());
-            price = test ? test.price : 0;
-          } else if (enrollment.itemType === 'formation' && enrollment.formation) {
-            const formation = formations.find(f => f._id.toString() === enrollment.formation.toString());
-            price = formation ? formation.price : 0;
-          }
+          // Only process if this month is in our display set
+          if (monthsToShow.includes(monthName)) {
+            // Find the price based on the item type
+            let price = 0;
+            if (enrollment.itemType === 'course' && enrollment.course) {
+              // Use the populated course object directly
+              price = enrollment.course.price || 0;
+            } else if (enrollment.itemType === 'test' && enrollment.test) {
+              // Use the populated test object directly
+              price = enrollment.test.price || 0;
+            } else if (enrollment.itemType === 'formation' && enrollment.formation) {
+              // Use the populated formation object directly
+              price = enrollment.formation.price || 0;
+            }
 
-          revenueByMonth[monthName] += price;
+            revenueByMonth[monthName] += price;
+          }
         }
       }
     });
 
     // Convert revenue by month to array format for the chart
-    stats.revenueData = months.map(month => ({
+    stats.revenueData = monthsToShow.map(month => ({
       name: month,
       revenue: revenueByMonth[month]
     }));
 
-    // Generate enrollment data by day of week
-    const enrollmentsByDay = {
-      'Lun': 0, 'Mar': 0, 'Mer': 0, 'Jeu': 0, 'Ven': 0, 'Sam': 0, 'Dim': 0
-    };
+    // Get enrollment period from query params (default to month)
+    const enrollmentPeriod = req.query.enrollmentPeriod || 'month';
 
+    // Generate enrollment data based on period
     const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
-    // Get enrollments from the last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    if (enrollmentPeriod === 'month') {
+      // Enrollments by day of week for the current month
+      const enrollmentsByDay = {
+        'Lun': 0, 'Mar': 0, 'Mer': 0, 'Jeu': 0, 'Ven': 0, 'Sam': 0, 'Dim': 0
+      };
 
-    enrollments.forEach(enrollment => {
-      if (enrollment.enrollmentDate && new Date(enrollment.enrollmentDate) >= thirtyDaysAgo) {
-        const dayOfWeek = days[new Date(enrollment.enrollmentDate).getDay()];
-        enrollmentsByDay[dayOfWeek]++;
-      }
-    });
+      // Get start of current month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
 
-    // Convert enrollments by day to array format for the chart
-    stats.enrollmentData = Object.keys(enrollmentsByDay).map(day => ({
-      name: day,
-      enrollments: enrollmentsByDay[day]
-    }));
+      enrollments.forEach(enrollment => {
+        if (enrollment.enrollmentDate) {
+          const enrollmentDate = new Date(enrollment.enrollmentDate);
+          if (enrollmentDate >= startOfMonth) {
+            const dayOfWeek = days[enrollmentDate.getDay()];
+            enrollmentsByDay[dayOfWeek]++;
+          }
+        }
+      });
+
+      // Convert enrollments by day to array format for the chart
+      stats.enrollmentData = Object.keys(enrollmentsByDay).map(day => ({
+        name: day,
+        enrollments: enrollmentsByDay[day]
+      }));
+    } else {
+      // Enrollments by month for the current year
+      const enrollmentsByMonth = {};
+      months.forEach(month => {
+        enrollmentsByMonth[month] = 0;
+      });
+
+      // Get start of current year
+      const startOfYear = new Date(currentYear, 0, 1);
+
+      enrollments.forEach(enrollment => {
+        if (enrollment.enrollmentDate) {
+          const enrollmentDate = new Date(enrollment.enrollmentDate);
+          if (enrollmentDate >= startOfYear && enrollmentDate.getFullYear() === currentYear) {
+            const monthName = months[enrollmentDate.getMonth()];
+            enrollmentsByMonth[monthName]++;
+          }
+        }
+      });
+
+      // Convert enrollments by month to array format for the chart
+      stats.enrollmentData = months.map(month => ({
+        name: month,
+        enrollments: enrollmentsByMonth[month]
+      }));
+    }
 
     res.status(200).json({
       success: true,

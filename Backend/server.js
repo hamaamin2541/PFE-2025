@@ -21,6 +21,8 @@ import ratingRoutes from './routes/ratingRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
+import teacherRatingRoutes from './routes/teacherRatingRoutes.js';
+import testimonialRoutes from './routes/testimonialRoutes.js';
 
 dotenv.config();
 
@@ -85,6 +87,8 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/contact', contactMessageRoutes);
+app.use('/api/teacher-ratings', teacherRatingRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -96,7 +100,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 
 

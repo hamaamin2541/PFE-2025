@@ -1,0 +1,61 @@
+.comments-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  background-color: #4361ee;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.comment-content {
+  margin-left: 40px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Styles pour les badges */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Animation pour les spinners */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-border {
+  animation: spin 1.2s linear infinite;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .comment-content {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}

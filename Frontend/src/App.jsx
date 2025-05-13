@@ -47,6 +47,11 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import UserManagement from './pages/Admin/UserManagement';
 import ComplaintManagement from './pages/Admin/ComplaintManagement';
 import ContactMessageManagement from './pages/Admin/ContactMessageManagement';
+import MessageManagement from './pages/Admin/MessageManagement';
+import SettingsManagement from './pages/Admin/SettingsManagement';
+import ExportsManagement from './pages/Admin/ExportsManagement';
+import ReportsManagement from './pages/Admin/ReportsManagement';
+import ContentManagement from './pages/Admin/Content/ContentManagement';
 
 // User Components
 import UserComplaints from './pages/User/UserComplaints';
@@ -85,8 +90,21 @@ function App() {
                   <Route index element={<Navigate to="/admin/dashboard" />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="users" element={<UserManagement />} />
+                  <Route path="users/new" element={<UserManagement newUser={true} />} />
                   <Route path="complaints" element={<ComplaintManagement />} />
                   <Route path="contact" element={<ContactMessageManagement />} />
+                  <Route path="courses" element={<ContentManagement />} />
+                  <Route path="tests" element={<ContentManagement />} />
+                  <Route path="formations" element={<ContentManagement />} />
+                  <Route path="messages" element={<MessageManagement />} />
+                  <Route path="reports" element={<ReportsManagement />} />
+                  <Route path="reports/users" element={<ReportsManagement />} />
+                  <Route path="reports/sales" element={<ReportsManagement />} />
+                  <Route path="reports/content" element={<ReportsManagement />} />
+                  <Route path="database" element={<Navigate to="/admin/dashboard" />} />
+                  <Route path="exports" element={<ExportsManagement />} />
+                  <Route path="settings" element={<SettingsManagement />} />
+                  <Route path="profile" element={<Navigate to="/admin/dashboard" />} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/Accueil" />} />

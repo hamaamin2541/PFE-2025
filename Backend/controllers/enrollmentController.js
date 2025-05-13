@@ -91,13 +91,6 @@ export const enrollInCourse = async (req, res) => {
           });
         }
         enrollmentData.course = itemId;
-
-        // Check if user is already enrolled
-        existingEnrollment = await Enrollment.findOne({
-          user: req.user._id,
-          itemType: 'course',
-          course: itemId
-        });
         break;
 
       case 'formation':
@@ -120,15 +113,6 @@ export const enrollInCourse = async (req, res) => {
 
           console.log('Formation found:', item.title);
           enrollmentData.formation = itemId;
-
-          // Check if user is already enrolled
-          existingEnrollment = await Enrollment.findOne({
-            user: req.user._id,
-            itemType: 'formation',
-            formation: itemId
-          });
-
-          console.log('Existing enrollment check result:', existingEnrollment ? 'Already enrolled' : 'Not enrolled');
         } catch (formationError) {
           console.error('Error in formation processing:', formationError);
           return res.status(500).json({
@@ -149,22 +133,10 @@ export const enrollInCourse = async (req, res) => {
           });
         }
         enrollmentData.test = itemId;
-
-        // Check if user is already enrolled
-        existingEnrollment = await Enrollment.findOne({
-          user: req.user._id,
-          itemType: 'test',
-          test: itemId
-        });
         break;
     }
 
-    if (existingEnrollment) {
-      return res.status(400).json({
-        success: false,
-        message: `You are already enrolled in this ${itemType}`
-      });
-    }
+    // We no longer check for existing enrollments to allow multiple purchases
 
     try {
       // Create enrollment
@@ -177,12 +149,13 @@ export const enrollInCourse = async (req, res) => {
       );
 
       // Update the item's students/participants array based on item type
+      // Nous utilisons $push au lieu de $addToSet pour permettre des inscriptions multiples
       switch (itemType) {
         case 'course':
           // Add student to course's students array
           await Course.findByIdAndUpdate(
             itemId,
-            { $addToSet: { students: req.user._id } }
+            { $push: { students: req.user._id } }
           );
           break;
 
@@ -191,7 +164,7 @@ export const enrollInCourse = async (req, res) => {
           const Formation = (await import('../models/Formation.js')).default;
           await Formation.findByIdAndUpdate(
             itemId,
-            { $addToSet: { students: req.user._id } }
+            { $push: { students: req.user._id } }
           );
           break;
 
@@ -201,7 +174,7 @@ export const enrollInCourse = async (req, res) => {
           await Test.findByIdAndUpdate(
             itemId,
             {
-              $addToSet: {
+              $push: {
                 participants: {
                   user: req.user._id,
                   score: 0,
@@ -219,14 +192,6 @@ export const enrollInCourse = async (req, res) => {
         message: `Successfully enrolled in the ${itemType}`
       });
     } catch (err) {
-      // Check for duplicate key error
-      if (err.code === 11000) {
-        return res.status(400).json({
-          success: false,
-          message: `You are already enrolled in this ${itemType}`
-        });
-      }
-
       // Re-throw for the outer catch block
       throw err;
     }

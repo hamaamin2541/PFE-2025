@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Button, Row, Col, Badge, Dropdown, Modal, Alert } from 'react-bootstrap';
 import { BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 
 export const TeacherCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -16,7 +17,7 @@ export const TeacherCourses = () => {
     const fetchCourses = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/courses/teacher-courses', {
+        const response = await axios.get(`${API_BASE_URL}/api/courses/teacher-courses`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -35,8 +36,8 @@ export const TeacherCourses = () => {
   const handleDelete = async (courseId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5000/api/courses/${courseId}`, {
-        headers: { 
+      const response = await axios.delete(`${API_BASE_URL}/api/courses/${courseId}`, {
+        headers: {
           'Authorization': `Bearer ${token}`
         }
       });
@@ -51,7 +52,7 @@ export const TeacherCourses = () => {
     } catch (error) {
       console.error('Error deleting course:', error);
       setDeleteError(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         'Une erreur est survenue lors de la suppression du cours'
       );
     }
@@ -84,9 +85,9 @@ export const TeacherCourses = () => {
               <Card className="h-100">
                 <div className="position-relative">
                   {course.coverImage && (
-                    <Card.Img 
-                      variant="top" 
-                      src={`http://localhost:5000/${course.coverImage}`}
+                    <Card.Img
+                      variant="top"
+                      src={`${API_BASE_URL}/${course.coverImage}`}
                       style={{ height: '200px', objectFit: 'cover' }}
                     />
                   )}
@@ -99,7 +100,7 @@ export const TeacherCourses = () => {
                         <Edit size={16} className="me-2" />
                         Modifier
                       </Dropdown.Item>
-                      <Dropdown.Item 
+                      <Dropdown.Item
                         className="text-danger"
                         onClick={() => {
                           setCourseToDelete(course);
@@ -150,8 +151,8 @@ export const TeacherCourses = () => {
           }}>
             Annuler
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             onClick={() => handleDelete(courseToDelete?._id)}
           >
             Supprimer

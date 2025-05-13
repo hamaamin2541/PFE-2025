@@ -201,16 +201,14 @@ export const replyToContactMessage = async (req, res) => {
 // Supprimer un message de contact (admin)
 export const deleteContactMessage = async (req, res) => {
   try {
-    const message = await ContactMessage.findById(req.params.id);
+    const result = await ContactMessage.findByIdAndDelete(req.params.id);
 
-    if (!message) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: 'Message non trouvé'
       });
     }
-
-    await message.remove();
 
     res.status(200).json({
       success: true,

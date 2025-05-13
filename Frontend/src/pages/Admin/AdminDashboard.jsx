@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeChart, setActiveChart] = useState('enrollments');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -189,18 +190,18 @@ const AdminDashboard = () => {
           <p className="dashboard-subtitle">Vue d'ensemble des statistiques et activités récentes</p>
         </div>
         <div className="dashboard-header-actions">
-          <Button variant="outline-primary" size="sm" className="me-2 btn-with-icon">
+          <Link to="/admin/reports/users" className="btn btn-outline-primary btn-sm me-2 btn-with-icon">
             <span className="d-flex align-items-center">
               <BarChart2 size={16} className="me-1" />
               Rapports
             </span>
-          </Button>
-          <Button variant="primary" size="sm" className="btn-with-icon">
+          </Link>
+          <Link to="/admin/users/new" className="btn btn-primary btn-sm btn-with-icon">
             <span className="d-flex align-items-center">
               <Users size={16} className="me-1" />
               Nouvel utilisateur
             </span>
-          </Button>
+          </Link>
         </div>
       </div>
 
@@ -297,22 +298,35 @@ const AdminDashboard = () => {
 
       {/* Main Dashboard Content */}
       <div className="dashboard-content">
-        <Row>
+        <Row className="gx-4">
           {/* Left Column */}
-          <Col lg={8}>
+          <Col lg={8} className="pe-lg-4" style={{height:"500px"}}>
             {/* Activity Charts */}
             <div className="chart-card mb-4">
               <div className="chart-card-header">
                 <h6 className="chart-card-title">Activité mensuelle</h6>
                 <div className="chart-actions">
-                  <Button variant="outline-primary" size="sm" className="me-2">Inscriptions</Button>
-                  <Button variant="outline-success" size="sm">Revenus</Button>
+                  <Button
+                    variant={activeChart === 'enrollments' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    className="me-2"
+                    onClick={() => setActiveChart('enrollments')}
+                  >
+                    Inscriptions
+                  </Button>
+                  <Button
+                    variant={activeChart === 'revenue' ? 'success' : 'outline-success'}
+                    size="sm"
+                    onClick={() => setActiveChart('revenue')}
+                  >
+                    Revenus
+                  </Button>
                 </div>
               </div>
               <div className="chart-card-body">
                 <div className="chart-container">
                   <Bar
-                    data={enrollmentData}
+                    data={activeChart === 'enrollments' ? enrollmentData : revenueData}
                     options={{
                       maintainAspectRatio: false,
                       responsive: true,
@@ -329,7 +343,7 @@ const AdminDashboard = () => {
                         y: {
                           beginAtZero: true,
                           ticks: {
-                            precision: 0
+                            precision: activeChart === 'revenue' ? 2 : 0
                           }
                         }
                       }
@@ -428,7 +442,7 @@ const AdminDashboard = () => {
           </Col>
 
           {/* Right Column */}
-          <Col lg={4}>
+          <Col lg={4} className="ps-lg-4" style={{height:"350px"}}>
             {/* Distribution Charts */}
             <div className="chart-card mb-4">
               <div className="chart-card-header">

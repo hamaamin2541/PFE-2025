@@ -32,10 +32,10 @@ router.post('/',
   createFormation
 );
 
-// Update a formation (only teachers)
+// Update a formation (teachers and admins)
 router.put('/:id',
   protect,
-  authorize('teacher'),
+  authorize('teacher', 'admin'),
   upload.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'resources', maxCount: 20 } // Allow up to 20 resource files
@@ -43,7 +43,7 @@ router.put('/:id',
   updateFormation
 );
 
-// Delete a formation (only teachers)
-router.delete('/:id', protect, authorize('teacher'), deleteFormation);
+// Delete a formation (teachers and admins)
+router.delete('/:id', protect, authorize('teacher', 'admin'), deleteFormation);
 
 export default router;

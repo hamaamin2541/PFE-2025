@@ -46,7 +46,7 @@ const DashboardStudent = () => {
     const fetchStudentData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/users/dashboard', {
+        const response = await fetch(`${API_BASE_URL}/api/users/dashboard`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -123,20 +123,45 @@ const DashboardStudent = () => {
   const handleUpdatePersonalInfo = async (updatedInfo) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updatedInfo)
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        updateStudentData(data);
-        setPersonalInfo(data);
-        alert('Informations mises à jour avec succès!');
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/update-profile`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updatedInfo),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          updateStudentData(data);
+          setPersonalInfo(data);
+          alert('Informations mises à jour avec succès!');
+        } else {
+          throw new Error('Failed to update profile');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          console.warn('Request timed out');
+          // Still update the UI optimistically
+          const updatedData = { ...studentData, ...updatedInfo };
+          updateStudentData(updatedData);
+          setPersonalInfo(updatedData);
+          alert('Mise à jour enregistrée localement (mode hors ligne)');
+        } else {
+          throw fetchError;
+        }
       }
     } catch (error) {
       console.error('Error updating personal info:', error);
@@ -147,17 +172,38 @@ const DashboardStudent = () => {
   const handlePasswordChange = async (passwordData) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/change-password', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(passwordData)
-      });
 
-      if (response.ok) {
-        alert('Mot de passe modifié avec succès!');
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/change-password`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(passwordData),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          alert('Mot de passe modifié avec succès!');
+        } else {
+          throw new Error('Failed to change password');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          console.warn('Request timed out');
+          alert('Le serveur ne répond pas. Veuillez réessayer plus tard.');
+        } else {
+          throw fetchError;
+        }
       }
     } catch (error) {
       console.error('Error changing password:', error);
@@ -170,31 +216,56 @@ const DashboardStudent = () => {
       setIsSubmitting(true);
       const token = localStorage.getItem('token');
 
-      const response = await fetch('http://localhost:5000/api/users/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email
-        })
-      });
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const data = await response.json();
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/users/update-profile`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            email: formData.email
+          }),
+          signal: controller.signal
+        });
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update profile');
-      }
+        clearTimeout(timeoutId);
+        const data = await response.json();
 
-      if (data.success && data.data) {
-        updateStudentData(data.data);
-        setPersonalInfo(data.data);
-        alert('Profil mis à jour avec succès!');
-      } else {
-        throw new Error('Invalid response format');
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update profile');
+        }
+
+        if (data.success && data.data) {
+          updateStudentData(data.data);
+          setPersonalInfo(data.data);
+          alert('Profil mis à jour avec succès!');
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+
+        if (fetchError.name === 'AbortError') {
+          console.warn('Request timed out');
+          // Update UI optimistically
+          const updatedData = {
+            ...studentData,
+            fullName: formData.fullName,
+            email: formData.email
+          };
+          updateStudentData(updatedData);
+          setPersonalInfo(updatedData);
+          alert('Profil mis à jour localement (mode hors ligne)');
+        } else {
+          throw fetchError;
+        }
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -460,6 +531,7 @@ const DashboardStudent = () => {
 
           {/* Displaying content based on activeTab */}
           <div className="dashboard-content p-4">
+            {renderNewStudentWelcome()}
             {renderContent()}
             {renderFormations()}
             {renderCourses()}

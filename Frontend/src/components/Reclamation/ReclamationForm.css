@@ -1,0 +1,138 @@
+.reclamation-modal .modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.reclamation-modal .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  padding: 1.25rem 1.5rem;
+}
+
+.reclamation-modal .modal-title {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1.25rem;
+}
+
+.reclamation-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.reclamation-modal .form-label {
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.reclamation-modal .form-control,
+.reclamation-modal .form-select {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.reclamation-modal .form-control:focus,
+.reclamation-modal .form-select:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+.reclamation-modal .form-control.is-invalid,
+.reclamation-modal .form-select.is-invalid {
+  border-color: #e74c3c;
+}
+
+.reclamation-modal .form-control.is-invalid:focus,
+.reclamation-modal .form-select.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+.reclamation-modal textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.reclamation-modal .form-text {
+  font-size: 0.85rem;
+  color: #718096;
+  margin-top: 0.5rem;
+}
+
+.reclamation-modal .modal-footer {
+  border-top: 1px solid #eee;
+  padding: 1.25rem 1.5rem;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
+.reclamation-modal .btn {
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.reclamation-modal .btn-primary {
+  background-color: #4361ee;
+  border-color: #4361ee;
+}
+
+.reclamation-modal .btn-primary:hover:not(:disabled) {
+  background-color: #3a0ca3;
+  border-color: #3a0ca3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reclamation-modal .btn-secondary {
+  background-color: #e2e8f0;
+  border-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.reclamation-modal .btn-secondary:hover {
+  background-color: #cbd5e0;
+  border-color: #cbd5e0;
+  color: #2d3748;
+}
+
+.reclamation-modal .alert {
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reclamation-modal .alert-success {
+  background-color: #e6f7ef;
+  border-color: #c3e6d4;
+  color: #2ecc71;
+}
+
+.reclamation-modal .alert-danger {
+  background-color: #fbe9e7;
+  border-color: #f5c6cb;
+  color: #e74c3c;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .reclamation-modal .modal-body {
+    padding: 1rem;
+  }
+  
+  .reclamation-modal .modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .reclamation-modal .btn {
+    width: 100%;
+  }
+}

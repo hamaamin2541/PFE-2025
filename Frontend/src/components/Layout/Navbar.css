@@ -2,9 +2,7 @@
 .navbar-custom {
   background: var(--primary-gradient);
   padding: 0.75rem 1.5rem;
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   height: 70px;
   box-shadow: var(--shadow-md);
@@ -331,11 +329,6 @@
   .navbar-toggler {
     margin-left: auto;
   }
-}
-
-/* Add space for fixed navbar */
-body {
-  padding-top: 70px;
 }
 
 /* ====== FIN NAVBAR ====== */

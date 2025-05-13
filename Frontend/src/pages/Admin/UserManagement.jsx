@@ -5,7 +5,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { Link } from 'react-router-dom';
 
-const UserManagement = () => {
+const UserManagement = ({ newUser = false }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,15 +32,31 @@ const UserManagement = () => {
     fetchUsers();
   }, [currentPage, searchTerm, roleFilter]);
 
+  // Show new user modal if newUser prop is true
+  useEffect(() => {
+    if (newUser) {
+      setShowUserModal(true);
+      setEditMode(true);
+      setFormData({
+        fullName: '',
+        email: '',
+        role: 'student',
+        specialty: '',
+        bio: '',
+        phone: ''
+      });
+    }
+  }, [newUser]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       let url = `${API_BASE_URL}/api/admin/users?page=${currentPage}`;
       if (searchTerm) url += `&search=${searchTerm}`;
       if (roleFilter) url += `&role=${roleFilter}`;
-      
+
       const response = await axios.get(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -106,7 +122,7 @@ const UserManagement = () => {
   const handleShowUserModal = async (user, edit = false) => {
     setSelectedUser(user);
     setEditMode(edit);
-    
+
     if (edit) {
       setFormData({
         fullName: user.fullName,
@@ -117,7 +133,7 @@ const UserManagement = () => {
         phone: user.phone || ''
       });
     }
-    
+
     setShowUserModal(true);
   };
 
@@ -145,21 +161,39 @@ const UserManagement = () => {
 
   const handleUpdateUser = async (e) => {
     e.preventDefault();
-    
+
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${API_BASE_URL}/api/admin/users/${selectedUser._id}`, formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
 
-      if (response.data.success) {
-        setSuccessMessage('Utilisateur mis à jour avec succès');
-        fetchUsers();
-        handleCloseUserModal();
+      // If we have a selected user, update it, otherwise create a new one
+      if (selectedUser) {
+        const response = await axios.put(`${API_BASE_URL}/api/admin/users/${selectedUser._id}`, formData, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          setSuccessMessage('Utilisateur mis à jour avec succès');
+          fetchUsers();
+          handleCloseUserModal();
+        }
+      } else {
+        // Create new user
+        const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
+          ...formData,
+          password: 'ChangeMe123!' // Default password that user will need to change
+        }, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          setSuccessMessage('Utilisateur créé avec succès');
+          fetchUsers();
+          handleCloseUserModal();
+        }
       }
     } catch (err) {
-      console.error('Error updating user:', err);
-      setError(err.response?.data?.message || 'Une erreur est survenue lors de la mise à jour');
+      console.error('Error updating/creating user:', err);
+      setError(err.response?.data?.message || 'Une erreur est survenue lors de l\'opération');
     }
   };
 
@@ -167,8 +201,8 @@ const UserManagement = () => {
   const paginationItems = [];
   for (let number = 1; number <= totalPages; number++) {
     paginationItems.push(
-      <Pagination.Item 
-        key={number} 
+      <Pagination.Item
+        key={number}
         active={number === currentPage}
         onClick={() => handlePageChange(number)}
       >
@@ -182,7 +216,22 @@ const UserManagement = () => {
       <Card className="shadow mb-4">
         <Card.Header className="py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 className="m-0 font-weight-bold text-primary">Gestion des utilisateurs</h6>
-          <Button variant="primary" size="sm">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              setShowUserModal(true);
+              setEditMode(true);
+              setFormData({
+                fullName: '',
+                email: '',
+                role: 'student',
+                specialty: '',
+                bio: '',
+                phone: ''
+              });
+            }}
+          >
             <UserPlus size={16} className="me-1" />
             Ajouter un utilisateur
           </Button>
@@ -193,13 +242,13 @@ const UserManagement = () => {
               {successMessage}
             </Alert>
           )}
-          
+
           {error && (
             <Alert variant="danger" onClose={() => setError(null)} dismissible>
               {error}
             </Alert>
           )}
-          
+
           <Row className="mb-3">
             <Col md={6}>
               <Form onSubmit={handleSearch}>
@@ -232,7 +281,7 @@ const UserManagement = () => {
               </InputGroup>
             </Col>
           </Row>
-          
+
           {loading ? (
             <div className="text-center py-4">
               <Spinner animation="border" role="status">
@@ -259,8 +308,8 @@ const UserManagement = () => {
                         <td>{user.email}</td>
                         <td>
                           <Badge bg={
-                            user.role === 'admin' ? 'danger' : 
-                            user.role === 'teacher' ? 'primary' : 
+                            user.role === 'admin' ? 'danger' :
+                            user.role === 'teacher' ? 'primary' :
                             'success'
                           }>
                             {user.role}
@@ -268,24 +317,24 @@ const UserManagement = () => {
                         </td>
                         <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                         <td>
-                          <Button 
-                            variant="info" 
-                            size="sm" 
+                          <Button
+                            variant="info"
+                            size="sm"
                             className="me-1"
                             onClick={() => handleShowUserModal(user)}
                           >
                             <Eye size={16} />
                           </Button>
-                          <Button 
-                            variant="warning" 
-                            size="sm" 
+                          <Button
+                            variant="warning"
+                            size="sm"
                             className="me-1"
                             onClick={() => handleShowUserModal(user, true)}
                           >
                             <Edit size={16} />
                           </Button>
-                          <Button 
-                            variant="danger" 
+                          <Button
+                            variant="danger"
                             size="sm"
                             onClick={() => handleShowDeleteModal(user)}
                           >
@@ -303,7 +352,7 @@ const UserManagement = () => {
                   )}
                 </tbody>
               </Table>
-              
+
               <div className="d-flex justify-content-center mt-4">
                 <Pagination>
                   <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
@@ -317,7 +366,7 @@ const UserManagement = () => {
           )}
         </Card.Body>
       </Card>
-      
+
       {/* Modal de suppression */}
       <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
         <Modal.Header closeButton>
@@ -340,16 +389,19 @@ const UserManagement = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      
+
       {/* Modal d'affichage/édition d'utilisateur */}
       <Modal show={showUserModal} onHide={handleCloseUserModal} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
-            {editMode ? 'Modifier l\'utilisateur' : 'Détails de l\'utilisateur'}
+            {editMode
+              ? (selectedUser ? 'Modifier l\'utilisateur' : 'Ajouter un nouvel utilisateur')
+              : 'Détails de l\'utilisateur'
+            }
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {selectedUser && (
+          {(selectedUser || editMode) && (
             editMode ? (
               <Form onSubmit={handleUpdateUser}>
                 <Row>
@@ -378,7 +430,7 @@ const UserManagement = () => {
                     </Form.Group>
                   </Col>
                 </Row>
-                
+
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
@@ -407,7 +459,7 @@ const UserManagement = () => {
                     </Form.Group>
                   </Col>
                 </Row>
-                
+
                 <Form.Group className="mb-3">
                   <Form.Label>Spécialité</Form.Label>
                   <Form.Control
@@ -417,7 +469,7 @@ const UserManagement = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-                
+
                 <Form.Group className="mb-3">
                   <Form.Label>Biographie</Form.Label>
                   <Form.Control
@@ -428,7 +480,7 @@ const UserManagement = () => {
                     onChange={handleInputChange}
                   />
                 </Form.Group>
-                
+
                 <div className="d-flex justify-content-end">
                   <Button variant="secondary" onClick={handleCloseUserModal} className="me-2">
                     Annuler
@@ -460,10 +512,10 @@ const UserManagement = () => {
                           </span>
                         </div>
                       )}
-                      <Badge 
+                      <Badge
                         bg={
-                          selectedUser.role === 'admin' ? 'danger' : 
-                          selectedUser.role === 'teacher' ? 'primary' : 
+                          selectedUser.role === 'admin' ? 'danger' :
+                          selectedUser.role === 'teacher' ? 'primary' :
                           'success'
                         }
                         className="mt-2"
@@ -475,17 +527,17 @@ const UserManagement = () => {
                   <Col md={8}>
                     <h4>{selectedUser.fullName}</h4>
                     <p className="text-muted">{selectedUser.email}</p>
-                    
+
                     {selectedUser.phone && (
                       <p><strong>Téléphone:</strong> {selectedUser.phone}</p>
                     )}
-                    
+
                     {selectedUser.specialty && (
                       <p><strong>Spécialité:</strong> {selectedUser.specialty}</p>
                     )}
-                    
+
                     <p><strong>Date d'inscription:</strong> {new Date(selectedUser.createdAt).toLocaleDateString()}</p>
-                    
+
                     {selectedUser.bio && (
                       <>
                         <h5 className="mt-3">Biographie</h5>
@@ -503,7 +555,7 @@ const UserManagement = () => {
             <Button variant="secondary" onClick={handleCloseUserModal}>
               Fermer
             </Button>
-            <Button 
+            <Button
               variant="warning"
               onClick={() => setEditMode(true)}
             >

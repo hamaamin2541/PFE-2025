@@ -67,18 +67,19 @@ const enrollmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Create a compound index that includes itemType to ensure a user can only enroll once in each specific item
+// Create indexes for better query performance, but without uniqueness constraints
+// This allows users to enroll multiple times in the same item
 enrollmentSchema.index(
   { user: 1, itemType: 1, course: 1 },
-  { unique: true, sparse: true, partialFilterExpression: { itemType: 'course' } }
+  { sparse: true, partialFilterExpression: { itemType: 'course' } }
 );
 enrollmentSchema.index(
   { user: 1, itemType: 1, formation: 1 },
-  { unique: true, sparse: true, partialFilterExpression: { itemType: 'formation' } }
+  { sparse: true, partialFilterExpression: { itemType: 'formation' } }
 );
 enrollmentSchema.index(
   { user: 1, itemType: 1, test: 1 },
-  { unique: true, sparse: true, partialFilterExpression: { itemType: 'test' } }
+  { sparse: true, partialFilterExpression: { itemType: 'test' } }
 );
 
 export default mongoose.model('Enrollment', enrollmentSchema);

@@ -809,6 +809,9 @@ body {
   margin: var(--spacing-md);
   position: relative;
   transition: all var(--transition-normal) var(--transition-ease);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .testimonial-card:hover {
@@ -820,6 +823,9 @@ body {
   position: relative;
   padding-left: var(--spacing-xl);
   margin-bottom: var(--spacing-lg);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .testimonial-content::before {
@@ -864,6 +870,102 @@ body {
 .testimonial-rating {
   color: #f39c12;
   margin-top: var(--spacing-xs);
+}
+
+/* Styles for new testimonials */
+.new-testimonial {
+  position: relative;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 10px 30px rgba(67, 97, 238, 0.15);
+  transform: scale(1.02);
+  animation: highlight-pulse 2s infinite;
+}
+
+.new-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+  }
+}
+
+.testimonial-button-container {
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-xl) 0;
+  position: relative;
+}
+
+.testimonial-button-container::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.3), transparent);
+  top: -15px;
+}
+
+.testimonial-button-container::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(67, 97, 238, 0.3), transparent);
+  bottom: -15px;
+}
+
+.btn-testimonial {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--border-radius-full);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal) var(--transition-ease);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+  }
+}
+
+.btn-testimonial:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  background: var(--secondary-gradient);
 }
 
 /* Stats Section */
@@ -1137,4 +1239,64 @@ body {
     justify-content: center;
     margin-top: var(--spacing-sm);
   }
+}
+
+/* Reclamation Section */
+.reclamation-section {
+  padding: 5rem 0;
+  background-color: #f8f9fa;
+  position: relative;
+}
+
+.reclamation-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"%3E%3Cpath fill="%23ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"%3E%3C/path%3E%3C/svg%3E');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.reclamation-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+.reclamation-section .section-title {
+  color: var(--dark-color);
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-size: var(--font-size-3xl);
+}
+
+.reclamation-section .section-subtitle {
+  color: var(--text-color);
+  max-width: 700px;
+  margin: 0 auto 2rem;
+  font-size: var(--font-size-lg);
+}
+
+.btn-reclamation {
+  background-color: var(--warning-color);
+  color: var(--dark-color);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: var(--font-size-md);
+}
+
+.btn-reclamation:hover {
+  background-color: #e0a800;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }

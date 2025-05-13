@@ -42,7 +42,14 @@ const TeacherSettings = () => {
             // Store just the path, not the full URL
             setPreviewImage(`${API_BASE_URL}/${profileImage}`);
             localStorage.setItem('teacherProfileImage', profileImage);
-            updateTeacherData({ profileImage: profileImage });
+            console.log('Setting profile image in TeacherSettings:', profileImage);
+            updateTeacherData({
+              profileImage: profileImage,
+              fullName,
+              email,
+              phone: phone || '',
+              bio: bio || ''
+            });
           }
         }
       } catch (err) {
@@ -51,7 +58,7 @@ const TeacherSettings = () => {
     };
 
     fetchTeacherData();
-  }, []);
+  }, [updateTeacherData]);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
@@ -85,10 +92,20 @@ const TeacherSettings = () => {
         const imagePath = response.data.imagePath;
         setSuccess('Photo de profil mise à jour avec succès');
         setPreviewImage(`${API_BASE_URL}/${imagePath}`);
-        updateTeacherData({ profileImage: imagePath });
+        console.log('Profile image updated in handleImageUpload:', imagePath);
+
+        // Update the teacher data with the new image path
+        updateTeacherData({
+          profileImage: imagePath,
+          ...personalInfo // Include all personal info to ensure profile completion is calculated correctly
+        });
+
+        // Also update localStorage directly
+        localStorage.setItem('teacherProfileImage', imagePath);
       }
     } catch (err) {
       setError('Erreur lors du téléchargement de l\'image');
+      console.error('Error uploading image:', err);
     }
   };
 
@@ -109,10 +126,22 @@ const TeacherSettings = () => {
 
       if (response.data.success) {
         setSuccess('Informations personnelles mises à jour avec succès');
-        updateTeacherData({ fullName: personalInfo.fullName });
+
+        // Update all personal info in the teacher context
+        updateTeacherData({
+          fullName: personalInfo.fullName,
+          email: personalInfo.email,
+          phone: personalInfo.phone,
+          bio: personalInfo.bio,
+          // Include the profile image to ensure it's not lost
+          profileImage: localStorage.getItem('teacherProfileImage') || teacherData.profileImage
+        });
+
+        console.log('Personal info updated:', personalInfo);
       }
     } catch (err) {
       setError('Erreur lors de la mise à jour des informations');
+      console.error('Error updating personal info:', err);
     } finally {
       setLoading(false);
     }

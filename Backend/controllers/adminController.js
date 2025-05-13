@@ -276,16 +276,14 @@ export const updateUser = async (req, res) => {
 // Supprimer un utilisateur
 export const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const result = await User.findByIdAndDelete(req.params.id);
 
-    if (!user) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: 'Utilisateur non trouvé'
       });
     }
-
-    await user.remove();
 
     res.status(200).json({
       success: true,

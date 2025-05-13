@@ -88,6 +88,9 @@ const PurchaseForm = ({ item, itemType = 'course', onPurchaseComplete, onCancel 
       }
 
       try {
+        // Nous ne vérifions plus si l'utilisateur est déjà inscrit
+        // pour permettre des achats multiples du même contenu
+
         // Log the request data for debugging
         console.log('Purchase request data:', {
           itemId: item._id,
@@ -119,17 +122,10 @@ const PurchaseForm = ({ item, itemType = 'course', onPurchaseComplete, onCancel 
         // Log the full error for debugging
         console.error('Purchase error details:', err);
 
-        // Handle specific error responses from the server
+        // Handle error responses from the server
         if (err.response && err.response.data) {
           console.log('Server error response:', err.response.data);
           setError(err.response.data.message || 'Une erreur est survenue lors de l\'achat');
-
-          // If the user is already enrolled, we can still consider it a success
-          if (err.response.data.message && err.response.data.message.includes('already enrolled')) {
-            setTimeout(() => {
-              onPurchaseComplete();
-            }, 2000); // Show the error message for 2 seconds, then proceed
-          }
         } else {
           setError('Une erreur de connexion est survenue. Veuillez réessayer.');
         }

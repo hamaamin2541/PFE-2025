@@ -37,6 +37,7 @@ export const TeacherProvider = ({ children }) => {
     return completionPercentage;
   };
 
+  // Fetch teacher data on component mount and when token changes
   useEffect(() => {
     const fetchTeacherData = async () => {
       const token = localStorage.getItem('token');
@@ -52,6 +53,7 @@ export const TeacherProvider = ({ children }) => {
       }
 
       try {
+        console.log('Fetching teacher profile data...');
         const response = await axios.get(`${API_BASE_URL}/api/users/teacher-profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -68,17 +70,21 @@ export const TeacherProvider = ({ children }) => {
           // Store the completion percentage in localStorage
           localStorage.setItem('profileCompletionPercentage', completionPercentage.toString());
 
-          setTeacherData(prev => ({
-            ...prev,
-            ...updatedData
-          }));
-
           // Ensure consistent image URL format
           if (response.data.data.profileImage) {
             // Store just the path, not the full URL
             const imagePath = response.data.data.profileImage;
             localStorage.setItem('teacherProfileImage', imagePath);
+            updatedData.profileImage = imagePath;
+            console.log('Profile image updated:', imagePath);
           }
+
+          setTeacherData(prev => ({
+            ...prev,
+            ...updatedData
+          }));
+
+          console.log('Teacher data updated:', updatedData);
         }
       } catch (error) {
         // Only log error if it's not a 403 (forbidden) error for non-teachers
@@ -93,6 +99,11 @@ export const TeacherProvider = ({ children }) => {
     };
 
     fetchTeacherData();
+
+    // Also fetch data when the component mounts
+    const intervalId = setInterval(fetchTeacherData, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(intervalId); // Clean up on unmount
   }, []);
 
   const updateTeacherData = (data) => {
@@ -102,6 +113,7 @@ export const TeacherProvider = ({ children }) => {
       // Store just the path for profile image, not the full URL
       if (data.profileImage) {
         localStorage.setItem('teacherProfileImage', data.profileImage);
+        console.log('Profile image updated in updateTeacherData:', data.profileImage);
       }
 
       // Recalculate profile completion percentage
@@ -110,9 +122,35 @@ export const TeacherProvider = ({ children }) => {
 
       // Store the completion percentage in localStorage
       localStorage.setItem('profileCompletionPercentage', completionPercentage.toString());
+      console.log('Profile completion updated:', completionPercentage);
 
       return newData;
     });
+
+    // Force a refresh of the teacher data from the server after updating
+    setTimeout(async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await axios.get(`${API_BASE_URL}/api/users/teacher-profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          const updatedData = { ...response.data.data };
+          const completionPercentage = calculateProfileCompletion(updatedData);
+          updatedData.profileCompletionPercentage = completionPercentage;
+
+          setTeacherData(prev => ({
+            ...prev,
+            ...updatedData
+          }));
+        }
+      } catch (error) {
+        console.error('Error refreshing teacher data:', error);
+      }
+    }, 1000); // Wait 1 second before refreshing
   };
 
   return (

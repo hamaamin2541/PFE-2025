@@ -10,7 +10,8 @@ import {
   Image,
   Modal,
   Form,
-  Dropdown
+  Dropdown,
+  Alert
 } from 'react-bootstrap';
 import {
   BookOpen,
@@ -29,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTeacher } from '../../context/TeacherContext';
 import { API_BASE_URL } from '../../config/api';
 import './DashboardTeacher.css';
+import { authAxios, isAuthenticated, isTeacher } from '../../utils/authUtils';
 import { TeacherAnalytics } from './TeacherAnalytics';
 import TeacherMessages from './TeacherMessages';
 import AddCourse from './AddCourse';
@@ -40,7 +42,7 @@ import TeacherContent from './TeacherContent';
 import TeacherSettings from './TeacherSettings';
 
 const DashboardTeacher = () => {
-  const { teacherData } = useTeacher();
+  const { teacherData, updateTeacherData } = useTeacher();
   const [activeTab, setActiveTab] = useState('courses');
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -48,30 +50,62 @@ const DashboardTeacher = () => {
     avgRating: 0,
     coursesPublished: 0
   });
+  const [authError, setAuthError] = useState(null);
   const navigate = useNavigate();
+
+  // Force refresh of teacher data when dashboard loads
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const storedImage = localStorage.getItem('teacherProfileImage');
+      const storedPercentage = localStorage.getItem('profileCompletionPercentage');
+
+      if (storedImage) {
+        updateTeacherData({
+          profileImage: storedImage,
+          profileCompletionPercentage: parseInt(storedPercentage || '0')
+        });
+      }
+    }
+  }, [updateTeacherData]);
+
+  // Vérifier l'authentification et le rôle au chargement du composant
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      setAuthError('Vous devez être connecté pour accéder à cette page');
+      setTimeout(() => navigate('/SeConnecter'), 2000);
+      return;
+    }
+
+    if (!isTeacher()) {
+      setAuthError('Vous devez être un enseignant pour accéder à cette page');
+      setTimeout(() => navigate('/Accueil'), 2000);
+      return;
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/courses/teacher/analytics`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        // Vérifier si l'utilisateur est connecté et est un enseignant
+        if (!isAuthenticated() || !isTeacher()) {
+          console.error('User is not authenticated or not a teacher');
+          navigate('/SeConnecter');
+          return;
+        }
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setStats({
-              totalStudents: data.data.totalStudents || 0,
-              totalEarnings: data.data.totalRevenue || 0,
-              avgRating: data.data.averageRating || 0,
-              coursesPublished: (data.data.totalCourses || 0) +
-                               (data.data.totalTests || 0) +
-                               (data.data.totalFormations || 0)
-            });
-          }
+        const api = authAxios();
+        const response = await api.get(`${API_BASE_URL}/api/courses/teacher/analytics`);
+
+        if (response.data.success) {
+          setStats({
+            totalStudents: response.data.data.totalStudents || 0,
+            totalEarnings: response.data.data.totalRevenue || 0,
+            avgRating: response.data.data.averageRating || 0,
+            coursesPublished: (response.data.data.totalCourses || 0) +
+                             (response.data.data.totalTests || 0) +
+                             (response.data.data.totalFormations || 0)
+          });
         }
       } catch (error) {
         console.error('Error fetching teacher stats:', error);
@@ -82,11 +116,16 @@ const DashboardTeacher = () => {
           avgRating: 0,
           coursesPublished: 0
         });
+
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          // Rediriger vers la page de connexion si l'authentification a échoué
+          navigate('/SeConnecter');
+        }
       }
     };
 
     fetchStats();
-  }, []);
+  }, [navigate]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -111,6 +150,20 @@ const DashboardTeacher = () => {
     }
   };
 
+  // Afficher un message d'erreur si l'authentification échoue
+  if (authError) {
+    return (
+      <Container className="mt-5">
+        <Alert variant="danger">
+          {authError}
+          <div className="mt-3">
+            Redirection en cours...
+          </div>
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container fluid className="teacher-dashboard px-0">
       <Row className="g-0">
@@ -132,7 +185,9 @@ const DashboardTeacher = () => {
                 style={{ objectFit: 'cover' }}
                 onError={(e) => {
                   e.target.src = '/images/default-profile.jpg';
+                  console.log('Image load error, using default image');
                 }}
+                onLoad={() => console.log('Profile image loaded successfully')}
               />
             </div>
             <h5>{teacherData.fullName || 'Loading...'}</h5>
@@ -146,12 +201,12 @@ const DashboardTeacher = () => {
                 <small className="text-white">{teacherData.profileCompletionPercentage || 0}%</small>
               </div>
               <ProgressBar
-                now={teacherData.profileCompletionPercentage || 0}
-                variant={teacherData.profileCompletionPercentage === 100 ? "success" : "info"}
+                now={parseInt(teacherData.profileCompletionPercentage) || 0}
+                variant={parseInt(teacherData.profileCompletionPercentage) === 100 ? "success" : "info"}
                 className="profile-progress"
                 style={{ height: '8px' }}
               />
-              {teacherData.profileCompletionPercentage < 100 && (
+              {parseInt(teacherData.profileCompletionPercentage) < 100 && (
                 <small className="text-white-50 mt-1 d-block">
                   Complétez votre profil dans Paramètres
                 </small>

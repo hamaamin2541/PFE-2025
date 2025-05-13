@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Row, Col, Badge, Dropdown, Modal, Alert, Tabs, Tab } from 'react-bootstrap';
+import { Card, Button, Row, Col, Badge, Dropdown, Modal, Alert, Tabs, Tab, Spinner } from 'react-bootstrap';
 import { BookOpen, MoreVertical, Edit, Trash2, GraduationCap, ClipboardCheck, Eye } from 'lucide-react';
-import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
+import { authAxios, isAuthenticated, isTeacher } from '../../utils/authUtils';
 
 export const TeacherContent = () => {
   const [courses, setCourses] = useState([]);
@@ -21,19 +21,21 @@ export const TeacherContent = () => {
     const fetchContent = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
+
+        // Vérifier si l'utilisateur est connecté et est un enseignant
+        if (!isAuthenticated() || !isTeacher()) {
+          console.error('User is not authenticated or not a teacher');
+          navigate('/SeConnecter');
+          return;
+        }
+
+        const api = authAxios();
 
         // Fetch all content types in parallel
         const [coursesResponse, testsResponse, formationsResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/courses/teacher-courses`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          axios.get(`${API_BASE_URL}/api/tests/teacher/tests`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          axios.get(`${API_BASE_URL}/api/formations/teacher/formations`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
+          api.get(`${API_BASE_URL}/api/courses/teacher-courses`),
+          api.get(`${API_BASE_URL}/api/tests/teacher/tests`),
+          api.get(`${API_BASE_URL}/api/formations/teacher/formations`)
         ]);
 
         console.log('Courses:', coursesResponse.data);
@@ -45,17 +47,21 @@ export const TeacherContent = () => {
         setFormations(formationsResponse.data.data || []);
       } catch (error) {
         console.error('Error fetching content:', error);
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          // Rediriger vers la page de connexion si l'authentification a échoué
+          navigate('/SeConnecter');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchContent();
-  }, []);
+  }, [navigate]);
 
   const handleDelete = async (id, type) => {
     try {
-      const token = localStorage.getItem('token');
+      const api = authAxios();
       let endpoint;
 
       switch (type) {
@@ -72,9 +78,7 @@ export const TeacherContent = () => {
           throw new Error('Invalid content type');
       }
 
-      const response = await axios.delete(endpoint, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.delete(endpoint);
 
       if (response.data.success) {
         // Update the state based on the type
@@ -97,6 +101,11 @@ export const TeacherContent = () => {
         error.response?.data?.message ||
         `Une erreur est survenue lors de la suppression du ${type}`
       );
+
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        // Rediriger vers la page de connexion si l'authentification a échoué
+        navigate('/SeConnecter');
+      }
     }
   };
 

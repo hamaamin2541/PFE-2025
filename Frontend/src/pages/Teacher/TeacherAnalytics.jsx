@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Card, OverlayTrigger, Tooltip, Dropdown } from 'react-bootstrap';
+import { Card, OverlayTrigger, Tooltip, Dropdown, Button, ButtonGroup } from 'react-bootstrap';
 import {
   Users, BookOpen, DollarSign, Star, BarChart2, TrendingUp,
   ClipboardCheck, GraduationCap, Eye, Calendar, PieChart,
-  MoreHorizontal, Download, RefreshCw, HelpCircle, Filter
+  Download, RefreshCw, Filter
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
@@ -71,72 +71,136 @@ export const TeacherAnalytics = () => {
     contentDistribution: []
   });
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/courses/teacher/analytics`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+  // Filter states for different charts
+  const [enrollmentPeriod, setEnrollmentPeriod] = useState('month'); // 'month' or 'year'
+  const [revenuePeriod, setRevenuePeriod] = useState('3months'); // '3months', '6months', or 'year'
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+  // Function to fetch analytics data with optional filters
+  const fetchAnalytics = async (params = {}) => {
+    try {
+      setIsRefreshing(true);
+      const token = localStorage.getItem('token');
+
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      if (params.enrollmentPeriod) queryParams.append('enrollmentPeriod', params.enrollmentPeriod);
+      if (params.revenuePeriod) queryParams.append('revenuePeriod', params.revenuePeriod);
+
+      const url = `${API_BASE_URL}/api/courses/teacher/analytics${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
 
-        const { data } = await response.json();
-
-        // Update stats with data from the API
-        setStats({
-          totalStudents: data.totalStudents || 0,
-          totalCourses: data.totalCourses || 0,
-          totalTests: data.totalTests || 0,
-          totalFormations: data.totalFormations || 0,
-          totalRevenue: data.totalRevenue || 0,
-          averageRating: parseFloat(data.averageRating) || 0,
-          totalViews: data.totalViews || 0,
-          courseViews: data.courseViews || [],
-          isLoading: false,
-          error: null
-        });
-
-        // Update chart data with data from the API
-        setChartData({
-          revenueData: data.revenueData || [],
-          enrollmentData: data.enrollmentData || [],
-          contentDistribution: data.contentDistribution || []
-        });
-
-        console.log('Analytics data loaded:', data);
-      } catch (error) {
-        console.error('Failed to fetch analytics:', error);
-        setStats(prev => ({
-          ...prev,
-          isLoading: false,
-          error: error.message
-        }));
-
-        // Set fallback data for charts if API call fails
-        setChartData({
-          revenueData: Array(12).fill(0).map((_, i) => ({
-            name: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][i],
-            revenue: 0
-          })),
-          enrollmentData: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => ({
-            name: day,
-            enrollments: 0
-          })),
-          contentDistribution: [
-            { name: 'Cours', value: 0 },
-            { name: 'Tests', value: 0 },
-            { name: 'Formations', value: 0 }
-          ]
-        });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
+      const { data } = await response.json();
+
+      // Update stats with data from the API
+      setStats({
+        totalStudents: data.totalStudents || 0,
+        totalCourses: data.totalCourses || 0,
+        totalTests: data.totalTests || 0,
+        totalFormations: data.totalFormations || 0,
+        totalRevenue: data.totalRevenue || 0,
+        averageRating: parseFloat(data.averageRating) || 0,
+        totalViews: data.totalViews || 0,
+        courseViews: data.courseViews || [],
+        isLoading: false,
+        error: null
+      });
+
+      // Update chart data with data from the API
+      setChartData({
+        revenueData: data.revenueData || [],
+        enrollmentData: data.enrollmentData || [],
+        contentDistribution: data.contentDistribution || []
+      });
+
+      console.log('Analytics data loaded:', data);
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+      setStats(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error.message
+      }));
+
+      // Set fallback data for charts if API call fails
+      setChartData({
+        revenueData: Array(12).fill(0).map((_, i) => ({
+          name: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][i],
+          revenue: 0
+        })),
+        enrollmentData: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => ({
+          name: day,
+          enrollments: 0
+        })),
+        contentDistribution: [
+          { name: 'Cours', value: 0 },
+          { name: 'Tests', value: 0 },
+          { name: 'Formations', value: 0 }
+        ]
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Function to handle refreshing the data
+  const handleRefresh = () => {
+    fetchAnalytics({
+      enrollmentPeriod,
+      revenuePeriod
+    });
+  };
+
+  // Function to handle exporting course views data
+  const handleExportCourseViews = () => {
+    // Create CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Titre du cours,Nombre de vues\n";
+
+    stats.courseViews.forEach(course => {
+      csvContent += `"${course.title}",${course.views}\n`;
+    });
+
+    // Create download link and trigger download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `vues_cours_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Function to update enrollment period and fetch data
+  const handleEnrollmentPeriodChange = (period) => {
+    setEnrollmentPeriod(period);
+    fetchAnalytics({
+      enrollmentPeriod: period,
+      revenuePeriod
+    });
+  };
+
+  // Function to update revenue period and fetch data
+  const handleRevenuePeriodChange = (period) => {
+    setRevenuePeriod(period);
+    fetchAnalytics({
+      enrollmentPeriod,
+      revenuePeriod: period
+    });
+  };
+
+  useEffect(() => {
+    // Initial data fetch
     fetchAnalytics();
   }, []);
 
@@ -305,16 +369,23 @@ export const TeacherAnalytics = () => {
           <div className="chart-card-header">
             <div className="chart-card-title">Vues des cours</div>
             <div className="chart-card-actions">
-              <Dropdown>
-                <Dropdown.Toggle variant="light" size="sm" id="dropdown-views">
-                  <MoreHorizontal size={16} />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item><Download size={14} className="me-2" /> Exporter</Dropdown.Item>
-                  <Dropdown.Item><RefreshCw size={14} className="me-2" /> Actualiser</Dropdown.Item>
-                  <Dropdown.Item><HelpCircle size={14} className="me-2" /> Aide</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+              <ButtonGroup size="sm">
+                <Button
+                  variant="outline-primary"
+                  onClick={handleExportCourseViews}
+                  disabled={isRefreshing || stats.courseViews.length === 0}
+                >
+                  <Download size={14} className="me-1" /> Exporter
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw size={14} className={`me-1 ${isRefreshing ? 'spin' : ''}`} />
+                  {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+                </Button>
+              </ButtonGroup>
             </div>
           </div>
           <div className="chart-card-body" style={{ position: 'relative' }}>
@@ -322,7 +393,7 @@ export const TeacherAnalytics = () => {
             {!stats.isLoading && stats.courseViews && stats.courseViews.length > 0 ? (
               <div className="course-views-chart">
                 {stats.courseViews.map((course, index) => (
-                  <div key={course.id} className="course-view-item">
+                  <div key={course.id || index} className="course-view-item">
                     <div className="course-view-header">
                       <div className="course-view-title">{course.title}</div>
                       <div className="course-view-count">{course.views} vues</div>
@@ -356,21 +427,27 @@ export const TeacherAnalytics = () => {
           <div className="chart-card-header">
             <div className="chart-card-title">Inscriptions récentes</div>
             <div className="chart-card-actions">
-              <Dropdown>
-                <Dropdown.Toggle variant="light" size="sm" id="dropdown-enrollments">
-                  <Filter size={16} />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item>Cette semaine</Dropdown.Item>
-                  <Dropdown.Item>Ce mois</Dropdown.Item>
-                  <Dropdown.Item>Cette année</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+              <ButtonGroup size="sm">
+                <Button
+                  variant={enrollmentPeriod === 'month' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleEnrollmentPeriodChange('month')}
+                  disabled={isRefreshing}
+                >
+                  Ce mois
+                </Button>
+                <Button
+                  variant={enrollmentPeriod === 'year' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleEnrollmentPeriodChange('year')}
+                  disabled={isRefreshing}
+                >
+                  Cette année
+                </Button>
+              </ButtonGroup>
             </div>
           </div>
           <div className="chart-card-body" style={{ position: 'relative' }}>
-            {stats.isLoading && <LoadingOverlay message="Chargement des inscriptions..." />}
-            {!stats.isLoading && chartData.enrollmentData.length > 0 ? (
+            {(stats.isLoading || isRefreshing) && <LoadingOverlay message="Chargement des inscriptions..." />}
+            {!stats.isLoading && !isRefreshing && chartData.enrollmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData.enrollmentData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -391,7 +468,7 @@ export const TeacherAnalytics = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              !stats.isLoading && (
+              !stats.isLoading && !isRefreshing && (
                 <PlaceholderChart
                   icon={BarChart2}
                   title="Aucune inscription récente"
@@ -408,21 +485,34 @@ export const TeacherAnalytics = () => {
           <div className="chart-card-header">
             <div className="chart-card-title">Revenus mensuels</div>
             <div className="chart-card-actions">
-              <Dropdown>
-                <Dropdown.Toggle variant="light" size="sm" id="dropdown-revenue">
-                  <Calendar size={16} />
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item>3 derniers mois</Dropdown.Item>
-                  <Dropdown.Item>6 derniers mois</Dropdown.Item>
-                  <Dropdown.Item>Année complète</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+              <ButtonGroup size="sm">
+                <Button
+                  variant={revenuePeriod === '3months' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleRevenuePeriodChange('3months')}
+                  disabled={isRefreshing}
+                >
+                  3 derniers mois
+                </Button>
+                <Button
+                  variant={revenuePeriod === '6months' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleRevenuePeriodChange('6months')}
+                  disabled={isRefreshing}
+                >
+                  6 derniers mois
+                </Button>
+                <Button
+                  variant={revenuePeriod === 'year' ? 'primary' : 'outline-primary'}
+                  onClick={() => handleRevenuePeriodChange('year')}
+                  disabled={isRefreshing}
+                >
+                  Année complète
+                </Button>
+              </ButtonGroup>
             </div>
           </div>
           <div className="chart-card-body" style={{ position: 'relative' }}>
-            {stats.isLoading && <LoadingOverlay message="Chargement des revenus..." />}
-            {!stats.isLoading && chartData.revenueData.length > 0 ? (
+            {(stats.isLoading || isRefreshing) && <LoadingOverlay message="Chargement des revenus..." />}
+            {!stats.isLoading && !isRefreshing && chartData.revenueData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData.revenueData}>
                   <defs>
@@ -449,7 +539,7 @@ export const TeacherAnalytics = () => {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              !stats.isLoading && (
+              !stats.isLoading && !isRefreshing && (
                 <PlaceholderChart
                   icon={DollarSign}
                   title="Aucun revenu enregistré"
