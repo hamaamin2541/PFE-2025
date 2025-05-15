@@ -6,25 +6,25 @@ const enrollmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  // One of these three fields will be populated based on the itemType
   course: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
+    ref: 'Course',
+    
   },
   formation: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Formation'
+    ref: 'Formation',
+ 
   },
   test: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Test'
+    ref: 'Test',
+    
   },
-  // Type of item enrolled in
   itemType: {
     type: String,
     enum: ['course', 'formation', 'test'],
-    required: true,
-    default: 'course'
+    required: true
   },
   enrollmentDate: {
     type: Date,
@@ -67,19 +67,8 @@ const enrollmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Create indexes for better query performance, but without uniqueness constraints
-// This allows users to enroll multiple times in the same item
-enrollmentSchema.index(
-  { user: 1, itemType: 1, course: 1 },
-  { sparse: true, partialFilterExpression: { itemType: 'course' } }
-);
-enrollmentSchema.index(
-  { user: 1, itemType: 1, formation: 1 },
-  { sparse: true, partialFilterExpression: { itemType: 'formation' } }
-);
-enrollmentSchema.index(
-  { user: 1, itemType: 1, test: 1 },
-  { sparse: true, partialFilterExpression: { itemType: 'test' } }
-);
 
-export default mongoose.model('Enrollment', enrollmentSchema);
+
+const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
+
+export default Enrollment;

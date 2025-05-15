@@ -2,7 +2,7 @@ import express from 'express';
 import { protect } from '../middleware/auth.js';
 import {
   getUserEnrollments,
-  enrollInCourse,
+  enroll,
   updateEnrollmentProgress,
   getEnrollment
 } from '../controllers/enrollmentController.js';
@@ -16,7 +16,7 @@ router.get('/', protect, getUserEnrollments);
 router.get('/:enrollmentId', protect, getEnrollment);
 
 // Enroll in a course
-router.post('/', protect, enrollInCourse);
+router.post('/', protect, enroll);
 
 // Update enrollment progress
 router.put('/:enrollmentId', protect, updateEnrollmentProgress);

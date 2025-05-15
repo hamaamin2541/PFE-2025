@@ -5,9 +5,11 @@ import morgan from 'morgan';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+dotenv.config();
 import connectDB from './config/db.js';
 import { errorHandler } from './utils/errorHandler.js'; // Import custom error handler
-
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -89,6 +91,28 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/contact', contactMessageRoutes);
 app.use('/api/teacher-ratings', teacherRatingRoutes);
 app.use('/api/testimonials', testimonialRoutes);
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: { name: 'Produit de test' },
+          unit_amount: 1000,       
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: 'http://localhost:5173/success',
+      cancel_url:  'http://localhost:5173/cancel',
+    });
+    res.json({ id: session.id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Impossible de créer la session' });
+  }
+});
 
 // Global error handler
 app.use((err, req, res, next) => {

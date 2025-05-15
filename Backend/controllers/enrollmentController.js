@@ -1,6 +1,9 @@
+import mongoose from 'mongoose';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
 import Enrollment from '../models/Enrollment.js';
+import Formation from '../models/Formation.js';
+import Test from '../models/Test.js';
 
 // Get all enrollments for the current user
 export const getUserEnrollments = async (req, res) => {
@@ -45,161 +48,64 @@ export const getUserEnrollments = async (req, res) => {
 };
 
 // Enroll in a course, formation, or test
-export const enrollInCourse = async (req, res) => {
+const ITEM_MODELS = {
+  course:    Course,
+  formation: Formation,
+  test:      Test
+};
+
+// Pour savoir dans quel champ de l’item on pousse l’utilisateur
+const ITEM_PUSH_FIELD = {
+  course:    'students',
+  formation: 'students',
+  test:      'participants'
+};
+
+
+export const enroll = async (req, res) => {
   try {
-    console.log('Enrollment request body:', req.body);
-    const { itemId, itemType = 'course' } = req.body;
+    const { itemId, itemType } = req.body;
+    const userId = req.user._id;
 
-    if (!itemId) {
-      console.log('Missing itemId in request');
+    // 1. Validation basique
+    const validTypes = ['course','formation','test'];
+    if (!itemId || !validTypes.includes(itemType)) {
       return res.status(400).json({
         success: false,
-        message: 'Item ID is required'
+        message: 'itemId et itemType (course|formation|test) sont requis'
       });
     }
 
-    // Validate item type
-    if (!['course', 'formation', 'test'].includes(itemType)) {
-      console.log('Invalid itemType:', itemType);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid item type. Must be course, formation, or test'
-      });
-    }
-
-    console.log(`Processing enrollment for ${itemType} with ID: ${itemId}`);
-    console.log('User ID:', req.user._id);
-
-    let item;
-    let existingEnrollment;
-    let enrollmentData = {
-      user: req.user._id,
-      enrollmentDate: Date.now(),
-      progress: 0,
-      status: 'active',
-      itemType
+    // 2. Filtre AND : user + itemType + champ correspondant
+    const filter = {
+      user:       userId,
+      itemType,             // s’assure de ne pas confondre plusieurs types
+      [itemType]: itemId    // ex. { test: ObjectId(...) }
     };
 
-    // Check if item exists based on type
-    switch (itemType) {
-      case 'course':
-        item = await Course.findById(itemId);
-        if (!item) {
-          return res.status(404).json({
-            success: false,
-            message: 'Course not found'
-          });
-        }
-        enrollmentData.course = itemId;
-        break;
-
-      case 'formation':
-        console.log('Processing formation enrollment');
-        // Import Formation model dynamically to avoid circular dependencies
-        const Formation = (await import('../models/Formation.js')).default;
-        console.log('Formation model imported');
-
-        try {
-          item = await Formation.findById(itemId);
-          console.log('Formation query result:', item ? 'Found' : 'Not found');
-
-          if (!item) {
-            console.log(`Formation with ID ${itemId} not found`);
-            return res.status(404).json({
-              success: false,
-              message: 'Formation not found'
-            });
-          }
-
-          console.log('Formation found:', item.title);
-          enrollmentData.formation = itemId;
-        } catch (formationError) {
-          console.error('Error in formation processing:', formationError);
-          return res.status(500).json({
-            success: false,
-            message: 'Error processing formation enrollment'
-          });
-        }
-        break;
-
-      case 'test':
-        // Import Test model dynamically to avoid circular dependencies
-        const Test = (await import('../models/Test.js')).default;
-        item = await Test.findById(itemId);
-        if (!item) {
-          return res.status(404).json({
-            success: false,
-            message: 'Test not found'
-          });
-        }
-        enrollmentData.test = itemId;
-        break;
-    }
-
-    // We no longer check for existing enrollments to allow multiple purchases
-
-    try {
-      // Create enrollment
-      const enrollment = await Enrollment.create(enrollmentData);
-
-      // Update user's enrollments
-      await User.findByIdAndUpdate(
-        req.user._id,
-        { $push: { enrollments: enrollment._id } }
-      );
-
-      // Update the item's students/participants array based on item type
-      // Nous utilisons $push au lieu de $addToSet pour permettre des inscriptions multiples
-      switch (itemType) {
-        case 'course':
-          // Add student to course's students array
-          await Course.findByIdAndUpdate(
-            itemId,
-            { $push: { students: req.user._id } }
-          );
-          break;
-
-        case 'formation':
-          // Add student to formation's students array
-          const Formation = (await import('../models/Formation.js')).default;
-          await Formation.findByIdAndUpdate(
-            itemId,
-            { $push: { students: req.user._id } }
-          );
-          break;
-
-        case 'test':
-          // Add student to test's participants array
-          const Test = (await import('../models/Test.js')).default;
-          await Test.findByIdAndUpdate(
-            itemId,
-            {
-              $push: {
-                participants: {
-                  user: req.user._id,
-                  score: 0,
-                  completedAt: null
-                }
-              }
-            }
-          );
-          break;
-      }
-
-      res.status(201).json({
-        success: true,
-        data: enrollment,
-        message: `Successfully enrolled in the ${itemType}`
+    let enrollment = await Enrollment.findOne(filter);
+    if (enrollment) {
+      return res.status(200).json({
+        success: false,
+        enrolled: false,
+        message: 'Vous êtes déjà inscrit à cet item',
       });
-    } catch (err) {
-      // Re-throw for the outer catch block
-      throw err;
     }
-  } catch (error) {
-    console.error(`Error enrolling in ${req.body.itemType || 'course'}:`, error);
-    res.status(500).json({
+
+    // 4. S’il n’existe pas, on crée un nouvel enrollment
+    enrollment = await Enrollment.create(filter);
+
+    return res.status(201).json({
+      success: true,
+      enrolled: false,
+      enrollment
+    });
+  }
+  catch (err) {
+    console.error('Enrollment error:', err);
+    return res.status(500).json({
       success: false,
-      message: 'An error occurred during enrollment. Please try again.'
+      message: 'Erreur serveur'
     });
   }
 };
