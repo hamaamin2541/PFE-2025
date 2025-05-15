@@ -25,6 +25,7 @@ import complaintRoutes from './routes/complaintRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 import teacherRatingRoutes from './routes/teacherRatingRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js';
+import exportRoutes from './routes/exportRoutes.js';
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/contact', contactMessageRoutes);
 app.use('/api/teacher-ratings', teacherRatingRoutes);
 app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/exports', exportRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
@@ -99,7 +101,7 @@ app.post('/create-checkout-session', async (req, res) => {
         price_data: {
           currency: 'eur',
           product_data: { name: 'Produit de test' },
-          unit_amount: 1000,       
+          unit_amount: 1000,
         },
         quantity: 1,
       }],

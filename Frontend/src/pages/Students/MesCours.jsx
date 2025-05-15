@@ -105,8 +105,15 @@ const MesCours = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleContinueCourse = (enrollmentId) => {
-    navigate(`/course/${enrollmentId}`);
+  const handleContinueCourse = (enrollment) => {
+    // Navigate to the appropriate route based on item type
+    if (enrollment.itemType === 'course') {
+      navigate(`/course/${enrollment._id}`);
+    } else if (enrollment.itemType === 'formation') {
+      navigate(`/formation/${enrollment._id}`);
+    } else if (enrollment.itemType === 'test') {
+      navigate(`/test/${enrollment._id}`);
+    }
   };
 
   return (
@@ -273,7 +280,7 @@ const MesCours = () => {
                         <Button
                           variant={enrollment.status === 'completed' ? 'outline-success' : 'primary'}
                           className="mt-auto btn-animated d-flex align-items-center justify-content-center"
-                          onClick={() => handleContinueCourse(enrollment._id)}
+                          onClick={() => handleContinueCourse(enrollment)}
                         >
                           {enrollment.status === 'completed' ? (
                             <>

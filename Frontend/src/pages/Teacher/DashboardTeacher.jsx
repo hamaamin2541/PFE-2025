@@ -53,21 +53,26 @@ const DashboardTeacher = () => {
   const [authError, setAuthError] = useState(null);
   const navigate = useNavigate();
 
-  // Force refresh of teacher data when dashboard loads
+  // Load stored teacher data when dashboard loads
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       const storedImage = localStorage.getItem('teacherProfileImage');
       const storedPercentage = localStorage.getItem('profileCompletionPercentage');
 
-      if (storedImage) {
+      // Only update if the data is different from what's already in context
+      if (storedImage &&
+          (teacherData.profileImage !== storedImage ||
+           teacherData.profileCompletionPercentage !== parseInt(storedPercentage || '0'))) {
+
+        console.log('Loading stored teacher data from localStorage');
         updateTeacherData({
           profileImage: storedImage,
           profileCompletionPercentage: parseInt(storedPercentage || '0')
         });
       }
     }
-  }, [updateTeacherData]);
+  }, []); // Remove updateTeacherData from dependencies
 
   // Vérifier l'authentification et le rôle au chargement du composant
   useEffect(() => {

@@ -25,6 +25,9 @@ import DashboardTeacher from './pages/Teacher/DashboardTeacher';
 
 // Pages étudiant
 import MesCours from './pages/Students/MesCours';
+import CourseView from './pages/Students/CourseView';
+import FormationView from './pages/Students/FormationView';
+import TestView from './pages/Students/TestView';
 import Tests from './pages/Students/Tests';
 import Messages from './pages/Students/Messages';
 import Parametres from './pages/Students/Parametres';
@@ -40,7 +43,9 @@ import AddTest from './pages/Teacher/conseiltest/AddTest';
 import EditCourse from './pages/Teacher/EditCourse';
 import EditTest from './pages/Teacher/EditTest';
 import EditFormation from './pages/Teacher/EditFormation';
-
+import Checkout from './components/Payment/Checkout';
+import Success  from './components/Payment/Success';
+import Cancel   from './components/Payment/Cancel';
 // Admin Components
 import AdminLayout from './pages/Admin/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -80,11 +85,18 @@ function App() {
                 <Route path="/Register" element={<Register />} />
                 <Route path="/dashboard-student" element={<DashboardStudent />} />
                 <Route path="/dashboard-student/complaints" element={<UserComplaints />} />
+                <Route path="/course/:enrollmentId" element={<CourseView />} />
+                <Route path="/formation/:enrollmentId" element={<FormationView />} />
+                <Route path="/test/:enrollmentId" element={<TestView />} />
                 <Route path="/dashboard-teacher" element={<DashboardTeacher />} />
                 <Route path="/dashboard-teacher/edit-course/:id" element={<EditCourse />} />
                 <Route path="/dashboard-teacher/edit-test/:id" element={<EditTest />} />
                 <Route path="/dashboard-teacher/edit-formation/:id" element={<EditFormation />} />
 
+                //yetregrlou
+            <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/success" element={<Success />} />
+                  <Route path="/cancel"  element={<Cancel />} />
                 {/* Routes d'administration */}
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Navigate to="/admin/dashboard" />} />

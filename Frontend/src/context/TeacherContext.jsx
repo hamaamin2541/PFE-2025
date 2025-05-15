@@ -106,7 +106,8 @@ export const TeacherProvider = ({ children }) => {
     return () => clearInterval(intervalId); // Clean up on unmount
   }, []);
 
-  const updateTeacherData = (data) => {
+  // Memoize the updateTeacherData function to prevent it from changing on every render
+  const updateTeacherData = React.useCallback((data) => {
     setTeacherData(prev => {
       const newData = { ...prev, ...data };
 
@@ -127,31 +128,9 @@ export const TeacherProvider = ({ children }) => {
       return newData;
     });
 
-    // Force a refresh of the teacher data from the server after updating
-    setTimeout(async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await axios.get(`${API_BASE_URL}/api/users/teacher-profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.data.success) {
-          const updatedData = { ...response.data.data };
-          const completionPercentage = calculateProfileCompletion(updatedData);
-          updatedData.profileCompletionPercentage = completionPercentage;
-
-          setTeacherData(prev => ({
-            ...prev,
-            ...updatedData
-          }));
-        }
-      } catch (error) {
-        console.error('Error refreshing teacher data:', error);
-      }
-    }, 1000); // Wait 1 second before refreshing
-  };
+    // We're removing the automatic server refresh to prevent infinite loops
+    // If a refresh is needed, components should handle it explicitly
+  }, []);
 
   return (
     <TeacherContext.Provider value={{ teacherData, updateTeacherData }}>

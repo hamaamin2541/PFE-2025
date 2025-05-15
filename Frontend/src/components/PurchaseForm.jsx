@@ -91,24 +91,57 @@ const PurchaseForm = ({ item, itemType = 'course', onPurchaseComplete, onCancel 
         // Nous ne vérifions plus si l'utilisateur est déjà inscrit
         // pour permettre des achats multiples du même contenu
 
+        // Validate item data
+        if (!item || !item._id) {
+          console.error('Invalid item data:', item);
+          setError('Données invalides. Veuillez réessayer.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Validate the item type
+        if (!['course', 'formation', 'test'].includes(itemType)) {
+          console.error('Invalid item type:', itemType);
+          setError(`Type d'élément invalide: ${itemType}`);
+          setIsSubmitting(false);
+          return;
+        }
+
         // Log the request data for debugging
         console.log('Purchase request data:', {
           itemId: item._id,
           itemType: itemType,
-          item: item
+          itemTitle: item.title
         });
 
         // Make API call to purchase the item
+        console.log(`Making API call to ${API_BASE_URL}/api/enrollments with type: ${itemType}`);
+        console.log('Item ID:', item._id);
+        console.log('Item Type:', itemType);
+
+        // Ensure we're using the correct API URL
+        const apiUrl = `${API_BASE_URL}/api/enrollments`;
+        console.log('Full API URL:', apiUrl);
+
+        // Log the token (first 10 chars only for security)
+        if (token) {
+          console.log('Token available:', token.substring(0, 10) + '...');
+        } else {
+          console.log('No token available!');
+        }
+
         const response = await axios.post(
-          `${API_BASE_URL}/api/enrollments`,
+          apiUrl,
           {
             itemId: item._id,
             itemType: itemType // 'course', 'formation', or 'test'
           },
           {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 30000 // 30 second timeout
           }
         );
 
@@ -123,10 +156,27 @@ const PurchaseForm = ({ item, itemType = 'course', onPurchaseComplete, onCancel 
         console.error('Purchase error details:', err);
 
         // Handle error responses from the server
-        if (err.response && err.response.data) {
-          console.log('Server error response:', err.response.data);
-          setError(err.response.data.message || 'Une erreur est survenue lors de l\'achat');
+        if (err.response) {
+          console.log('Server error status:', err.response.status);
+          console.log('Server error headers:', err.response.headers);
+          console.log('Server error data:', err.response.data);
+
+          if (err.response.data && err.response.data.message) {
+            setError(err.response.data.message);
+          } else if (err.response.status === 500) {
+            setError(`Erreur serveur lors de l'achat du ${itemType === 'course' ? 'cours' :
+                                                          itemType === 'formation' ? 'de la formation' :
+                                                          'du test'}. Veuillez réessayer.`);
+          } else {
+            setError(`Erreur ${err.response.status}: Une erreur est survenue lors de l'achat`);
+          }
+        } else if (err.request) {
+          // The request was made but no response was received
+          console.log('Error request:', err.request);
+          setError('Aucune réponse du serveur. Veuillez vérifier votre connexion et réessayer.');
         } else {
+          // Something happened in setting up the request
+          console.log('Error message:', err.message);
           setError('Une erreur de connexion est survenue. Veuillez réessayer.');
         }
       }

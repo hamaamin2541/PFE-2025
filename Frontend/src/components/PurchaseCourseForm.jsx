@@ -100,6 +100,7 @@ const PurchaseForm = ({ item, itemType = 'course', onPurchaseComplete, onCancel 
           }
         }
       );
+console.log(itemType);
 
       if (response.data.success) {
         // Call the onPurchaseComplete callback

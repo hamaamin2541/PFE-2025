@@ -41,15 +41,24 @@ const TeacherSettings = () => {
           if (profileImage) {
             // Store just the path, not the full URL
             setPreviewImage(`${API_BASE_URL}/${profileImage}`);
-            localStorage.setItem('teacherProfileImage', profileImage);
-            console.log('Setting profile image in TeacherSettings:', profileImage);
-            updateTeacherData({
-              profileImage: profileImage,
-              fullName,
-              email,
-              phone: phone || '',
-              bio: bio || ''
-            });
+
+            // Only update localStorage if the image has changed
+            const currentStoredImage = localStorage.getItem('teacherProfileImage');
+            if (currentStoredImage !== profileImage) {
+              localStorage.setItem('teacherProfileImage', profileImage);
+              console.log('Setting profile image in TeacherSettings:', profileImage);
+
+              // Only update teacher data if we have new information
+              if (!teacherData.profileImage || teacherData.profileImage !== profileImage) {
+                updateTeacherData({
+                  profileImage: profileImage,
+                  fullName,
+                  email,
+                  phone: phone || '',
+                  bio: bio || ''
+                });
+              }
+            }
           }
         }
       } catch (err) {
@@ -58,7 +67,8 @@ const TeacherSettings = () => {
     };
 
     fetchTeacherData();
-  }, [updateTeacherData]);
+    // Remove updateTeacherData from the dependency array to prevent infinite loops
+  }, []);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];

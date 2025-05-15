@@ -144,6 +144,16 @@ const AdminSidebar = ({ onLogout }) => {
                 <span className="sidebar-menu-text">Contact</span>
               </Link>
             </li>
+
+            <li className="sidebar-menu-item">
+              <Link
+                to="/admin/user-experiences"
+                className={`sidebar-menu-link ${isActive('/admin/user-experiences') ? 'active' : ''}`}
+              >
+                <MessageSquare size={18} className="sidebar-menu-icon" />
+                <span className="sidebar-menu-text">Expériences Utilisateurs</span>
+              </Link>
+            </li>
           </ul>
         </div>
 

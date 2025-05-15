@@ -178,7 +178,7 @@ const UserManagement = ({ newUser = false }) => {
         }
       } else {
         // Create new user
-        const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
+        const response = await axios.post(`${API_BASE_URL}/api/auth/add_newuser`, {
           ...formData,
           password: 'ChangeMe123!' // Default password that user will need to change
         }, {

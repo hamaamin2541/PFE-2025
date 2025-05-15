@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Table, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
-import { Download, FileText, Calendar, Filter, Clock, CheckCircle, XCircle, RefreshCw, Plus } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Table, Form, Alert, Spinner, Badge, Modal, Nav, Tab } from 'react-bootstrap';
+import { Download, FileText, Calendar, Filter, Clock, CheckCircle, XCircle, RefreshCw, Plus, User, Book, FileBox } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 
@@ -9,6 +9,8 @@ const ExportsManagement = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [exports, setExports] = useState([]);
+  const [studentExports, setStudentExports] = useState([]);
+  const [loadingStudentExports, setLoadingStudentExports] = useState(true);
   const [showNewExportModal, setShowNewExportModal] = useState(false);
   const [exportType, setExportType] = useState('users');
   const [dateRange, setDateRange] = useState('all');
@@ -16,19 +18,21 @@ const ExportsManagement = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState('admin');
 
   useEffect(() => {
     fetchExports();
+    fetchStudentExports();
   }, []);
 
   const fetchExports = async () => {
     try {
       setLoading(true);
-      
+
       // In a real application, this would be an API call
       // For now, we'll just simulate a delay and use mock data
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Mock data for exports
       const mockExports = [
         {
@@ -76,7 +80,7 @@ const ExportsManagement = () => {
           completedAt: null
         }
       ];
-      
+
       setExports(mockExports);
       setLoading(false);
     } catch (err) {
@@ -102,11 +106,11 @@ const ExportsManagement = () => {
   const handleGenerateExport = async () => {
     try {
       setGenerating(true);
-      
+
       // In a real application, this would be an API call
       // For now, we'll just simulate a delay
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Create a new export object
       const now = new Date();
       const newExport = {
@@ -120,14 +124,14 @@ const ExportsManagement = () => {
         createdAt: now,
         completedAt: new Date(now.getTime() + 2 * 60 * 1000) // 2 minutes later
       };
-      
+
       // Add the new export to the list
       setExports([newExport, ...exports]);
-      
+
       setSuccessMessage('Exportation générée avec succès');
       setGenerating(false);
       handleCloseNewExportModal();
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage('');
@@ -143,7 +147,7 @@ const ExportsManagement = () => {
     // In a real application, this would trigger a download
     // For now, we'll just show a success message
     setSuccessMessage(`Téléchargement de ${exportItem.name}.${exportItem.format} démarré`);
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       setSuccessMessage('');
@@ -171,15 +175,76 @@ const ExportsManagement = () => {
   const getTypeIcon = (type) => {
     switch (type) {
       case 'users':
-        return <FileText size={16} className="text-primary" />;
+        return <User size={16} className="text-primary" />;
       case 'courses':
-        return <FileText size={16} className="text-success" />;
+        return <Book size={16} className="text-success" />;
       case 'sales':
         return <FileText size={16} className="text-warning" />;
       case 'complaints':
         return <FileText size={16} className="text-danger" />;
+      case 'course':
+        return <Book size={16} className="text-primary" />;
+      case 'formation':
+        return <FileBox size={16} className="text-warning" />;
+      case 'test':
+        return <FileText size={16} className="text-info" />;
       default:
         return <FileText size={16} />;
+    }
+  };
+
+  const fetchStudentExports = async () => {
+    try {
+      setLoadingStudentExports(true);
+
+      // In a real application, this would be an API call
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setLoadingStudentExports(false);
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/exports`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setStudentExports(response.data.data);
+      } else {
+        console.error('Error fetching student exports:', response.data);
+      }
+
+      setLoadingStudentExports(false);
+    } catch (err) {
+      console.error('Error fetching student exports:', err);
+      setLoadingStudentExports(false);
+    }
+  };
+
+  const handleDownloadStudentExport = async (exportId) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setError('Vous devez être connecté pour télécharger ce fichier');
+        return;
+      }
+
+      // Open in a new tab with token in query params
+      window.open(`${API_BASE_URL}/api/exports/download/${exportId}?token=${token}`, '_blank');
+
+      setSuccessMessage('Téléchargement démarré');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      console.error('Error downloading export:', err);
+      setError('Erreur lors du téléchargement de l\'exportation');
     }
   };
 
@@ -199,83 +264,171 @@ const ExportsManagement = () => {
               {successMessage}
             </Alert>
           )}
-          
+
           {error && (
             <Alert variant="danger" onClose={() => setError(null)} dismissible>
               {error}
             </Alert>
           )}
-          
-          {loading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Chargement...</span>
-              </Spinner>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover>
-                <thead>
-                  <tr>
-                    <th>Nom</th>
-                    <th>Type</th>
-                    <th>Format</th>
-                    <th>Taille</th>
-                    <th>Enregistrements</th>
-                    <th>Date de création</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exports.length > 0 ? (
-                    exports.map((exportItem) => (
-                      <tr key={exportItem.id}>
-                        <td className="d-flex align-items-center">
-                          {getTypeIcon(exportItem.type)}
-                          <span className="ms-2">{exportItem.name}</span>
-                        </td>
-                        <td>{exportItem.type}</td>
-                        <td>{exportItem.format.toUpperCase()}</td>
-                        <td>{exportItem.size}</td>
-                        <td>{exportItem.records}</td>
-                        <td>{formatDate(exportItem.createdAt)}</td>
-                        <td>{getStatusBadge(exportItem.status)}</td>
-                        <td>
-                          {exportItem.status === 'completed' ? (
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => handleDownload(exportItem)}
-                            >
-                              <Download size={16} />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline-secondary"
-                              size="sm"
-                              disabled
-                            >
-                              <Download size={16} />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center">
-                        Aucune exportation trouvée
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </div>
-          )}
+
+          <Tab.Container id="exports-tabs" activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
+            <Nav variant="tabs" className="mb-3">
+              <Nav.Item>
+                <Nav.Link eventKey="admin">Exportations administratives</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="student">Exportations des étudiants</Nav.Link>
+              </Nav.Item>
+            </Nav>
+
+            <Tab.Content>
+              <Tab.Pane eventKey="admin">
+                {loading ? (
+                  <div className="text-center py-4">
+                    <Spinner animation="border" role="status">
+                      <span className="visually-hidden">Chargement...</span>
+                    </Spinner>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <Table hover>
+                      <thead>
+                        <tr>
+                          <th>Nom</th>
+                          <th>Type</th>
+                          <th>Format</th>
+                          <th>Taille</th>
+                          <th>Enregistrements</th>
+                          <th>Date de création</th>
+                          <th>Statut</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {exports.length > 0 ? (
+                          exports.map((exportItem) => (
+                            <tr key={exportItem.id}>
+                              <td className="d-flex align-items-center">
+                                {getTypeIcon(exportItem.type)}
+                                <span className="ms-2">{exportItem.name}</span>
+                              </td>
+                              <td>{exportItem.type}</td>
+                              <td>{exportItem.format.toUpperCase()}</td>
+                              <td>{exportItem.size}</td>
+                              <td>{exportItem.records}</td>
+                              <td>{formatDate(exportItem.createdAt)}</td>
+                              <td>{getStatusBadge(exportItem.status)}</td>
+                              <td>
+                                {exportItem.status === 'completed' ? (
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={() => handleDownload(exportItem)}
+                                  >
+                                    <Download size={16} />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    disabled
+                                  >
+                                    <Download size={16} />
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="8" className="text-center">
+                              Aucune exportation trouvée
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </Tab.Pane>
+
+              <Tab.Pane eventKey="student">
+                {loadingStudentExports ? (
+                  <div className="text-center py-4">
+                    <Spinner animation="border" role="status">
+                      <span className="visually-hidden">Chargement...</span>
+                    </Spinner>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <Table hover>
+                      <thead>
+                        <tr>
+                          <th>Étudiant</th>
+                          <th>Contenu</th>
+                          <th>Type</th>
+                          <th>Format</th>
+                          <th>Taille</th>
+                          <th>Date d'exportation</th>
+                          <th>Statut</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {studentExports.length > 0 ? (
+                          studentExports.map((exportItem) => (
+                            <tr key={exportItem._id}>
+                              <td>{exportItem.user?.fullName || 'Utilisateur inconnu'}</td>
+                              <td>{exportItem.content?.title || 'Contenu non disponible'}</td>
+                              <td className="d-flex align-items-center">
+                                {getTypeIcon(exportItem.contentType)}
+                                <span className="ms-2">
+                                  {exportItem.contentType === 'course' ? 'Cours' :
+                                   exportItem.contentType === 'formation' ? 'Formation' : 'Test'}
+                                </span>
+                              </td>
+                              <td>{exportItem.format.toUpperCase()}</td>
+                              <td>{(exportItem.fileSize / 1024).toFixed(2)} KB</td>
+                              <td>{formatDate(exportItem.exportDate)}</td>
+                              <td>{getStatusBadge(exportItem.status)}</td>
+                              <td>
+                                {exportItem.status === 'completed' ? (
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={() => handleDownloadStudentExport(exportItem._id)}
+                                  >
+                                    <Download size={16} />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    disabled
+                                  >
+                                    <Download size={16} />
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="8" className="text-center">
+                              Aucune exportation d'étudiant trouvée
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </Tab.Pane>
+            </Tab.Content>
+          </Tab.Container>
         </Card.Body>
       </Card>
-      
+
       {/* Modal for new export */}
       <Modal show={showNewExportModal} onHide={handleCloseNewExportModal}>
         <Modal.Header closeButton>
@@ -295,7 +448,7 @@ const ExportsManagement = () => {
                 <option value="complaints">Réclamations</option>
               </Form.Select>
             </Form.Group>
-            
+
             <Form.Group className="mb-3">
               <Form.Label>Période</Form.Label>
               <Form.Select
@@ -312,7 +465,7 @@ const ExportsManagement = () => {
                 <option value="custom">Période personnalisée</option>
               </Form.Select>
             </Form.Group>
-            
+
             {dateRange === 'custom' && (
               <Row className="mb-3">
                 <Col>
@@ -337,7 +490,7 @@ const ExportsManagement = () => {
                 </Col>
               </Row>
             )}
-            
+
             <Form.Group className="mb-3">
               <Form.Label>Format</Form.Label>
               <Form.Select
