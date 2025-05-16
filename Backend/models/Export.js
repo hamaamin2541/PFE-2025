@@ -8,13 +8,22 @@ const exportSchema = new mongoose.Schema({
   },
   contentType: {
     type: String,
-    enum: ['course', 'test', 'formation'],
+    enum: ['course', 'test', 'formation', 'report'],
     required: true
   },
   content: {
     type: mongoose.Schema.Types.ObjectId,
     // Use a virtual to handle the reference
-    required: true
+    required: function() {
+      return this.contentType !== 'report';
+    }
+  },
+  reportType: {
+    type: String,
+    enum: ['users', 'courses', 'sales', 'complaints'],
+    required: function() {
+      return this.contentType === 'report';
+    }
   },
   exportDate: {
     type: Date,
@@ -34,7 +43,7 @@ const exportSchema = new mongoose.Schema({
   },
   format: {
     type: String,
-    enum: ['pdf', 'zip'],
+    enum: ['pdf', 'zip', 'csv', 'xlsx', 'json'],
     default: 'pdf'
   },
   status: {

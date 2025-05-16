@@ -583,8 +583,85 @@ const DashboardStudent = () => {
         return;
       }
 
-      // Open in a new tab with token in query params
-      window.open(`${API_BASE_URL}/api/exports/download/${exportId}?token=${token}`, '_blank');
+      // Try multiple download methods for better browser compatibility
+      const downloadUrl = `${API_BASE_URL}/api/exports/download/${exportId}?token=${token}`;
+
+      // Method 1: Form submission approach
+      try {
+        // Create a hidden form for download request
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = `${API_BASE_URL}/api/exports/download/${exportId}`;
+        form.target = '_blank';
+
+        // Add token as hidden field
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = 'token';
+        tokenField.value = token;
+        form.appendChild(tokenField);
+
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+      } catch (formError) {
+        console.error('Form submission error:', formError);
+
+        // Method 2: Fetch API approach
+        try {
+          const response = await fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) throw new Error('Network response was not ok');
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // Use a timestamp to avoid browser caching issues
+          a.download = `export-${exportId}-${Date.now()}.file`;
+          document.body.appendChild(a);
+          a.click();
+
+          // Clean up
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }, 100);
+        } catch (fetchError) {
+          console.error('Fetch error:', fetchError);
+
+          // Method 3: iframe approach
+          try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            iframe.src = downloadUrl;
+
+            // Clean up
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 5000);
+
+            // Method 4: Last resort - window.open
+            window.open(downloadUrl, '_blank');
+          } catch (iframeError) {
+            console.error('iframe error:', iframeError);
+            // Final fallback
+            window.location.href = downloadUrl;
+          }
+        }
+      }
     } catch (err) {
       console.error('Error downloading export:', err);
       alert('Erreur lors du téléchargement du fichier');

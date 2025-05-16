@@ -17,6 +17,7 @@ const CourseView = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [exportError, setExportError] = useState(null);
+  const [exportResponse, setExportResponse] = useState(null);
 
   useEffect(() => {
     const fetchEnrollment = async () => {
@@ -114,7 +115,89 @@ const CourseView = () => {
 
       if (response.data.success) {
         setExportSuccess(true);
-        setTimeout(() => setExportSuccess(false), 5000);
+        setExportResponse(response);
+
+        // Wait a moment for the server to generate the file
+        setTimeout(() => {
+          // Try to download the file automatically
+          if (response.data.data && response.data.data._id) {
+            const exportId = response.data.data._id;
+            const downloadUrl = `${API_BASE_URL}/api/exports/download/${exportId}?token=${token}`;
+
+            // Method 1: Form submission approach
+            try {
+              // Create a hidden form for download request
+              const form = document.createElement('form');
+              form.method = 'GET';
+              form.action = `${API_BASE_URL}/api/exports/download/${exportId}`;
+              form.target = '_blank';
+
+              // Add token as hidden field
+              const tokenField = document.createElement('input');
+              tokenField.type = 'hidden';
+              tokenField.name = 'token';
+              tokenField.value = token;
+              form.appendChild(tokenField);
+
+              // Submit the form
+              document.body.appendChild(form);
+              form.submit();
+
+              // Clean up
+              setTimeout(() => {
+                document.body.removeChild(form);
+              }, 100);
+            } catch (formError) {
+              console.error('Form submission error:', formError);
+
+              // Method 2: Fetch API approach
+              fetch(downloadUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              })
+              .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.blob();
+              })
+              .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `course-export-${Date.now()}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+
+                // Clean up
+                setTimeout(() => {
+                  window.URL.revokeObjectURL(url);
+                  document.body.removeChild(a);
+                }, 100);
+              })
+              .catch(fetchError => {
+                console.error('Fetch error:', fetchError);
+
+                // Method 3: iframe approach as fallback
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                iframe.src = downloadUrl;
+
+                // Clean up
+                setTimeout(() => {
+                  document.body.removeChild(iframe);
+                }, 5000);
+
+                // Method 4: Last resort - window.open
+                window.open(downloadUrl, '_blank');
+              });
+            }
+          }
+
+          setTimeout(() => setExportSuccess(false), 5000);
+        }, 1000); // Wait 1 second for the server to process
       } else {
         setExportError('Erreur lors de l\'exportation du cours');
       }
@@ -163,12 +246,28 @@ const CourseView = () => {
     <Container className="py-5">
       <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1 }}>
         {exportSuccess && (
-          <Toast bg="success" onClose={() => setExportSuccess(false)} show={exportSuccess} delay={5000} autohide>
+          <Toast bg="success" onClose={() => {
+            setExportSuccess(false);
+            setTimeout(() => setExportResponse(null), 500);
+          }} show={exportSuccess} delay={5000} autohide>
             <Toast.Header>
               <strong className="me-auto">Exportation réussie</strong>
             </Toast.Header>
             <Toast.Body className="text-white">
-              Le cours a été exporté avec succès. Vous pouvez le télécharger depuis votre tableau de bord.
+              Le cours a été exporté avec succès. Le téléchargement devrait démarrer automatiquement.
+              {exportResponse && exportResponse.data && exportResponse.data.data && exportResponse.data.data._id && (
+                <div className="mt-2">
+                  Si le téléchargement ne démarre pas, <a
+                    href={`${API_BASE_URL}/api/exports/download/${exportResponse.data.data._id}?token=${localStorage.getItem('token')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white font-weight-bold"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    cliquez ici
+                  </a> ou consultez votre tableau de bord.
+                </div>
+              )}
             </Toast.Body>
           </Toast>
         )}

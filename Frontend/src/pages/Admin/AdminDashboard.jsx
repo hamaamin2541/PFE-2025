@@ -515,7 +515,7 @@ const AdminDashboard = () => {
                     <AlertTriangle size={18} />
                     <span>Gérer les réclamations</span>
                   </Link>
-                  <Link to="/admin/reports" className="btn btn-info btn-action">
+                  <Link to="/admin/reports/users" className="btn btn-info btn-action">
                     <BarChart2 size={18} />
                     <span>Voir les rapports</span>
                   </Link>

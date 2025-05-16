@@ -47,15 +47,30 @@ const SettingsManagement = () => {
   });
 
   useEffect(() => {
-    // Simulate loading settings from API
     const fetchSettings = async () => {
       try {
         setLoading(true);
-        // In a real application, this would be an API call
-        // For now, we'll just simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // We're using the default settings defined above
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Vous devez être connecté pour accéder aux paramètres');
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get(`${API_BASE_URL}/api/settings`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success) {
+          setSettings(response.data.data);
+        } else {
+          setError('Erreur lors du chargement des paramètres');
+        }
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -82,11 +97,32 @@ const SettingsManagement = () => {
       setSaving(true);
       setError(null);
 
-      // In a real application, this would be an API call
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Vous devez être connecté pour modifier les paramètres');
+        setSaving(false);
+        return;
+      }
 
-      setSuccessMessage(`Paramètres ${getSectionName(section)} mis à jour avec succès`);
+      // Send only the section data that needs to be updated
+      const response = await axios.put(
+        `${API_BASE_URL}/api/settings/${section}`,
+        settings[section],
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage(`Paramètres ${getSectionName(section)} mis à jour avec succès`);
+      } else {
+        setError('Erreur lors de la sauvegarde des paramètres');
+      }
+
       setSaving(false);
 
       // Clear success message after 3 seconds
@@ -137,7 +173,7 @@ const SettingsManagement = () => {
       )}
 
       <Tab.Container defaultActiveKey="notifications">
-        
+
           <Col md={3} lg={2} className="mb-4" style={{ display: 'block', visibility: 'visible', opacity: 1, zIndex: 1000 }}>
             <Card className="shadow-sm" style={{ border: '2px solid #e9ecef', backgroundColor: '#ffffff', borderRadius: '0.75rem' ,width:"800px",display:"block" ,marginBottom:"800px" }}>
               <Card.Body className="p-3">
@@ -643,9 +679,53 @@ const SettingsManagement = () => {
                       </Row>
 
                       <div className="d-flex justify-content-between mt-3">
-                        <Button variant="outline-secondary">
-                          <RefreshCw size={16} className="me-2" />
-                          Tester la connexion
+                        <Button
+                          variant="outline-secondary"
+                          onClick={async () => {
+                            try {
+                              setSaving(true);
+                              const token = localStorage.getItem('token');
+                              if (!token) {
+                                setError('Vous devez être connecté pour tester la configuration');
+                                setSaving(false);
+                                return;
+                              }
+
+                              const response = await axios.post(
+                                `${API_BASE_URL}/api/settings/test-email`,
+                                {},
+                                {
+                                  headers: {
+                                    Authorization: `Bearer ${token}`
+                                  }
+                                }
+                              );
+
+                              if (response.data.success) {
+                                setSuccessMessage('Test de configuration email réussi');
+                              } else {
+                                setError('Erreur lors du test de la configuration email');
+                              }
+                              setSaving(false);
+                            } catch (err) {
+                              console.error('Error testing email config:', err);
+                              setError('Erreur lors du test de la configuration email');
+                              setSaving(false);
+                            }
+                          }}
+                          disabled={saving}
+                        >
+                          {saving ? (
+                            <>
+                              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                              Test en cours...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw size={16} className="me-2" />
+                              Tester la connexion
+                            </>
+                          )}
                         </Button>
 
                         <Button
@@ -679,7 +759,7 @@ const SettingsManagement = () => {
               </Card.Body>
             </Card>
           </Col>
-      
+
       </Tab.Container>
     </Container>
   );

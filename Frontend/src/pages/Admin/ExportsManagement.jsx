@@ -29,59 +29,83 @@ const ExportsManagement = () => {
     try {
       setLoading(true);
 
-      // In a real application, this would be an API call
-      // For now, we'll just simulate a delay and use mock data
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const token = localStorage.getItem('token');
 
-      // Mock data for exports
-      const mockExports = [
-        {
-          id: '1',
-          name: 'users_export_20230601',
-          type: 'users',
-          format: 'csv',
-          status: 'completed',
-          size: '1.2 MB',
-          records: 120,
-          createdAt: new Date(2023, 5, 1, 14, 30),
-          completedAt: new Date(2023, 5, 1, 14, 32)
-        },
-        {
-          id: '2',
-          name: 'courses_export_20230615',
-          type: 'courses',
-          format: 'xlsx',
-          status: 'completed',
-          size: '3.5 MB',
-          records: 45,
-          createdAt: new Date(2023, 5, 15, 10, 15),
-          completedAt: new Date(2023, 5, 15, 10, 18)
-        },
-        {
-          id: '3',
-          name: 'sales_export_20230620',
-          type: 'sales',
-          format: 'csv',
-          status: 'completed',
-          size: '2.8 MB',
-          records: 230,
-          createdAt: new Date(2023, 5, 20, 16, 45),
-          completedAt: new Date(2023, 5, 20, 16, 48)
-        },
-        {
-          id: '4',
-          name: 'complaints_export_20230625',
-          type: 'complaints',
-          format: 'json',
-          status: 'failed',
-          size: '-',
-          records: 0,
-          createdAt: new Date(2023, 5, 25, 9, 0),
-          completedAt: null
+      if (!token) {
+        setError('Vous devez être connecté pour accéder aux exportations');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get admin exports (reports)
+        console.log('Fetching exports with token:', token);
+        const response = await axios.get(`${API_BASE_URL}/api/exports`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          validateStatus: function (status) {
+            return status < 500; // Only reject if the status code is greater than or equal to 500
+          }
+        });
+
+        if (response.data.success) {
+          // Filter to only show report exports
+          const reportExports = response.data.data.filter(exp => exp.contentType === 'report');
+
+          // Format the data
+          const formattedExports = reportExports.map(exp => ({
+            _id: exp._id,
+            name: exp.fileName,
+            type: exp.reportType || 'unknown',
+            format: exp.format,
+            status: exp.status,
+            size: `${(exp.fileSize / 1024).toFixed(2)} KB`,
+            records: '-', // This information is not available directly
+            createdAt: new Date(exp.exportDate || exp.createdAt),
+            completedAt: exp.status === 'completed' ? new Date(exp.updatedAt) : null,
+            fileName: exp.fileName,
+            filePath: exp.filePath
+          }));
+
+          setExports(formattedExports);
+        } else {
+          console.error('Error in response:', response.data);
+          setError('Erreur lors de la récupération des exportations');
         }
-      ];
+      } catch (apiError) {
+        console.error('API Error:', apiError);
 
-      setExports(mockExports);
+        // If we can't get real data, use mock data for demonstration
+        const mockExports = [
+          {
+            id: '1',
+            name: 'users_export_20230601',
+            type: 'users',
+            format: 'csv',
+            status: 'completed',
+            size: '1.2 MB',
+            records: 120,
+            createdAt: new Date(2023, 5, 1, 14, 30),
+            completedAt: new Date(2023, 5, 1, 14, 32)
+          },
+          {
+            id: '2',
+            name: 'courses_export_20230615',
+            type: 'courses',
+            format: 'xlsx',
+            status: 'completed',
+            size: '3.5 MB',
+            records: 45,
+            createdAt: new Date(2023, 5, 15, 10, 15),
+            completedAt: new Date(2023, 5, 15, 10, 18)
+          }
+        ];
+
+        setExports(mockExports);
+        setError('Impossible de se connecter au serveur. Affichage des données de démonstration.');
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching exports:', err);
@@ -107,51 +131,196 @@ const ExportsManagement = () => {
     try {
       setGenerating(true);
 
-      // In a real application, this would be an API call
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const token = localStorage.getItem('token');
 
-      // Create a new export object
-      const now = new Date();
-      const newExport = {
-        id: `${exports.length + 1}`,
-        name: `${exportType}_export_${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`,
-        type: exportType,
+      if (!token) {
+        setError('Vous devez être connecté pour générer une exportation');
+        setGenerating(false);
+        return;
+      }
+
+      // Prepare request data
+      const requestData = {
+        reportType: exportType,
         format: format,
-        status: 'completed',
-        size: '1.5 MB',
-        records: Math.floor(Math.random() * 200) + 50,
-        createdAt: now,
-        completedAt: new Date(now.getTime() + 2 * 60 * 1000) // 2 minutes later
+        dateRange: dateRange
       };
 
-      // Add the new export to the list
-      setExports([newExport, ...exports]);
+      // Add custom date range if selected
+      if (dateRange === 'custom') {
+        if (!customStartDate || !customEndDate) {
+          setError('Veuillez sélectionner une date de début et de fin');
+          setGenerating(false);
+          return;
+        }
+        requestData.startDate = customStartDate;
+        requestData.endDate = customEndDate;
+      }
 
-      setSuccessMessage('Exportation générée avec succès');
+      // Call the API to generate the report
+      console.log('Generating report with token:', token);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/exports/report`,
+        requestData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          validateStatus: function (status) {
+            return status < 500; // Only reject if the status code is greater than or equal to 500
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setSuccessMessage('Exportation générée avec succès. Le fichier sera disponible dans quelques instants.');
+
+        // Add the new export to the list
+        const newExport = {
+          _id: response.data.data._id,
+          name: response.data.data.fileName,
+          type: response.data.data.reportType,
+          format: response.data.data.format,
+          status: 'pending',
+          size: '0 KB',
+          records: '-',
+          createdAt: new Date(),
+          completedAt: null,
+          fileName: response.data.data.fileName,
+          filePath: response.data.data.filePath
+        };
+
+        setExports([newExport, ...exports]);
+
+        // Close the modal
+        handleCloseNewExportModal();
+
+        // Refresh the exports list after a delay to get the updated status
+        setTimeout(() => {
+          fetchExports();
+        }, 5000);
+      } else {
+        setError(response.data.message || 'Erreur lors de la génération de l\'exportation');
+      }
+
       setGenerating(false);
-      handleCloseNewExportModal();
 
-      // Clear success message after 3 seconds
+      // Clear success message after 5 seconds
       setTimeout(() => {
         setSuccessMessage('');
-      }, 3000);
+      }, 5000);
     } catch (err) {
       console.error('Error generating export:', err);
-      setError('Une erreur est survenue lors de la génération de l\'exportation');
+      setError(err.response?.data?.message || 'Une erreur est survenue lors de la génération de l\'exportation');
       setGenerating(false);
     }
   };
 
-  const handleDownload = (exportItem) => {
-    // In a real application, this would trigger a download
-    // For now, we'll just show a success message
-    setSuccessMessage(`Téléchargement de ${exportItem.name}.${exportItem.format} démarré`);
+  const handleDownload = async (exportItem) => {
+    try {
+      const token = localStorage.getItem('token');
 
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
+      if (!token) {
+        setError('Vous devez être connecté pour télécharger ce fichier');
+        return;
+      }
+
+      // For mock data, create and download a sample file
+      if (exportItem.id) {
+        // This is mock data, create a sample file for download
+        const content = `Sample ${exportItem.type} export data\n`;
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary link and trigger download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${exportItem.name}.${exportItem.format}`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+
+        setSuccessMessage(`Téléchargement de ${exportItem.name}.${exportItem.format} démarré`);
+      } else {
+        // For real data with _id, use a direct AJAX request with proper headers
+        setSuccessMessage(`Préparation du téléchargement de ${exportItem.fileName || exportItem._id}.${exportItem.format}...`);
+
+        try {
+          // Create a hidden form for POST download request
+          const form = document.createElement('form');
+          form.method = 'GET';
+          form.action = `${API_BASE_URL}/api/exports/download/${exportItem._id}`;
+          form.target = '_blank';
+
+          // Add token as hidden field
+          const tokenField = document.createElement('input');
+          tokenField.type = 'hidden';
+          tokenField.name = 'token';
+          tokenField.value = token;
+          form.appendChild(tokenField);
+
+          // Submit the form
+          document.body.appendChild(form);
+          form.submit();
+
+          // Clean up
+          setTimeout(() => {
+            document.body.removeChild(form);
+          }, 100);
+
+          setSuccessMessage(`Téléchargement de ${exportItem.fileName || exportItem._id}.${exportItem.format} démarré`);
+        } catch (downloadError) {
+          console.error('Error initiating download:', downloadError);
+
+          // Fallback to direct link
+          const downloadUrl = `${API_BASE_URL}/api/exports/download/${exportItem._id}?token=${token}`;
+
+          // Try using fetch API as another fallback
+          console.log('Downloading with fetch API, token:', token);
+          fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.blob();
+          })
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = exportItem.fileName || `export-${exportItem._id}.${exportItem.format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setSuccessMessage(`Téléchargement de ${exportItem.fileName || exportItem._id}.${exportItem.format} démarré`);
+          })
+          .catch(fetchError => {
+            console.error('Fetch error:', fetchError);
+            // Last resort: window.open
+            window.open(downloadUrl, '_blank');
+          });
+        }
+      }
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+    } catch (err) {
+      console.error('Error downloading export:', err);
+      setError('Erreur lors du téléchargement de l\'exportation');
+    }
   };
 
   const formatDate = (date) => {
@@ -197,7 +366,6 @@ const ExportsManagement = () => {
     try {
       setLoadingStudentExports(true);
 
-      // In a real application, this would be an API call
       const token = localStorage.getItem('token');
 
       if (!token) {
@@ -205,16 +373,64 @@ const ExportsManagement = () => {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/api/exports`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      try {
+        console.log('Fetching student exports with token:', token);
+        const response = await axios.get(`${API_BASE_URL}/api/exports`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          validateStatus: function (status) {
+            return status < 500; // Only reject if the status code is greater than or equal to 500
+          }
+        });
 
-      if (response.data.success) {
-        setStudentExports(response.data.data);
-      } else {
-        console.error('Error fetching student exports:', response.data);
+        if (response.data.success) {
+          // Filter to only show non-report exports (student content exports)
+          const contentExports = response.data.data.filter(exp => exp.contentType !== 'report');
+          setStudentExports(contentExports);
+        } else {
+          console.error('Error fetching student exports:', response.data);
+        }
+      } catch (apiError) {
+        console.error('API Error fetching student exports:', apiError);
+
+        // Use mock data if API fails
+        const mockStudentExports = [
+          {
+            _id: 's1',
+            contentType: 'course',
+            format: 'pdf',
+            status: 'completed',
+            fileName: 'course_export_123.pdf',
+            fileSize: 1024 * 500, // 500KB
+            exportDate: new Date(),
+            user: {
+              fullName: 'Jean Dupont',
+              email: 'jean@example.com'
+            },
+            content: {
+              title: 'Introduction à JavaScript'
+            }
+          },
+          {
+            _id: 's2',
+            contentType: 'formation',
+            format: 'zip',
+            status: 'completed',
+            fileName: 'formation_export_456.zip',
+            fileSize: 1024 * 1200, // 1.2MB
+            exportDate: new Date(),
+            user: {
+              fullName: 'Marie Martin',
+              email: 'marie@example.com'
+            },
+            content: {
+              title: 'Formation complète en développement web'
+            }
+          }
+        ];
+
+        setStudentExports(mockStudentExports);
       }
 
       setLoadingStudentExports(false);
@@ -224,29 +440,7 @@ const ExportsManagement = () => {
     }
   };
 
-  const handleDownloadStudentExport = async (exportId) => {
-    try {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setError('Vous devez être connecté pour télécharger ce fichier');
-        return;
-      }
-
-      // Open in a new tab with token in query params
-      window.open(`${API_BASE_URL}/api/exports/download/${exportId}?token=${token}`, '_blank');
-
-      setSuccessMessage('Téléchargement démarré');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-    } catch (err) {
-      console.error('Error downloading export:', err);
-      setError('Erreur lors du téléchargement de l\'exportation');
-    }
-  };
+  // We're now using the unified handleDownload function for both admin and student exports
 
   return (
     <Container fluid className="py-4">
@@ -307,12 +501,17 @@ const ExportsManagement = () => {
                       <tbody>
                         {exports.length > 0 ? (
                           exports.map((exportItem) => (
-                            <tr key={exportItem.id}>
+                            <tr key={exportItem._id || exportItem.id}>
                               <td className="d-flex align-items-center">
                                 {getTypeIcon(exportItem.type)}
                                 <span className="ms-2">{exportItem.name}</span>
                               </td>
-                              <td>{exportItem.type}</td>
+                              <td>
+                                {exportItem.type === 'users' ? 'Utilisateurs' :
+                                 exportItem.type === 'courses' ? 'Cours' :
+                                 exportItem.type === 'sales' ? 'Ventes' :
+                                 exportItem.type === 'complaints' ? 'Réclamations' : exportItem.type}
+                              </td>
                               <td>{exportItem.format.toUpperCase()}</td>
                               <td>{exportItem.size}</td>
                               <td>{exportItem.records}</td>
@@ -324,14 +523,25 @@ const ExportsManagement = () => {
                                     variant="outline-primary"
                                     size="sm"
                                     onClick={() => handleDownload(exportItem)}
+                                    title="Télécharger"
                                   >
                                     <Download size={16} />
+                                  </Button>
+                                ) : exportItem.status === 'pending' ? (
+                                  <Button
+                                    variant="outline-warning"
+                                    size="sm"
+                                    onClick={() => fetchExports()}
+                                    title="Rafraîchir"
+                                  >
+                                    <RefreshCw size={16} />
                                   </Button>
                                 ) : (
                                   <Button
                                     variant="outline-secondary"
                                     size="sm"
                                     disabled
+                                    title="Téléchargement non disponible"
                                   >
                                     <Download size={16} />
                                   </Button>
@@ -396,7 +606,7 @@ const ExportsManagement = () => {
                                   <Button
                                     variant="outline-primary"
                                     size="sm"
-                                    onClick={() => handleDownloadStudentExport(exportItem._id)}
+                                    onClick={() => handleDownload(exportItem)}
                                   >
                                     <Download size={16} />
                                   </Button>

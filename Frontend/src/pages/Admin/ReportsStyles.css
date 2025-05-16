@@ -1,0 +1,347 @@
+/* Custom styles for Reports Management */
+
+/* Period dropdown styling */
+.period-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.period-dropdown {
+  background-color: white;
+  border-color: #e0e0e0;
+  color: #333;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 180px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.period-dropdown:hover,
+.period-dropdown:focus {
+  background-color: #f8f9fa;
+  border-color: #d0d0d0;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.period-dropdown::after {
+  margin-left: 10px;
+}
+
+.period-dropdown-menu {
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.25rem 0;
+  min-width: 200px;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1.5rem;
+  color: #333;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.dropdown-item.active {
+  background-color: #f0f7ff;
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+/* Chart container styling */
+.chart-container {
+  position: relative;
+  margin: auto;
+}
+
+/* Stats container styling */
+.stats-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-item {
+  margin-bottom: 1rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+/* Card styling */
+.card {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* Tab styling */
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  color: #6c757d;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  color: #007bff;
+  background-color: transparent;
+  border-bottom: 2px solid #007bff;
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: transparent;
+}
+
+/* Refresh button styling */
+.refresh-button {
+  border-color: #e0e0e0;
+  color: #6c757d;
+  background-color: white;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-button:hover {
+  background-color: #f8f9fa;
+  border-color: #d0d0d0;
+  color: #495057;
+}
+
+.refresh-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.refresh-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Export button styling */
+.export-button {
+  border-color: #e0e0e0;
+  color: #007bff;
+  background-color: white;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.export-button:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+}
+
+.export-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.export-button-lg {
+  border-color: #e0e0e0;
+  color: #007bff;
+  background-color: white;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.export-button-lg:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+}
+
+.export-button-lg:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Section header styling */
+.section-header {
+  margin-bottom: 2rem;
+}
+
+.section-header h3 {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.section-divider {
+  height: 1px;
+  background-color: #e9ecef;
+  margin-top: 1rem;
+}
+
+/* Stats summary cards */
+.stats-summary {
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  height: 100%;
+  border: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-content {
+  display: flex;
+  align-items: center;
+}
+
+.stat-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: white;
+}
+
+.users-icon {
+  background-color: #4361ee;
+}
+
+.new-users-icon {
+  background-color: #4cc9f0;
+}
+
+.students-icon {
+  background-color: #4895ef;
+}
+
+.teachers-icon {
+  background-color: #3f37c9;
+}
+
+.courses-icon {
+  background-color: #4cc9f0;
+}
+
+.tests-icon {
+  background-color: #f72585;
+}
+
+.formations-icon {
+  background-color: #7209b7;
+}
+
+.sales-icon {
+  background-color: #fb8500;
+}
+
+.revenue-icon {
+  background-color: #38b000;
+}
+
+.stat-card-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #212529;
+  display: flex;
+  align-items: center;
+}
+
+/* Card header styling */
+.card-header {
+  background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Period select styling */
+.period-select {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  padding: 0.5rem 1rem;
+  min-width: 200px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  height: 40px;
+  cursor: pointer;
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+}
+
+.period-select:hover,
+.period-select:focus {
+  background-color: #f8f9fa;
+  border-color: #d0d0d0;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  outline: none;
+}
+
+.period-select option {
+  padding: 10px;
+  font-size: 0.9rem;
+}

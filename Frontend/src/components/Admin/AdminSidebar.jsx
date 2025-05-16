@@ -163,7 +163,11 @@ const AdminSidebar = ({ onLogout }) => {
             <li className="sidebar-menu-item">
               <div
                 className={`sidebar-menu-link ${isMenuActive(['/admin/reports']) ? 'active-parent' : ''}`}
-                onClick={() => toggleMenu('reports')}
+                onClick={() => {
+                  toggleMenu('reports');
+                  // Navigate to reports/users page when clicking on the main menu item
+                  navigate('/admin/reports/users');
+                }}
               >
                 <div className="sidebar-menu-link-content">
                   <BarChart2 size={18} className="sidebar-menu-icon" />
@@ -208,15 +212,6 @@ const AdminSidebar = ({ onLogout }) => {
         <div className="sidebar-section">
           <div className="sidebar-section-title">SYSTÈME</div>
           <ul className="sidebar-menu">
-            <li className="sidebar-menu-item">
-              <Link
-                to="/admin/database"
-                className={`sidebar-menu-link ${isActive('/admin/database') ? 'active' : ''}`}
-              >
-                <Database size={18} className="sidebar-menu-icon" />
-                <span className="sidebar-menu-text">Base de données</span>
-              </Link>
-            </li>
 
             <li className="sidebar-menu-item">
               <Link

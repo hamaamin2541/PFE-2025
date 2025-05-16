@@ -5,7 +5,8 @@ import {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  getReportData
 } from '../controllers/adminController.js';
 
 const router = express.Router();
@@ -16,6 +17,9 @@ router.use(adminOnly);
 
 // Routes du tableau de bord
 router.get('/dashboard', getDashboardStats);
+
+// Routes des rapports
+router.get('/reports', getReportData);
 
 // Routes de gestion des utilisateurs
 router.get('/users', getUsers);

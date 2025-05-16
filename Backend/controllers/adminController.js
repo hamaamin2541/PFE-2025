@@ -298,6 +298,467 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+// Obtenir les données pour les rapports
+export const getReportData = async (req, res) => {
+  try {
+    const { dateRange, startDate, endDate } = req.query;
+
+    // Déterminer la plage de dates en fonction du paramètre dateRange
+    let dateFilter = {};
+    const now = new Date();
+
+    switch (dateRange) {
+      case 'last7days':
+        dateFilter = { $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7) };
+        break;
+      case 'last30days':
+        dateFilter = { $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30) };
+        break;
+      case 'last90days':
+        dateFilter = { $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90) };
+        break;
+      case 'thisMonth':
+        dateFilter = {
+          $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+          $lte: new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        };
+        break;
+      case 'lastMonth':
+        dateFilter = {
+          $gte: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+          $lte: new Date(now.getFullYear(), now.getMonth(), 0)
+        };
+        break;
+      case 'thisYear':
+        dateFilter = { $gte: new Date(now.getFullYear(), 0, 1) };
+        break;
+      case 'lastYear':
+        dateFilter = {
+          $gte: new Date(now.getFullYear() - 1, 0, 1),
+          $lte: new Date(now.getFullYear(), 0, 0)
+        };
+        break;
+      case 'custom':
+        if (startDate && endDate) {
+          dateFilter = {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+          };
+        }
+        break;
+      default:
+        // Par défaut, tous les temps
+        break;
+    }
+
+    // Statistiques des utilisateurs
+    const totalUsers = await User.countDocuments();
+
+    // Compter les nouveaux utilisateurs dans la plage de dates
+    let newUsersQuery = {};
+    if (Object.keys(dateFilter).length > 0) {
+      newUsersQuery.createdAt = dateFilter;
+    }
+    const newUsers = await User.countDocuments(newUsersQuery);
+
+    // Utilisateurs par rôle
+    const students = await User.countDocuments({ role: 'student' });
+    const teachers = await User.countDocuments({ role: 'teacher' });
+    const admins = await User.countDocuments({ role: 'admin' });
+
+    const usersByRole = [
+      { role: 'student', count: students },
+      { role: 'teacher', count: teachers },
+      { role: 'admin', count: admins }
+    ];
+
+    // Utilisateurs par mois
+    const usersByMonth = await getUsersByMonth(dateFilter);
+
+    // Statistiques du contenu
+    const totalCourses = await Course.countDocuments();
+    const totalTests = await Test.countDocuments();
+    const totalFormations = await Formation.countDocuments();
+
+    const contentByType = [
+      { type: 'courses', count: totalCourses },
+      { type: 'tests', count: totalTests },
+      { type: 'formations', count: totalFormations }
+    ];
+
+    // Contenu par mois
+    const contentByMonth = await getContentByMonth(dateFilter);
+
+    // Statistiques des ventes
+    let salesQuery = {};
+    if (Object.keys(dateFilter).length > 0) {
+      salesQuery.enrollmentDate = dateFilter;
+    }
+
+    const totalSales = await Enrollment.countDocuments(salesQuery);
+
+    // Calculer le revenu total
+    const enrollments = await Enrollment.find(salesQuery)
+      .populate({
+        path: 'course',
+        select: 'price'
+      })
+      .populate({
+        path: 'test',
+        select: 'price'
+      })
+      .populate({
+        path: 'formation',
+        select: 'price'
+      });
+
+    let totalRevenue = 0;
+    enrollments.forEach(enrollment => {
+      if (enrollment.course && enrollment.course.price) {
+        totalRevenue += enrollment.course.price;
+      } else if (enrollment.test && enrollment.test.price) {
+        totalRevenue += enrollment.test.price;
+      } else if (enrollment.formation && enrollment.formation.price) {
+        totalRevenue += enrollment.formation.price;
+      }
+    });
+
+    // Ventes par mois
+    const salesByMonth = await getSalesByMonth(dateFilter);
+
+    // Revenus par mois
+    const revenueByMonth = await getRevenueByMonthFiltered(dateFilter);
+
+    // Assembler et renvoyer les données
+    res.status(200).json({
+      success: true,
+      data: {
+        users: {
+          totalUsers,
+          newUsers,
+          usersByRole,
+          usersByMonth
+        },
+        content: {
+          totalContent: totalCourses + totalTests + totalFormations,
+          contentByType,
+          contentByMonth
+        },
+        sales: {
+          totalRevenue,
+          totalSales,
+          salesByMonth,
+          revenueByMonth
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching report data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Une erreur est survenue lors de la récupération des données de rapport'
+    });
+  }
+};
+
+// Obtenir les utilisateurs par mois
+const getUsersByMonth = async (dateFilter) => {
+  const now = new Date();
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  let matchStage = {};
+  if (Object.keys(dateFilter).length > 0) {
+    matchStage.createdAt = dateFilter;
+  } else {
+    matchStage.createdAt = { $gte: twelveMonthsAgo };
+  }
+
+  const usersByMonth = await User.aggregate([
+    {
+      $match: matchStage
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: {
+        '_id.year': 1,
+        '_id.month': 1
+      }
+    }
+  ]);
+
+  // Formater les résultats
+  const months = [];
+  const counts = [];
+
+  // Remplir les 12 derniers mois
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    const found = usersByMonth.find(item =>
+      item._id.year === year && item._id.month === month
+    );
+
+    const monthName = date.toLocaleString('default', { month: 'short' });
+    months.push(monthName);
+    counts.push(found ? found.count : 0);
+  }
+
+  return { months, counts };
+};
+
+// Obtenir le contenu par mois
+const getContentByMonth = async (dateFilter) => {
+  const now = new Date();
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  let matchStage = {};
+  if (Object.keys(dateFilter).length > 0) {
+    matchStage.createdAt = dateFilter;
+  } else {
+    matchStage.createdAt = { $gte: twelveMonthsAgo };
+  }
+
+  // Agréger les cours, tests et formations par mois
+  const coursesByMonth = await Course.aggregate([
+    {
+      $match: matchStage
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const testsByMonth = await Test.aggregate([
+    {
+      $match: matchStage
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const formationsByMonth = await Formation.aggregate([
+    {
+      $match: matchStage
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Combiner les résultats
+  const contentByMonth = {};
+
+  // Initialiser les mois
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const key = `${year}-${month}`;
+    contentByMonth[key] = 0;
+  }
+
+  // Ajouter les cours
+  coursesByMonth.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    if (contentByMonth[key] !== undefined) {
+      contentByMonth[key] += item.count;
+    }
+  });
+
+  // Ajouter les tests
+  testsByMonth.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    if (contentByMonth[key] !== undefined) {
+      contentByMonth[key] += item.count;
+    }
+  });
+
+  // Ajouter les formations
+  formationsByMonth.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    if (contentByMonth[key] !== undefined) {
+      contentByMonth[key] += item.count;
+    }
+  });
+
+  // Formater les résultats
+  const months = [];
+  const counts = [];
+
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const key = `${year}-${month}`;
+
+    const monthName = date.toLocaleString('default', { month: 'short' });
+    months.push(monthName);
+    counts.push(contentByMonth[key]);
+  }
+
+  return { months, counts };
+};
+
+// Obtenir les ventes par mois
+const getSalesByMonth = async (dateFilter) => {
+  const now = new Date();
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  let matchStage = {};
+  if (Object.keys(dateFilter).length > 0) {
+    matchStage.enrollmentDate = dateFilter;
+  } else {
+    matchStage.enrollmentDate = { $gte: twelveMonthsAgo };
+  }
+
+  const salesByMonth = await Enrollment.aggregate([
+    {
+      $match: matchStage
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$enrollmentDate' },
+          month: { $month: '$enrollmentDate' }
+        },
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: {
+        '_id.year': 1,
+        '_id.month': 1
+      }
+    }
+  ]);
+
+  // Formater les résultats
+  const months = [];
+  const counts = [];
+
+  // Remplir les 12 derniers mois
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    const found = salesByMonth.find(item =>
+      item._id.year === year && item._id.month === month
+    );
+
+    const monthName = date.toLocaleString('default', { month: 'short' });
+    months.push(monthName);
+    counts.push(found ? found.count : 0);
+  }
+
+  return { months, counts };
+};
+
+// Obtenir les revenus par mois avec filtre
+const getRevenueByMonthFiltered = async (dateFilter) => {
+  const now = new Date();
+  const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  let query = {};
+  if (Object.keys(dateFilter).length > 0) {
+    query.enrollmentDate = dateFilter;
+  } else {
+    query.enrollmentDate = { $gte: twelveMonthsAgo };
+  }
+
+  const enrollments = await Enrollment.find(query)
+    .populate({
+      path: 'course',
+      select: 'price'
+    })
+    .populate({
+      path: 'test',
+      select: 'price'
+    })
+    .populate({
+      path: 'formation',
+      select: 'price'
+    });
+
+  // Initialiser les revenus pour les 12 derniers mois
+  const revenueByMonth = {};
+
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const key = `${year}-${month}`;
+    revenueByMonth[key] = 0;
+  }
+
+  // Calculer les revenus par mois
+  enrollments.forEach(enrollment => {
+    const date = new Date(enrollment.enrollmentDate);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const key = `${year}-${month}`;
+
+    let price = 0;
+    if (enrollment.course && enrollment.course.price) {
+      price = enrollment.course.price;
+    } else if (enrollment.test && enrollment.test.price) {
+      price = enrollment.test.price;
+    } else if (enrollment.formation && enrollment.formation.price) {
+      price = enrollment.formation.price;
+    }
+
+    if (revenueByMonth[key] !== undefined) {
+      revenueByMonth[key] += price;
+    }
+  });
+
+  // Formater les résultats
+  const months = [];
+  const revenues = [];
+
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const key = `${year}-${month}`;
+
+    const monthName = date.toLocaleString('default', { month: 'short' });
+    months.push(monthName);
+    revenues.push(revenueByMonth[key]);
+  }
+
+  return { months, revenues };
+};
+
 // Fonctions utilitaires pour les statistiques
 
 // Obtenir les inscriptions par mois (12 derniers mois)
