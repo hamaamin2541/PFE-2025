@@ -1,20 +1,19 @@
 // DashboardStudent.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Button, Image, Card, ProgressBar, Badge, Table, Spinner } from 'react-bootstrap';
-import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, FileText } from 'lucide-react';
+import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, FileText, Layers } from 'lucide-react';
 import { useStudent } from '../../context/StudentContext';
 import { useFormation } from '../../context/FormationContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/api';
-import Overview from './Overview';  // Assurez-vous d'avoir ces composants créés
+import Overview from './Overview';
 import Courses from './MesCours';
 import Tests from './Tests';
 import Messages from './Messages';
-import SettingsPage from './Parametres';
-import './DashboardStudent.css';  // Ajouter votre CSS si nécessaire
-import { initializeNewStudent } from '../../services/studentInitializer';
 import Parametres from './Parametres';
-
+import MesContenus from './MesContenus';
+import './StudentDashboard.css';  // Nouveau fichier CSS correspondant au style enseignant
+import { initializeNewStudent } from '../../services/studentInitializer';
 const DashboardStudent = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -375,12 +374,11 @@ const DashboardStudent = () => {
     switch (activeTab) {
       case 'overview':
         return <Overview />;
-      case 'courses':
-        return <Courses />;
-      case 'tests':
-        return <Tests />;
+      case 'contenus':
+        return <MesContenus />;
       case 'messages':
-        return <Messages />;
+        // Pass the teacherId from location.state to the Messages component
+        return <Messages teacherId={location.state?.teacherId} />;
       case 'parametres':
         return <Parametres
           currentProfileImage={profileImage}
@@ -865,7 +863,19 @@ const DashboardStudent = () => {
             <h5>{studentData?.fullName || 'Loading...'}</h5>
             <p className="text-muted">{studentData?.role || 'Étudiant'}</p>
             <div className="rating mb-3">
-              <span className="ms-1">{studentData?.rating || '4.7'}</span>
+              <span className="ms-1">{studentData?.rating || '0'}</span>
+            </div>
+            <div className="profile-completion mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <small className="text-white">Profil complété</small>
+                <small className="text-white">{studentData?.profileCompletionPercentage || 0}%</small>
+              </div>
+              <ProgressBar
+                now={parseInt(studentData?.profileCompletionPercentage) || 0}
+                variant={parseInt(studentData?.profileCompletionPercentage) === 100 ? "success" : "info"}
+                className="profile-progress"
+                style={{ height: '8px' }}
+              />
             </div>
           </div>
 
@@ -878,15 +888,9 @@ const DashboardStudent = () => {
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link active={activeTab === 'courses'} onClick={() => setActiveTab('courses')}>
+              <Nav.Link active={activeTab === 'contenus'} onClick={() => setActiveTab('contenus')}>
                 <BookOpen size={18} className="me-2" />
-                Mes Cours
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link active={activeTab === 'tests'} onClick={() => setActiveTab('tests')}>
-                <CheckCircle size={18} className="me-2" />
-                Tests
+                Mes Contenus
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -909,10 +913,9 @@ const DashboardStudent = () => {
           <div className="dashboard-header p-4">
             <div className="d-flex justify-content-between align-items-center">
               <h2>{activeTab === 'overview' && 'Vue d\'ensemble'}
-                  {activeTab === 'courses' && 'Mes Cours'}
-                  {activeTab === 'tests' && 'Tests'}
+                  {activeTab === 'contenus' && 'Mes Contenus'}
                   {activeTab === 'messages' && 'Messages'}
-                  {activeTab === 'settings' && 'Paramètres'}
+                  {activeTab === 'parametres' && 'Paramètres'}
               </h2>
               <div className="d-flex align-items-center">
                 <div className="notification-icon me-3 position-relative">
@@ -927,7 +930,7 @@ const DashboardStudent = () => {
                   {renderNotifications()}
                 </div>
                 <div className="profile d-flex align-items-center">
-                  <Image src={"https://randomuser.me/api/portraits/men/32.jpg"} roundedCircle width={40} height={40} className="me-2" />
+                  <Image src={profileImage} roundedCircle width={40} height={40} className="me-2" />
                   <div>
                     <div className="profile-name">{studentData?.fullName || 'Loading...'}</div>
                     <small className="text-muted">{studentData?.studentCard || '#ID'}</small>
@@ -939,12 +942,7 @@ const DashboardStudent = () => {
 
           {/* Displaying content based on activeTab */}
           <div className="dashboard-content p-4">
-            {renderNewStudentWelcome()}
             {renderContent()}
-            {renderFormations()}
-            {renderCourses()}
-            {renderTests()}
-            {renderExports()}
           </div>
         </Col>
       </Row>

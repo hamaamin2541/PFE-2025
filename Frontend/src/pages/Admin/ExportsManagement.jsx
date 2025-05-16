@@ -485,16 +485,16 @@ const ExportsManagement = () => {
                   </div>
                 ) : (
                   <div className="table-responsive">
-                    <Table hover>
-                      <thead>
+                    <Table hover responsive className="table-striped">
+                      <thead className="table-light">
                         <tr>
                           <th>Nom</th>
                           <th>Type</th>
                           <th>Format</th>
                           <th>Taille</th>
-                          <th>Enregistrements</th>
                           <th>Date de création</th>
                           <th>Statut</th>
+                          <th>Dernière mise à jour</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -514,9 +514,9 @@ const ExportsManagement = () => {
                               </td>
                               <td>{exportItem.format.toUpperCase()}</td>
                               <td>{exportItem.size}</td>
-                              <td>{exportItem.records}</td>
                               <td>{formatDate(exportItem.createdAt)}</td>
                               <td>{getStatusBadge(exportItem.status)}</td>
+                              <td>{formatDate(exportItem.completedAt || exportItem.updatedAt)}</td>
                               <td>
                                 {exportItem.status === 'completed' ? (
                                   <Button
@@ -571,8 +571,8 @@ const ExportsManagement = () => {
                   </div>
                 ) : (
                   <div className="table-responsive">
-                    <Table hover>
-                      <thead>
+                    <Table hover responsive className="table-striped">
+                      <thead className="table-light">
                         <tr>
                           <th>Étudiant</th>
                           <th>Contenu</th>

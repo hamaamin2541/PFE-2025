@@ -9,17 +9,17 @@ const enrollmentSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    
+
   },
   formation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Formation',
- 
+
   },
   test: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Test',
-    
+
   },
   itemType: {
     type: String,
@@ -62,6 +62,20 @@ const enrollmentSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String
+  },
+  transactionId: {
+    type: String
+  },
+  amount: {
+    type: Number
   }
 }, {
   timestamps: true

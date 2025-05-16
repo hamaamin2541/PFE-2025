@@ -1,12 +1,13 @@
 import express from 'express';
-import { protect } from '../middleware/auth.js';
+import { protect, adminOnly } from '../middleware/auth.js';
 import {
   sendMessage,
   getMessages,
   markAsRead,
   moveToTrash,
   toggleStarred,
-  getUnreadCount
+  getUnreadCount,
+  adminSendMessage
 } from '../controllers/messageController.js';
 
 const router = express.Router();
@@ -31,5 +32,8 @@ router.put('/:messageId/trash', moveToTrash);
 
 // Toggle starred status
 router.put('/:messageId/star', toggleStarred);
+
+// Admin routes
+router.post('/admin/send', adminOnly, adminSendMessage);
 
 export default router;

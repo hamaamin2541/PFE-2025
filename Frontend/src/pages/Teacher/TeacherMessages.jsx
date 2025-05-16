@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { Container, Row, Col, ListGroup, InputGroup, Form, Button, Modal, Alert } from 'react-bootstrap';
-import { Search, Mail, Inbox, Send, Trash2, Star, Archive, X, ArrowLeft } from 'lucide-react';
+import { Search, Mail, Inbox, Send, Trash2, Star, Archive, X, ArrowLeft, Plus } from 'lucide-react';
 
-const TeacherMessages = () => {
+const TeacherMessages = ({ teacherId }) => {
   const [activeFolder, setActiveFolder] = useState('inbox');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -18,6 +18,31 @@ const TeacherMessages = () => {
   const [sendingReply, setSendingReply] = useState(false);
   const [replyError, setReplyError] = useState(null);
   const [replySuccess, setReplySuccess] = useState(null);
+
+  // New message functionality
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [newMessage, setNewMessage] = useState({
+    recipientId: '',
+    subject: '',
+    content: ''
+  });
+  const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [recipientType, setRecipientType] = useState('teacher');
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  // Handle teacherId prop if provided
+  useEffect(() => {
+    if (teacherId) {
+      fetchTeachers();
+      setRecipientType('teacher');
+      setNewMessage(prev => ({
+        ...prev,
+        recipientId: teacherId
+      }));
+      setShowNewMessageModal(true);
+    }
+  }, [teacherId]);
 
   // Fetch messages from API
   const fetchMessages = async () => {
@@ -134,6 +159,96 @@ const TeacherMessages = () => {
     }
   };
 
+  // Fetch teachers for the new message modal
+  const fetchTeachers = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/users/byRole/teacher`);
+
+      if (response.data.success) {
+        setTeachers(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching teachers:', err);
+    }
+  };
+
+  // Fetch students for the new message modal
+  const fetchStudents = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/users/byRole/student`);
+
+      if (response.data.success) {
+        setStudents(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+    }
+  };
+
+  // Open new message modal and fetch recipients
+  const handleNewMessage = () => {
+    fetchTeachers();
+    fetchStudents();
+    setShowNewMessageModal(true);
+  };
+
+  // Handle recipient type change
+  const handleRecipientTypeChange = (type) => {
+    setRecipientType(type);
+    setNewMessage(prev => ({
+      ...prev,
+      recipientId: ''
+    }));
+  };
+
+  // Handle input changes for new message form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewMessage(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Send a new message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+
+    if (!newMessage.recipientId || !newMessage.subject || !newMessage.content) {
+      setError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      setSendingMessage(true);
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post(`${API_BASE_URL}/api/messages`, newMessage, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Close modal and reset form
+        setShowNewMessageModal(false);
+
+        // Reset the form
+        setNewMessage({
+          recipientId: '',
+          subject: '',
+          content: ''
+        });
+
+        // Refresh messages to update the list
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Erreur lors de l\'envoi du message');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   // Filter messages based on search term
   const filteredMessages = messages.filter(message =>
     message.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,6 +264,14 @@ const TeacherMessages = () => {
         <Col md={2} className="border-end">
           <div className="folders-sidebar">
             <h5 className="mb-3">Messages</h5>
+            <Button
+              variant="primary"
+              className="w-100 mb-3"
+              onClick={handleNewMessage}
+            >
+              <Plus size={16} className="me-2" />
+              Nouveau message
+            </Button>
             <ListGroup variant="flush">
               <ListGroup.Item
                 action
@@ -337,13 +460,19 @@ const TeacherMessages = () => {
 
               {activeFolder === 'inbox' && (
                 <div className="mt-3">
-                  <Button
-                    variant="primary"
-                    onClick={handleOpenReply}
-                  >
-                    <Send size={16} className="me-2" />
-                    Répondre
-                  </Button>
+                  {!selectedMessage.fromAdmin ? (
+                    <Button
+                      variant="primary"
+                      onClick={handleOpenReply}
+                    >
+                      <Send size={16} className="me-2" />
+                      Répondre
+                    </Button>
+                  ) : (
+                    <div className="alert alert-info">
+                      Ce message a été envoyé par un administrateur et ne peut pas recevoir de réponse.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -414,6 +543,115 @@ const TeacherMessages = () => {
             {sendingReply ? 'Envoi en cours...' : 'Envoyer'}
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      {/* New Message Modal */}
+      <Modal
+        show={showNewMessageModal}
+        onHide={() => setShowNewMessageModal(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Nouveau message</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {error && (
+            <div className="alert alert-danger">{error}</div>
+          )}
+          <Form onSubmit={handleSendMessage}>
+            <div className="mb-3">
+              <div className="btn-group w-100 mb-3">
+                <button
+                  type="button"
+                  className={`btn ${recipientType === 'teacher' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => handleRecipientTypeChange('teacher')}
+                >
+                  Professeurs
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${recipientType === 'student' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => handleRecipientTypeChange('student')}
+                >
+                  Étudiants
+                </button>
+              </div>
+            </div>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Destinataire</Form.Label>
+              {recipientType === 'teacher' ? (
+                <Form.Select
+                  name="recipientId"
+                  value={newMessage.recipientId}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez un professeur</option>
+                  {teachers.map(teacher => (
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.fullName}
+                    </option>
+                  ))}
+                </Form.Select>
+              ) : (
+                <Form.Select
+                  name="recipientId"
+                  value={newMessage.recipientId}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez un étudiant</option>
+                  {students.map(student => (
+                    <option key={student._id} value={student._id}>
+                      {student.fullName}
+                    </option>
+                  ))}
+                </Form.Select>
+              )}
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Sujet</Form.Label>
+              <Form.Control
+                type="text"
+                name="subject"
+                value={newMessage.subject}
+                onChange={handleInputChange}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Message</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={5}
+                name="content"
+                value={newMessage.content}
+                onChange={handleInputChange}
+                required
+              />
+            </Form.Group>
+
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="secondary"
+                className="me-2"
+                onClick={() => setShowNewMessageModal(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={sendingMessage}
+              >
+                {sendingMessage ? 'Envoi en cours...' : 'Envoyer'}
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
       </Modal>
     </Container>
   );

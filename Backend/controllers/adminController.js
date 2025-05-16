@@ -398,7 +398,10 @@ export const getReportData = async (req, res) => {
     const totalSales = await Enrollment.countDocuments(salesQuery);
 
     // Calculer le revenu total
-    const enrollments = await Enrollment.find(salesQuery)
+    const enrollments = await Enrollment.find({
+      ...salesQuery,
+      paymentStatus: 'completed' // Only count completed payments
+    })
       .populate({
         path: 'course',
         select: 'price'
@@ -414,7 +417,12 @@ export const getReportData = async (req, res) => {
 
     let totalRevenue = 0;
     enrollments.forEach(enrollment => {
-      if (enrollment.course && enrollment.course.price) {
+      // First check if the enrollment has an amount field
+      if (enrollment.amount) {
+        totalRevenue += enrollment.amount;
+      }
+      // If not, use the price from the related item
+      else if (enrollment.course && enrollment.course.price) {
         totalRevenue += enrollment.course.price;
       } else if (enrollment.test && enrollment.test.price) {
         totalRevenue += enrollment.test.price;
@@ -695,7 +703,10 @@ const getRevenueByMonthFiltered = async (dateFilter) => {
     query.enrollmentDate = { $gte: twelveMonthsAgo };
   }
 
-  const enrollments = await Enrollment.find(query)
+  const enrollments = await Enrollment.find({
+    ...query,
+    paymentStatus: 'completed' // Only count completed payments
+  })
     .populate({
       path: 'course',
       select: 'price'
@@ -728,7 +739,12 @@ const getRevenueByMonthFiltered = async (dateFilter) => {
     const key = `${year}-${month}`;
 
     let price = 0;
-    if (enrollment.course && enrollment.course.price) {
+    // First check if the enrollment has an amount field
+    if (enrollment.amount) {
+      price = enrollment.amount;
+    }
+    // If not, use the price from the related item
+    else if (enrollment.course && enrollment.course.price) {
       price = enrollment.course.price;
     } else if (enrollment.test && enrollment.test.price) {
       price = enrollment.test.price;
@@ -817,7 +833,8 @@ const getRevenueByMonth = async () => {
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
   const enrollments = await Enrollment.find({
-    enrollmentDate: { $gte: twelveMonthsAgo }
+    enrollmentDate: { $gte: twelveMonthsAgo },
+    paymentStatus: 'completed' // Only count completed payments
   })
     .populate({
       path: 'course',
@@ -851,7 +868,12 @@ const getRevenueByMonth = async () => {
     const key = `${year}-${month}`;
 
     let price = 0;
-    if (enrollment.course && enrollment.course.price) {
+    // First check if the enrollment has an amount field
+    if (enrollment.amount) {
+      price = enrollment.amount;
+    }
+    // If not, use the price from the related item
+    else if (enrollment.course && enrollment.course.price) {
       price = enrollment.course.price;
     } else if (enrollment.test && enrollment.test.price) {
       price = enrollment.test.price;

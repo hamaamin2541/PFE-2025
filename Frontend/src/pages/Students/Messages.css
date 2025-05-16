@@ -3,55 +3,103 @@
   background-color: #f9f9f9;
   border-radius: 10px;
   padding: 20px;
+  height: 100%;
 }
 
-/* Sidebar unique */
-.sidebar {
+/* Message sidebar - renamed to avoid conflicts */
+.message-folders {
   width: 250px;
   padding-right: 20px;
   border-right: 1px solid #e0e0e0;
   background-color: #fff;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
-.sidebar button {
+.message-folders button {
   width: 100%;
 }
 
 /* Liste des messages */
 .message-list {
-  flex-grow: 1;
-  padding: 20px;
+  width: 300px !important;
+  min-width: 300px;
+  max-width: 300px;
+  padding: 0;
+  border-right: 1px solid #e0e0e0;
+  background-color: #fff;
+  overflow-y: auto;
+  height: 100%;
 }
 
 /* Contenu du message sélectionné */
 .message-content {
-  flex-grow: 2;
+  flex: 1;
   padding: 20px;
   background-color: #fff;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  height: 100%;
+}
+
+.message-body {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
 }
 
 .message-body p {
   font-size: 16px;
+  margin-bottom: 10px;
 }
 
 /* Avatar */
 .avatar img {
   border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Fix pour les éléments de liste */
+.messages-container .list-group-item {
+  border-left: none;
+  border-right: none;
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.messages-container .list-group-item:hover {
+  background-color: #f5f5f5;
+}
+
+.messages-container .list-group-item.active {
+  background-color: #e9f0ff;
+  color: #333;
+  border-color: #e0e0e0;
 }
 
 /* Utilisation de Bootstrap pour la réactivité */
-@media (max-width: 767px) {
-  .d-flex {
+@media (max-width: 992px) {
+  .messages-container .d-flex {
     flex-direction: column;
   }
-  .sidebar {
+
+  .message-folders {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
   }
+
+  .message-list {
+    width: 100% !important;
+    max-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+  }
+
   .message-content {
-    margin-top: 20px;
+    width: 100%;
   }
 }

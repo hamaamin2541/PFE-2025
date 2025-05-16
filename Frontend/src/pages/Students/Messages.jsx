@@ -9,7 +9,7 @@ import {
   Search, Mail, Send, Archive, AlertCircle, Star, Trash2, X
 } from 'lucide-react';
 
-export const Messages = () => {
+export const Messages = ({ teacherId }) => {
   const location = useLocation();
   const [activeFolder, setActiveFolder] = useState('inbox');
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -25,18 +25,74 @@ export const Messages = () => {
     content: ''
   });
   const [teachers, setTeachers] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [recipientType, setRecipientType] = useState('teacher');
   const [sendingMessage, setSendingMessage] = useState(false);
 
-  // Check if we were redirected with a teacher ID
+  // Check if we were redirected with a teacher ID (from props or location state)
   useEffect(() => {
-    if (location.state?.teacherId) {
+    // First check the prop (passed from DashboardStudent)
+    if (teacherId) {
       // Find teacher info and open new message modal
-      fetchTeachers(location.state.teacherId);
+      fetchTeachers(teacherId);
+      setRecipientType('teacher');
       setShowNewMessageModal(true);
     }
-  }, [location.state]);
+    // Then check location state (for direct navigation)
+    else if (location.state?.teacherId) {
+      // Find teacher info and open new message modal
+      fetchTeachers(location.state.teacherId);
+      setRecipientType('teacher');
+      setShowNewMessageModal(true);
+    }
 
-  // Fetch messages from API
+    // Check if we were redirected with a student ID
+    if (location.state?.studentId) {
+      // Find student info and open new message modal
+      fetchStudents(location.state.studentId);
+      setRecipientType('student');
+      setShowNewMessageModal(true);
+    }
+
+    // Check if we were redirected with a conversation ID
+    if (location.state?.conversationId) {
+      // Find the conversation and select it
+      fetchConversation(location.state.conversationId);
+    }
+  }, [location.state, teacherId]);
+
+  // Fetch a specific conversation by ID
+  const fetchConversation = async (conversationId) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        setError('Vous devez être connecté pour voir vos messages');
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/messages/${conversationId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success && response.data.data) {
+        // Set the selected message
+        setSelectedMessage(response.data.data);
+
+        // Also fetch all messages to populate the list
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error('Error fetching conversation:', err);
+      setError('Erreur lors du chargement de la conversation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch messages from API with debounce
   const fetchMessages = async () => {
     try {
       setLoading(true);
@@ -48,19 +104,65 @@ export const Messages = () => {
         return;
       }
 
+      // Utiliser un cache pour éviter de recharger les mêmes données
+      const cachedMessages = sessionStorage.getItem(`messages_${activeFolder}`);
+      const cacheTimestamp = sessionStorage.getItem(`messages_${activeFolder}_timestamp`);
+
+      // Vérifier si nous avons un cache récent (moins de 5 minutes)
+      const now = Date.now();
+      const cacheAge = cacheTimestamp ? now - parseInt(cacheTimestamp) : Infinity;
+      const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes
+
+      if (cachedMessages && cacheValid) {
+        setMessages(JSON.parse(cachedMessages));
+        setLoading(false);
+
+        // Rafraîchir en arrière-plan
+        refreshMessagesInBackground();
+        return;
+      }
+
       const response = await axios.get(`${API_BASE_URL}/api/messages?folder=${activeFolder}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.data.success) {
-        setMessages(response.data.data);
+        const messagesData = response.data.data;
+        setMessages(messagesData);
         setError(null);
+
+        // Mettre en cache les résultats
+        sessionStorage.setItem(`messages_${activeFolder}`, JSON.stringify(messagesData));
+        sessionStorage.setItem(`messages_${activeFolder}_timestamp`, now.toString());
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Erreur lors du chargement des messages');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Rafraîchir les messages en arrière-plan sans bloquer l'interface
+  const refreshMessagesInBackground = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await axios.get(`${API_BASE_URL}/api/messages?folder=${activeFolder}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const messagesData = response.data.data;
+        setMessages(messagesData);
+
+        // Mettre à jour le cache
+        sessionStorage.setItem(`messages_${activeFolder}`, JSON.stringify(messagesData));
+        sessionStorage.setItem(`messages_${activeFolder}_timestamp`, Date.now().toString());
+      }
+    } catch (err) {
+      console.error('Error refreshing messages in background:', err);
     }
   };
 
@@ -85,6 +187,27 @@ export const Messages = () => {
     }
   };
 
+  // Fetch students for the new message modal
+  const fetchStudents = async (preselectedStudentId = null) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/users/byRole/student`);
+
+      if (response.data.success) {
+        setStudents(response.data.data);
+
+        // If we have a preselected student, set it in the form
+        if (preselectedStudentId) {
+          setNewMessage(prev => ({
+            ...prev,
+            recipientId: preselectedStudentId
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+    }
+  };
+
   // Send a new message
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -105,16 +228,25 @@ export const Messages = () => {
       if (response.data.success) {
         // Close modal and reset form
         setShowNewMessageModal(false);
+
+        // If the message was sent successfully and we have the new message data
+        if (response.data.data) {
+          // Set the sent message as the selected message
+          setSelectedMessage(response.data.data);
+
+          // Switch to sent folder to show the message
+          setActiveFolder('sent');
+        }
+
+        // Reset the form
         setNewMessage({
           recipientId: '',
           subject: '',
           content: ''
         });
 
-        // Refresh messages if we're in the sent folder
-        if (activeFolder === 'sent') {
-          fetchMessages();
-        }
+        // Refresh messages to update the list
+        fetchMessages();
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -133,14 +265,37 @@ export const Messages = () => {
     }));
   };
 
+  // Utiliser un effet avec une dépendance sur activeFolder
   useEffect(() => {
-    fetchMessages();
+    // Utiliser une référence pour éviter les appels inutiles
+    const controller = new AbortController();
+
+    const loadMessages = async () => {
+      await fetchMessages();
+    };
+
+    loadMessages();
+
+    // Nettoyage en cas de changement de dossier avant la fin du chargement
+    return () => {
+      controller.abort();
+    };
   }, [activeFolder]);
 
-  // Open new message modal and fetch teachers
+  // Open new message modal and fetch recipients
   const handleNewMessage = () => {
     fetchTeachers();
+    fetchStudents();
     setShowNewMessageModal(true);
+  };
+
+  // Handle recipient type change
+  const handleRecipientTypeChange = (type) => {
+    setRecipientType(type);
+    setNewMessage(prev => ({
+      ...prev,
+      recipientId: ''
+    }));
   };
 
   const filteredMessages = messages;
@@ -150,14 +305,15 @@ export const Messages = () => {
 
   return (
     <div className="messages-container">
-      <Card>
+      <Card className="border-0 shadow-sm h-100">
         <Card.Body className="p-0">
-          <div className="d-flex" style={{ minHeight: '600px' }}>
-            {/* Sidebar unique pour les dossiers */}
-            <div className="sidebar message-folders">
+          <div className="d-flex" style={{ height: '700px' }}>
+            {/* Dossiers de messages */}
+            <div className="message-folders">
               <Button
                 variant="primary"
-                className="w-100 rounded-0 mb-3"
+                className="w-100 mb-3 mt-3 mx-auto"
+                style={{ maxWidth: '90%' }}
                 onClick={handleNewMessage}
               >
                 <Send size={16} className="me-2" />
@@ -204,18 +360,24 @@ export const Messages = () => {
             </div>
 
             {/* Liste des messages */}
-            <div className="message-list border-end" style={{ width: '350px' }}>
+            <div className="message-list">
               <div className="p-3 border-bottom">
                 <InputGroup>
-                  <InputGroup.Text>
+                  <InputGroup.Text className="bg-light border-end-0">
                     <Search size={16} />
                   </InputGroup.Text>
-                  <Form.Control placeholder="Rechercher des messages..." />
+                  <Form.Control
+                    placeholder="Rechercher..."
+                    className="border-start-0 bg-light"
+                  />
                 </InputGroup>
               </div>
 
               {loading ? (
                 <div className="text-center p-4 text-muted">
+                  <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Chargement...</span>
+                  </div>
                   <p className="mt-2">Chargement des messages...</p>
                 </div>
               ) : messages.length === 0 ? (
@@ -254,11 +416,11 @@ export const Messages = () => {
             </div>
 
             {/* Contenu du message sélectionné */}
-            <div className="message-content flex-grow-1">
+            <div className="message-content">
               {selectedMessage ? (
                 <div className="p-3">
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5>{selectedMessage.subject}</h5>
+                    <h5 className="mb-0">{selectedMessage.subject}</h5>
                     <div>
                       <Button variant="light" size="sm" className="me-2">
                         <Star size={16} />
@@ -313,10 +475,16 @@ export const Messages = () => {
                   </div>
 
                   <div className="border-top pt-3">
-                    <Button variant="primary" className="me-2">
-                      <Send size={16} className="me-2" />
-                      Répondre
-                    </Button>
+                    {!selectedMessage.fromAdmin ? (
+                      <Button variant="primary" className="me-2">
+                        <Send size={16} className="me-2" />
+                        Répondre
+                      </Button>
+                    ) : (
+                      <small className="text-muted d-block mb-2">
+                        Ce message a été envoyé par un administrateur et ne peut pas recevoir de réponse.
+                      </small>
+                    )}
                     <Button variant="outline-secondary">
                       <AlertCircle size={16} className="me-2" />
                       Signaler
@@ -351,21 +519,56 @@ export const Messages = () => {
             <div className="alert alert-danger">{error}</div>
           )}
           <Form onSubmit={handleSendMessage}>
+            <div className="mb-3">
+              <div className="btn-group w-100 mb-3">
+                <button
+                  type="button"
+                  className={`btn ${recipientType === 'teacher' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => handleRecipientTypeChange('teacher')}
+                >
+                  Professeurs
+                </button>
+                <button
+                  type="button"
+                  className={`btn ${recipientType === 'student' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  onClick={() => handleRecipientTypeChange('student')}
+                >
+                  Étudiants
+                </button>
+              </div>
+            </div>
+
             <Form.Group className="mb-3">
               <Form.Label>Destinataire</Form.Label>
-              <Form.Select
-                name="recipientId"
-                value={newMessage.recipientId}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Sélectionnez un professeur</option>
-                {teachers.map(teacher => (
-                  <option key={teacher._id} value={teacher._id}>
-                    {teacher.fullName}
-                  </option>
-                ))}
-              </Form.Select>
+              {recipientType === 'teacher' ? (
+                <Form.Select
+                  name="recipientId"
+                  value={newMessage.recipientId}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez un professeur</option>
+                  {teachers.map(teacher => (
+                    <option key={teacher._id} value={teacher._id}>
+                      {teacher.fullName}
+                    </option>
+                  ))}
+                </Form.Select>
+              ) : (
+                <Form.Select
+                  name="recipientId"
+                  value={newMessage.recipientId}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez un étudiant</option>
+                  {students.map(student => (
+                    <option key={student._id} value={student._id}>
+                      {student.fullName}
+                    </option>
+                  ))}
+                </Form.Select>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-3">

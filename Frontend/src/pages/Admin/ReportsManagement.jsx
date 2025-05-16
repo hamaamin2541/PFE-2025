@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Tab, Nav, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Spinner, Tab, Nav, Alert, Modal } from 'react-bootstrap';
 import {
   BarChart2, PieChart, Download, RefreshCw, Users, BookOpen, DollarSign,
   UserPlus, GraduationCap, ShoppingCart, CreditCard
@@ -93,49 +93,51 @@ const ReportsManagement = () => {
     } catch (err) {
       console.error('Error fetching report data:', err);
 
-      // En cas d'erreur, utiliser des données de démonstration
-      const mockData = {
+      // Instead of using mock data, show an error and empty data
+      setError('Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
+
+      // Initialize with empty data structure to avoid errors
+      const emptyData = {
         users: {
-          totalUsers: 1250,
-          newUsers: 85,
+          totalUsers: 0,
+          newUsers: 0,
           usersByRole: [
-            { role: 'student', count: 1050 },
-            { role: 'teacher', count: 180 },
-            { role: 'admin', count: 20 }
+            { role: 'student', count: 0 },
+            { role: 'teacher', count: 0 },
+            { role: 'admin', count: 0 }
           ],
           usersByMonth: {
-            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            counts: [45, 52, 68, 74, 62, 90, 85, 95, 110, 120, 135, 150]
+            months: [],
+            counts: []
           }
         },
         content: {
-          totalContent: 320,
+          totalContent: 0,
           contentByType: [
-            { type: 'courses', count: 180 },
-            { type: 'tests', count: 95 },
-            { type: 'formations', count: 45 }
+            { type: 'courses', count: 0 },
+            { type: 'tests', count: 0 },
+            { type: 'formations', count: 0 }
           ],
           contentByMonth: {
-            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            counts: [12, 15, 18, 22, 25, 28, 30, 32, 35, 38, 42, 45]
+            months: [],
+            counts: []
           }
         },
         sales: {
-          totalRevenue: 45250.75,
-          totalSales: 850,
+          totalRevenue: 0,
+          totalSales: 0,
           salesByMonth: {
-            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            counts: [35, 42, 55, 62, 70, 75, 80, 85, 90, 95, 105, 110]
+            months: [],
+            counts: []
           },
           revenueByMonth: {
-            months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            revenues: [1850, 2250, 3100, 3500, 3800, 4200, 4500, 4800, 5100, 5400, 5750, 6000]
+            months: [],
+            revenues: []
           }
         }
       };
 
-      setReportData(mockData);
-      setError('Impossible de se connecter au serveur. Affichage des données de démonstration.');
+      setReportData(emptyData);
       setLoading(false);
     }
   };
@@ -158,7 +160,21 @@ const ReportsManagement = () => {
     }
   };
 
-  const handleExport = async (reportType) => {
+  const [exportFormat, setExportFormat] = useState('pdf');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportingReportType, setExportingReportType] = useState(null);
+
+  const handleShowExportModal = (reportType) => {
+    setExportingReportType(reportType);
+    setShowExportModal(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+    setExportingReportType(null);
+  };
+
+  const handleExport = async (reportType, format = exportFormat) => {
     try {
       const token = localStorage.getItem('token');
 
@@ -167,14 +183,16 @@ const ReportsManagement = () => {
         return;
       }
 
-      setSuccessMessage(`Préparation de l'exportation du rapport ${reportType}...`);
+      setSuccessMessage(`Préparation de l'exportation du rapport ${reportType} au format ${format.toUpperCase()}...`);
+      handleCloseExportModal();
 
       // Préparer les données pour la requête d'exportation
       const requestData = {
         reportType: reportType === 'utilisateurs' ? 'users' :
                     reportType === 'contenu' ? 'courses' :
-                    reportType === 'ventes' ? 'sales' : 'users',
-        format: 'pdf', // Format par défaut
+                    reportType === 'ventes' ? 'sales' :
+                    reportType === 'reclamations' ? 'complaints' : 'users',
+        format: format, // Format spécifié
         dateRange: dateRange
       };
 
@@ -197,7 +215,7 @@ const ReportsManagement = () => {
       );
 
       if (response.data.success) {
-        setSuccessMessage(`Exportation du rapport ${reportType} démarrée. Le fichier sera disponible dans la section Exportations.`);
+        setSuccessMessage(`Exportation du rapport ${reportType} au format ${format.toUpperCase()} démarrée. Le fichier sera disponible dans la section Exportations.`);
       } else {
         setError(response.data.message || 'Erreur lors de l\'exportation du rapport');
       }
@@ -432,7 +450,7 @@ const ReportsManagement = () => {
                     <Button
                       variant="outline-primary"
                       className="export-button-lg"
-                      onClick={() => handleExport('utilisateurs')}
+                      onClick={() => handleShowExportModal('utilisateurs')}
                     >
                       <Download size={16} className="me-2" />
                       <span>Exporter</span>
@@ -593,7 +611,7 @@ const ReportsManagement = () => {
                     <Button
                       variant="outline-primary"
                       className="export-button-lg"
-                      onClick={() => handleExport('contenu')}
+                      onClick={() => handleShowExportModal('contenu')}
                     >
                       <Download size={16} className="me-2" />
                       <span>Exporter</span>
@@ -736,7 +754,7 @@ const ReportsManagement = () => {
                     <Button
                       variant="outline-primary"
                       className="export-button-lg"
-                      onClick={() => handleExport('ventes')}
+                      onClick={() => handleShowExportModal('ventes')}
                     >
                       <Download size={16} className="me-2" />
                       <span>Exporter</span>
@@ -854,6 +872,42 @@ const ReportsManagement = () => {
           </Col>
         </Row>
       </Tab.Container>
+
+      {/* Export Modal */}
+      <Modal show={showExportModal} onHide={handleCloseExportModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Exporter le rapport</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Choisissez le format d'exportation pour le rapport {exportingReportType === 'utilisateurs' ? 'des utilisateurs' :
+                                                                exportingReportType === 'contenu' ? 'du contenu' :
+                                                                exportingReportType === 'ventes' ? 'des ventes' :
+                                                                exportingReportType === 'reclamations' ? 'des réclamations' : ''}</p>
+          <Form.Group className="mb-3">
+            <Form.Label>Format</Form.Label>
+            <Form.Select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value)}
+            >
+              <option value="pdf">PDF</option>
+              <option value="xlsx">Excel (XLSX)</option>
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseExportModal}>
+            Annuler
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => handleExport(exportingReportType, exportFormat)}
+          >
+            Exporter
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

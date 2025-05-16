@@ -1,6 +1,24 @@
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 
+// Check if a message is from admin (used to prevent replies)
+export const isFromAdmin = async (messageId, userId) => {
+  try {
+    const message = await Message.findById(messageId);
+    if (!message) return false;
+
+    // Get the sender
+    const sender = await User.findById(message.sender);
+    if (!sender) return false;
+
+    // Check if sender is admin
+    return sender.role === 'admin';
+  } catch (error) {
+    console.error('Error checking if message is from admin:', error);
+    return false;
+  }
+};
+
 // Send a new message
 export const sendMessage = async (req, res) => {
   try {
@@ -29,6 +47,9 @@ export const sendMessage = async (req, res) => {
         message: 'Recipient not found'
       });
     }
+
+    // All users (teachers, students, admins) can message each other
+    // No additional role-based restrictions needed
 
     // Create message for recipient's inbox
     const inboxMessage = new Message({
@@ -250,6 +271,126 @@ export const getUnreadCount = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error counting unread messages',
+      error: error.message
+    });
+  }
+};
+
+// Admin send message to users (can send to multiple users)
+export const adminSendMessage = async (req, res) => {
+  try {
+    const { recipients, subject, content, recipientType } = req.body;
+
+    if ((!recipients || recipients.length === 0) && !recipientType) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide recipients or a recipient type (students/teachers/admins/all)'
+      });
+    }
+
+    if (!subject || !content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide subject and content'
+      });
+    }
+
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can use this function'
+      });
+    }
+
+    let userIds = [];
+
+    // If specific recipients are provided
+    if (recipients && recipients.length > 0) {
+      userIds = recipients;
+    }
+    // If recipient type is provided (students, teachers, admins, or all)
+    else if (recipientType) {
+      let query = {};
+
+      if (recipientType === 'students') {
+        query.role = 'student';
+      } else if (recipientType === 'teachers') {
+        query.role = 'teacher';
+      } else if (recipientType === 'admins') {
+        query.role = 'admin';
+        // Exclude the current admin from recipients
+        query._id = { $ne: req.user._id };
+      } else if (recipientType !== 'all') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid recipient type. Use "students", "teachers", "admins", or "all"'
+        });
+      }
+
+      const users = await User.find(query).select('_id');
+      userIds = users.map(user => user._id);
+    }
+
+    if (userIds.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No recipients found'
+      });
+    }
+
+    // Create messages for all recipients
+    const messagePromises = [];
+    const sentMessages = [];
+
+    for (const recipientId of userIds) {
+      // Check if recipient is an admin
+      const recipient = await User.findById(recipientId);
+      const isAdminRecipient = recipient && recipient.role === 'admin';
+
+      // Create message for recipient's inbox
+      const inboxMessage = new Message({
+        sender: req.user._id,
+        recipient: recipientId,
+        subject,
+        content,
+        folder: 'inbox',
+        fromAdmin: !isAdminRecipient // Only mark as fromAdmin if recipient is not an admin
+      });
+
+      messagePromises.push(inboxMessage.save());
+      sentMessages.push(inboxMessage);
+    }
+
+    // Create a single copy in admin's sent folder
+    const sentMessage = new Message({
+      sender: req.user._id,
+      recipient: req.user._id, // Admin is both sender and recipient for the sent copy
+      subject,
+      content,
+      folder: 'sent',
+      read: true,
+      fromAdmin: true,
+      recipientCount: userIds.length // Store how many users received this message
+    });
+
+    messagePromises.push(sentMessage.save());
+
+    await Promise.all(messagePromises);
+
+    res.status(201).json({
+      success: true,
+      message: `Message sent successfully to ${userIds.length} recipient(s)`,
+      data: {
+        sentMessage,
+        recipientCount: userIds.length
+      }
+    });
+  } catch (error) {
+    console.error('Error sending admin message:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending message',
       error: error.message
     });
   }

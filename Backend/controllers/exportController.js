@@ -644,18 +644,49 @@ const generateReportFile = async (exportItem, reportType, dateFilter, fullPath, 
 const getUsersForReport = async (dateFilter) => {
   try {
     const users = await User.find(dateFilter)
-      .select('fullName email role createdAt lastLogin')
+      .select('fullName email role createdAt lastLogin phone specialty bio enrollments')
       .sort('-createdAt');
 
-    return users.map(user => ({
-      id: user._id,
-      nom: user.fullName,
-      email: user.email,
-      role: user.role === 'student' ? 'Étudiant' :
-            user.role === 'teacher' ? 'Enseignant' : 'Administrateur',
-      dateInscription: user.createdAt ? new Date(user.createdAt).toLocaleString('fr-FR') : 'N/A',
-      dernièreConnexion: user.lastLogin ? new Date(user.lastLogin).toLocaleString('fr-FR') : 'Jamais'
-    }));
+    // Get enrollment counts for each user
+    const userIds = users.map(user => user._id);
+    const enrollmentCounts = await Enrollment.aggregate([
+      { $match: { user: { $in: userIds } } },
+      { $group: { _id: '$user', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map of user ID to enrollment count
+    const enrollmentCountMap = {};
+    enrollmentCounts.forEach(item => {
+      enrollmentCountMap[item._id] = item.count;
+    });
+
+    return users.map(user => {
+      // Calculate user activity metrics
+      const enrollmentCount = enrollmentCountMap[user._id] || 0;
+      const daysSinceRegistration = user.createdAt ?
+        Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) : 0;
+      const daysSinceLastLogin = user.lastLogin ?
+        Math.floor((new Date() - new Date(user.lastLogin)) / (1000 * 60 * 60 * 24)) : null;
+
+      return {
+        id: user._id,
+        nom: user.fullName,
+        email: user.email,
+        role: user.role === 'student' ? 'Étudiant' :
+              user.role === 'teacher' ? 'Enseignant' : 'Administrateur',
+        téléphone: user.phone || 'Non renseigné',
+        spécialité: user.specialty || 'Non renseignée',
+        biographie: user.bio ? (user.bio.length > 50 ? user.bio.substring(0, 50) + '...' : user.bio) : 'Non renseignée',
+        dateInscription: user.createdAt ? new Date(user.createdAt).toLocaleString('fr-FR') : 'N/A',
+        dernièreConnexion: user.lastLogin ? new Date(user.lastLogin).toLocaleString('fr-FR') : 'Jamais',
+        nombreInscriptions: enrollmentCount,
+        jourDepuisInscription: daysSinceRegistration,
+        jourDepuisDerniereConnexion: daysSinceLastLogin !== null ? daysSinceLastLogin : 'N/A',
+        statutActivité: daysSinceLastLogin !== null ?
+          (daysSinceLastLogin < 7 ? 'Actif' :
+           daysSinceLastLogin < 30 ? 'Modéré' : 'Inactif') : 'Jamais connecté'
+      };
+    });
   } catch (error) {
     console.error('Error getting users for report:', error);
     return [];
@@ -667,21 +698,68 @@ const getCoursesForReport = async (dateFilter) => {
   try {
     const courses = await Course.find(dateFilter)
       .populate('teacher', 'fullName email')
-      .select('title description price level category createdAt views')
+      .select('title description price level category language createdAt views sections students ratings')
       .sort('-createdAt');
 
-    return courses.map(course => ({
-      id: course._id,
-      titre: course.title,
-      description: course.description ? course.description.substring(0, 100) + '...' : 'N/A',
-      prix: course.price ? `${course.price} €` : 'Gratuit',
-      niveau: course.level,
-      catégorie: course.category,
-      enseignant: course.teacher ? course.teacher.fullName : 'N/A',
-      emailEnseignant: course.teacher ? course.teacher.email : 'N/A',
-      dateCreation: course.createdAt ? new Date(course.createdAt).toLocaleString('fr-FR') : 'N/A',
-      vues: course.views || 0
-    }));
+    // Get enrollment counts for each course
+    const courseIds = courses.map(course => course._id);
+    const enrollmentCounts = await Enrollment.aggregate([
+      { $match: { course: { $in: courseIds }, itemType: 'course' } },
+      { $group: { _id: '$course', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map of course ID to enrollment count
+    const enrollmentCountMap = {};
+    enrollmentCounts.forEach(item => {
+      enrollmentCountMap[item._id] = item.count;
+    });
+
+    return courses.map(course => {
+      // Calculate course metrics
+      const enrollmentCount = enrollmentCountMap[course._id] || 0;
+      const daysSinceCreation = course.createdAt ?
+        Math.floor((new Date() - new Date(course.createdAt)) / (1000 * 60 * 60 * 24)) : 0;
+
+      // Calculate average rating
+      let avgRating = 0;
+      if (course.ratings && course.ratings.length > 0) {
+        const sum = course.ratings.reduce((acc, rating) => acc + rating.value, 0);
+        avgRating = (sum / course.ratings.length).toFixed(1);
+      }
+
+      // Calculate content metrics
+      const sectionCount = course.sections ? course.sections.length : 0;
+      let resourceCount = 0;
+      if (course.sections) {
+        course.sections.forEach(section => {
+          if (section.resources) {
+            resourceCount += section.resources.length;
+          }
+        });
+      }
+
+      return {
+        id: course._id,
+        titre: course.title,
+        description: course.description ? course.description.substring(0, 100) + '...' : 'N/A',
+        prix: course.price ? `${course.price} €` : 'Gratuit',
+        niveau: course.level,
+        catégorie: course.category,
+        langue: course.language || 'Français',
+        enseignant: course.teacher ? course.teacher.fullName : 'N/A',
+        emailEnseignant: course.teacher ? course.teacher.email : 'N/A',
+        dateCreation: course.createdAt ? new Date(course.createdAt).toLocaleString('fr-FR') : 'N/A',
+        jourDepuisCreation: daysSinceCreation,
+        vues: course.views || 0,
+        nombreInscriptions: enrollmentCount,
+        nombreSections: sectionCount,
+        nombreRessources: resourceCount,
+        nombreEvaluations: course.ratings ? course.ratings.length : 0,
+        noteAverage: avgRating > 0 ? `${avgRating}/5` : 'Aucune évaluation',
+        tauxConversion: course.views > 0 ? `${((enrollmentCount / course.views) * 100).toFixed(1)}%` : '0%',
+        popularité: course.views > 100 ? 'Élevée' : (course.views > 50 ? 'Moyenne' : 'Faible')
+      };
+    });
   } catch (error) {
     console.error('Error getting courses for report:', error);
     return [];
@@ -695,43 +773,165 @@ const getSalesForReport = async (dateFilter) => {
       ...dateFilter,
       paymentStatus: 'completed'
     })
-      .populate('user', 'fullName email')
-      .populate('course', 'title price')
-      .populate('test', 'title price')
-      .populate('formation', 'title price')
+      .populate('user', 'fullName email role')
+      .populate({
+        path: 'course',
+        select: 'title price category level teacher',
+        populate: { path: 'teacher', select: 'fullName' }
+      })
+      .populate({
+        path: 'test',
+        select: 'title price category difficulty teacher',
+        populate: { path: 'teacher', select: 'fullName' }
+      })
+      .populate({
+        path: 'formation',
+        select: 'title price category level teacher',
+        populate: { path: 'teacher', select: 'fullName' }
+      })
       .sort('-createdAt');
 
-    return enrollments.map(enrollment => {
+    // Calculate total revenue
+    let totalRevenue = 0;
+    let revenueByCategory = {};
+    let revenueByContentType = { 'Cours': 0, 'Test': 0, 'Formation': 0 };
+    let salesByDay = {};
+
+    // Get current date and format it
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().split('T')[0];
+
+    // Initialize sales by day for the last 30 days
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      salesByDay[dateStr] = { count: 0, revenue: 0 };
+    }
+
+    const formattedEnrollments = enrollments.map(enrollment => {
       let contentType = '';
       let contentTitle = '';
       let price = 0;
+      let category = '';
+      let level = '';
+      let teacherName = '';
 
       if (enrollment.course) {
         contentType = 'Cours';
         contentTitle = enrollment.course.title;
         price = enrollment.course.price || 0;
+        category = enrollment.course.category || 'Non catégorisé';
+        level = enrollment.course.level || 'Non spécifié';
+        teacherName = enrollment.course.teacher ? enrollment.course.teacher.fullName : 'N/A';
       } else if (enrollment.test) {
         contentType = 'Test';
         contentTitle = enrollment.test.title;
         price = enrollment.test.price || 0;
+        category = enrollment.test.category || 'Non catégorisé';
+        level = enrollment.test.difficulty || 'Non spécifié';
+        teacherName = enrollment.test.teacher ? enrollment.test.teacher.fullName : 'N/A';
       } else if (enrollment.formation) {
         contentType = 'Formation';
         contentTitle = enrollment.formation.title;
         price = enrollment.formation.price || 0;
+        category = enrollment.formation.category || 'Non catégorisé';
+        level = enrollment.formation.level || 'Non spécifié';
+        teacherName = enrollment.formation.teacher ? enrollment.formation.teacher.fullName : 'N/A';
       }
+
+      // Update total revenue
+      totalRevenue += price;
+
+      // Update revenue by category
+      if (!revenueByCategory[category]) {
+        revenueByCategory[category] = 0;
+      }
+      revenueByCategory[category] += price;
+
+      // Update revenue by content type
+      revenueByContentType[contentType] += price;
+
+      // Update sales by day
+      if (enrollment.enrollmentDate) {
+        const enrollmentDate = new Date(enrollment.enrollmentDate);
+        const dateStr = enrollmentDate.toISOString().split('T')[0];
+        if (salesByDay[dateStr]) {
+          salesByDay[dateStr].count += 1;
+          salesByDay[dateStr].revenue += price;
+        }
+      }
+
+      // Calculate days since purchase
+      const daysSincePurchase = enrollment.enrollmentDate ?
+        Math.floor((new Date() - new Date(enrollment.enrollmentDate)) / (1000 * 60 * 60 * 24)) : 0;
 
       return {
         id: enrollment._id,
         étudiant: enrollment.user ? enrollment.user.fullName : 'N/A',
         email: enrollment.user ? enrollment.user.email : 'N/A',
+        roleUtilisateur: enrollment.user ?
+          (enrollment.user.role === 'student' ? 'Étudiant' :
+           enrollment.user.role === 'teacher' ? 'Enseignant' : 'Administrateur') : 'N/A',
         typeContenu: contentType,
         titreContenu: contentTitle,
+        catégorie: category,
+        niveau: level,
+        enseignant: teacherName,
         prix: `${price} €`,
-        dateAchat: enrollment.createdAt ? new Date(enrollment.createdAt).toLocaleString('fr-FR') : 'N/A',
+        dateAchat: enrollment.enrollmentDate ? new Date(enrollment.enrollmentDate).toLocaleString('fr-FR') : 'N/A',
+        jourDepuisAchat: daysSincePurchase,
         méthodePayment: enrollment.paymentMethod || 'N/A',
-        transactionId: enrollment.transactionId || 'N/A'
+        transactionId: enrollment.transactionId || 'N/A',
+        statut: enrollment.status || 'active',
+        progression: enrollment.progress ? `${enrollment.progress}%` : '0%'
       };
     });
+
+    // Add summary information at the beginning of the report
+    const summaryData = {
+      id: 'summary',
+      étudiant: `RÉSUMÉ - ${formattedEnrollments.length} ventes`,
+      email: `Revenu total: ${totalRevenue} €`,
+      roleUtilisateur: '',
+      typeContenu: `Cours: ${revenueByContentType['Cours']} €`,
+      titreContenu: `Tests: ${revenueByContentType['Test']} €`,
+      catégorie: `Formations: ${revenueByContentType['Formation']} €`,
+      niveau: '',
+      enseignant: '',
+      prix: '',
+      dateAchat: `Généré le: ${new Date().toLocaleString('fr-FR')}`,
+      jourDepuisAchat: '',
+      méthodePayment: '',
+      transactionId: '',
+      statut: '',
+      progression: ''
+    };
+
+    // Add category breakdown
+    const categoryBreakdown = Object.keys(revenueByCategory).map(category => {
+      return {
+        id: `category_${category}`,
+        étudiant: '',
+        email: '',
+        roleUtilisateur: '',
+        typeContenu: '',
+        titreContenu: '',
+        catégorie: `CATÉGORIE: ${category}`,
+        niveau: '',
+        enseignant: '',
+        prix: `${revenueByCategory[category]} €`,
+        dateAchat: `${((revenueByCategory[category] / totalRevenue) * 100).toFixed(1)}% du total`,
+        jourDepuisAchat: '',
+        méthodePayment: '',
+        transactionId: '',
+        statut: '',
+        progression: ''
+      };
+    });
+
+    // Return the data with summary at the beginning
+    return [summaryData, ...categoryBreakdown, ...formattedEnrollments];
   } catch (error) {
     console.error('Error getting sales for report:', error);
     return [];
@@ -742,21 +942,153 @@ const getSalesForReport = async (dateFilter) => {
 const getComplaintsForReport = async (dateFilter) => {
   try {
     const complaints = await Complaint.find(dateFilter)
-      .populate('user', 'fullName email')
+      .populate('user', 'fullName email role')
+      .populate('assignedTo', 'fullName email')
+      .populate({
+        path: 'relatedItem.itemId',
+        select: 'title'
+      })
       .sort('-createdAt');
 
-    return complaints.map(complaint => ({
-      id: complaint._id,
-      sujet: complaint.subject,
-      description: complaint.description ? complaint.description.substring(0, 100) + '...' : 'N/A',
-      étudiant: complaint.user ? complaint.user.fullName : 'N/A',
-      email: complaint.user ? complaint.user.email : 'N/A',
-      statut: complaint.status === 'pending' ? 'En attente' :
-              complaint.status === 'in-progress' ? 'En cours' : 'Résolu',
-      dateCreation: complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('fr-FR') : 'N/A',
-      dateRésolution: complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleString('fr-FR') : 'N/A',
-      commentaires: complaint.comments ? complaint.comments.length : 0
-    }));
+    // Calculate statistics
+    const totalComplaints = complaints.length;
+    const statusCounts = {
+      'pending': 0,
+      'in_progress': 0,
+      'resolved': 0,
+      'rejected': 0
+    };
+
+    const typeCounts = {
+      'course': 0,
+      'teacher': 0,
+      'payment': 0,
+      'technical': 0,
+      'other': 0
+    };
+
+    const priorityCounts = {
+      'low': 0,
+      'medium': 0,
+      'high': 0,
+      'urgent': 0
+    };
+
+    let avgResolutionTime = 0;
+    let resolvedCount = 0;
+
+    complaints.forEach(complaint => {
+      // Count by status
+      if (complaint.status && statusCounts[complaint.status] !== undefined) {
+        statusCounts[complaint.status]++;
+      }
+
+      // Count by type
+      if (complaint.type && typeCounts[complaint.type] !== undefined) {
+        typeCounts[complaint.type]++;
+      }
+
+      // Count by priority
+      if (complaint.priority && priorityCounts[complaint.priority] !== undefined) {
+        priorityCounts[complaint.priority]++;
+      }
+
+      // Calculate resolution time for resolved complaints
+      if (complaint.status === 'resolved' && complaint.resolvedAt && complaint.createdAt) {
+        const resolutionTime = new Date(complaint.resolvedAt) - new Date(complaint.createdAt);
+        avgResolutionTime += resolutionTime;
+        resolvedCount++;
+      }
+    });
+
+    // Calculate average resolution time in hours
+    if (resolvedCount > 0) {
+      avgResolutionTime = Math.round(avgResolutionTime / resolvedCount / (1000 * 60 * 60));
+    }
+
+    const formattedComplaints = complaints.map(complaint => {
+      // Get related item title if available
+      let relatedItemTitle = 'N/A';
+      if (complaint.relatedItem && complaint.relatedItem.itemId && complaint.relatedItem.itemId.title) {
+        relatedItemTitle = complaint.relatedItem.itemId.title;
+      }
+
+      // Calculate resolution time for this complaint
+      let resolutionTime = 'N/A';
+      if (complaint.status === 'resolved' && complaint.resolvedAt && complaint.createdAt) {
+        const timeDiff = new Date(complaint.resolvedAt) - new Date(complaint.createdAt);
+        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+        const days = Math.floor(hours / 24);
+
+        if (days > 0) {
+          resolutionTime = `${days} jour(s) et ${hours % 24} heure(s)`;
+        } else {
+          resolutionTime = `${hours} heure(s)`;
+        }
+      }
+
+      // Format comments
+      let lastComment = 'Aucun commentaire';
+      if (complaint.comments && complaint.comments.length > 0) {
+        const comment = complaint.comments[complaint.comments.length - 1];
+        lastComment = `${comment.text.substring(0, 50)}${comment.text.length > 50 ? '...' : ''} (${new Date(comment.date).toLocaleString('fr-FR')})`;
+      }
+
+      return {
+        id: complaint._id,
+        sujet: complaint.subject,
+        description: complaint.description ? complaint.description.substring(0, 100) + '...' : 'N/A',
+        étudiant: complaint.user ? complaint.user.fullName : 'N/A',
+        email: complaint.user ? complaint.user.email : 'N/A',
+        roleUtilisateur: complaint.user ?
+          (complaint.user.role === 'student' ? 'Étudiant' :
+           complaint.user.role === 'teacher' ? 'Enseignant' : 'Administrateur') : 'N/A',
+        type: complaint.type === 'course' ? 'Cours' :
+              complaint.type === 'teacher' ? 'Enseignant' :
+              complaint.type === 'payment' ? 'Paiement' :
+              complaint.type === 'technical' ? 'Technique' : 'Autre',
+        priorité: complaint.priority === 'low' ? 'Basse' :
+                  complaint.priority === 'medium' ? 'Moyenne' :
+                  complaint.priority === 'high' ? 'Haute' : 'Urgente',
+        statut: complaint.status === 'pending' ? 'En attente' :
+                complaint.status === 'in_progress' ? 'En cours' :
+                complaint.status === 'resolved' ? 'Résolu' : 'Rejeté',
+        contenuConcerné: relatedItemTitle,
+        typeContenu: complaint.relatedItem ? complaint.relatedItem.itemType : 'N/A',
+        assignéÀ: complaint.assignedTo ? complaint.assignedTo.fullName : 'Non assigné',
+        dateCreation: complaint.createdAt ? new Date(complaint.createdAt).toLocaleString('fr-FR') : 'N/A',
+        dateRésolution: complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleString('fr-FR') : 'N/A',
+        tempsRésolution: resolutionTime,
+        nombreCommentaires: complaint.comments ? complaint.comments.length : 0,
+        dernierCommentaire: lastComment,
+        piècesJointes: complaint.attachments ? complaint.attachments.length : 0
+      };
+    });
+
+    // Add summary information at the beginning of the report
+    const summaryData = {
+      id: 'summary',
+      sujet: `RÉSUMÉ - ${totalComplaints} réclamations`,
+      description: `Temps moyen de résolution: ${avgResolutionTime} heure(s)`,
+      étudiant: '',
+      email: '',
+      roleUtilisateur: '',
+      type: `Cours: ${typeCounts.course}, Enseignant: ${typeCounts.teacher}`,
+      priorité: `Haute: ${priorityCounts.high}, Urgente: ${priorityCounts.urgent}`,
+      statut: `En attente: ${statusCounts.pending}, En cours: ${statusCounts.in_progress}`,
+      contenuConcerné: `Résolu: ${statusCounts.resolved}, Rejeté: ${statusCounts.rejected}`,
+      typeContenu: '',
+      assignéÀ: '',
+      dateCreation: `Généré le: ${new Date().toLocaleString('fr-FR')}`,
+      dateRésolution: '',
+      tempsRésolution: '',
+      nombreCommentaires: '',
+      dernierCommentaire: '',
+      piècesJointes: ''
+    };
+
+    // Return the data with summary at the beginning
+    return [summaryData, ...formattedComplaints];
   } catch (error) {
     console.error('Error getting complaints for report:', error);
     return [];
@@ -794,30 +1126,251 @@ const generateExcel = async (data, fullPath, reportType) => {
     try {
       // Create a new workbook
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet(reportType);
 
-      // Add headers
+      // Set workbook properties
+      workbook.creator = 'WeLearn Platform';
+      workbook.lastModifiedBy = 'WeLearn Platform';
+      workbook.created = new Date();
+      workbook.modified = new Date();
+
+      // Add title based on report type
+      let title = '';
+      switch (reportType) {
+        case 'users':
+          title = 'Rapport des Utilisateurs';
+          break;
+        case 'courses':
+          title = 'Rapport des Cours';
+          break;
+        case 'sales':
+          title = 'Rapport des Ventes';
+          break;
+        case 'complaints':
+          title = 'Rapport des Réclamations';
+          break;
+        default:
+          title = 'Rapport';
+      }
+
+      workbook.title = title;
+      workbook.subject = title;
+      workbook.keywords = 'rapport, welearn, education';
+
+      // Create worksheet
+      const worksheet = workbook.addWorksheet(reportType, {
+        pageSetup: {
+          paperSize: 9, // A4
+          orientation: 'landscape',
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0
+        }
+      });
+
+      // Check if we have summary data (first item with id 'summary')
+      let hasSummary = false;
+      let summaryData = null;
+
+      if (data.length > 0 && data[0].id === 'summary') {
+        hasSummary = true;
+        summaryData = data[0];
+
+        // Create a summary section
+        worksheet.mergeCells('A1:H1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = 'RÉSUMÉ DU RAPPORT';
+        titleCell.font = {
+          name: 'Arial',
+          size: 16,
+          bold: true,
+          color: { argb: 'FFFFFFFF' }
+        };
+        titleCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4A90E2' }
+        };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(1).height = 30;
+
+        // Add summary data based on report type
+        let summaryRow = 2;
+
+        if (reportType === 'sales') {
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.étudiant;
+          worksheet.getCell(`A${summaryRow}`).font = { bold: true };
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.email;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.typeContenu;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.titreContenu;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.catégorie;
+          summaryRow++;
+        } else if (reportType === 'complaints') {
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.sujet;
+          worksheet.getCell(`A${summaryRow}`).font = { bold: true };
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.description;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.type;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.priorité;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.statut;
+          summaryRow++;
+
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = summaryData.contenuConcerné;
+          summaryRow++;
+        } else {
+          worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+          worksheet.getCell(`A${summaryRow}`).value = `Nombre total d'éléments: ${data.length - 1}`;
+          worksheet.getCell(`A${summaryRow}`).font = { bold: true };
+          summaryRow++;
+        }
+
+        // Add generation date
+        worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+        worksheet.getCell(`A${summaryRow}`).value = `Généré le: ${new Date().toLocaleString('fr-FR')}`;
+        summaryRow++;
+
+        // Add empty row as separator
+        summaryRow++;
+
+        // Format summary section
+        for (let i = 2; i < summaryRow; i++) {
+          worksheet.getRow(i).height = 20;
+          if (worksheet.getCell(`A${i}`).value) {
+            worksheet.getCell(`A${i}`).alignment = { horizontal: 'left', vertical: 'middle' };
+          }
+        }
+
+        // Remove summary from data for table display
+        data = data.slice(1);
+
+        // Add table title
+        worksheet.mergeCells(`A${summaryRow}:H${summaryRow}`);
+        const tableTitleCell = worksheet.getCell(`A${summaryRow}`);
+        tableTitleCell.value = 'DONNÉES DÉTAILLÉES';
+        tableTitleCell.font = {
+          name: 'Arial',
+          size: 14,
+          bold: true,
+          color: { argb: 'FF333333' }
+        };
+        tableTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        worksheet.getRow(summaryRow).height = 25;
+
+        summaryRow++;
+      }
+
+      // Add data table
       if (data.length > 0) {
         const headers = Object.keys(data[0]);
-        worksheet.addRow(headers);
 
-        // Add data
-        data.forEach(item => {
-          const row = [];
-          headers.forEach(header => {
-            row.push(item[header]);
-          });
-          worksheet.addRow(row);
-        });
+        // Determine starting row for data table
+        const startRow = hasSummary ? worksheet.lastRow.number + 1 : 1;
+
+        // Add headers
+        const headerRow = worksheet.addRow(headers);
 
         // Format headers
-        worksheet.getRow(1).font = { bold: true };
-        worksheet.getRow(1).fill = {
+        headerRow.font = { bold: true, color: { argb: 'FF333333' } };
+        headerRow.fill = {
           type: 'pattern',
           pattern: 'solid',
           fgColor: { argb: 'FFE0E0E0' }
         };
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+        headerRow.height = 20;
+
+        // Add data rows
+        data.forEach((item, index) => {
+          const row = [];
+          headers.forEach(header => {
+            row.push(item[header] || '');
+          });
+
+          const dataRow = worksheet.addRow(row);
+
+          // Add alternating row colors
+          if (index % 2 === 0) {
+            dataRow.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF9F9F9' }
+            };
+          }
+
+          dataRow.alignment = { vertical: 'middle' };
+          dataRow.height = 18;
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+          let maxLength = 0;
+          column.eachCell({ includeEmpty: true }, cell => {
+            const columnLength = cell.value ? cell.value.toString().length : 10;
+            if (columnLength > maxLength) {
+              maxLength = columnLength;
+            }
+          });
+          column.width = Math.min(maxLength + 2, 30);
+        });
+
+        // Add borders to all cells in the data table
+        const endRow = worksheet.lastRow.number;
+        const endCol = headers.length;
+
+        for (let i = startRow; i <= endRow; i++) {
+          for (let j = 1; j <= endCol; j++) {
+            const cell = worksheet.getCell(i, j);
+            cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' }
+            };
+          }
+        }
+
+        // Freeze the header row
+        worksheet.views = [
+          { state: 'frozen', xSplit: 0, ySplit: startRow }
+        ];
       }
+
+      // Add footer
+      const footerRow = worksheet.lastRow.number + 2;
+      worksheet.mergeCells(`A${footerRow}:H${footerRow}`);
+      const footerCell = worksheet.getCell(`A${footerRow}`);
+      footerCell.value = 'WeLearn - Plateforme d\'apprentissage en ligne';
+      footerCell.font = {
+        name: 'Arial',
+        size: 10,
+        color: { argb: 'FF999999' }
+      };
+      footerCell.alignment = { horizontal: 'center' };
 
       // Write to file
       workbook.xlsx.writeFile(fullPath)
@@ -854,7 +1407,17 @@ const generatePDF = async (data, fullPath, reportType) => {
   return new Promise((resolve, reject) => {
     try {
       // Create a new PDF document
-      const doc = new PDFDocument();
+      const doc = new PDFDocument({
+        margins: { top: 50, bottom: 50, left: 50, right: 50 },
+        size: 'A4',
+        info: {
+          Title: `Rapport ${reportType}`,
+          Author: 'WeLearn Platform',
+          Subject: `Rapport ${reportType}`,
+          Keywords: 'rapport, welearn, education'
+        }
+      });
+
       const stream = fs.createWriteStream(fullPath);
 
       // Handle errors on the stream
@@ -865,70 +1428,327 @@ const generatePDF = async (data, fullPath, reportType) => {
 
       doc.pipe(stream);
 
-      // Add title
+      // Add title and header
       let title = '';
+      let subtitle = '';
+
       switch (reportType) {
         case 'users':
           title = 'Rapport des Utilisateurs';
+          subtitle = 'Statistiques et informations détaillées sur les utilisateurs';
           break;
         case 'courses':
           title = 'Rapport des Cours';
+          subtitle = 'Statistiques et informations détaillées sur les cours';
           break;
         case 'sales':
           title = 'Rapport des Ventes';
+          subtitle = 'Statistiques et informations détaillées sur les ventes';
           break;
         case 'complaints':
           title = 'Rapport des Réclamations';
+          subtitle = 'Statistiques et informations détaillées sur les réclamations';
           break;
         default:
           title = 'Rapport';
+          subtitle = 'Informations détaillées';
       }
 
-      doc.fontSize(25).text(title, { align: 'center' });
-      doc.moveDown();
-      doc.fontSize(12).text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, { align: 'right' });
-      doc.moveDown();
+      // Add logo or header image (placeholder)
+      // doc.image('path/to/logo.png', 50, 45, { width: 50 });
 
-      // Add data
+      // Add header with background color
+      doc.fillColor('#4A90E2')
+         .rect(50, 50, doc.page.width - 100, 60)
+         .fill();
+
+      doc.fillColor('white')
+         .fontSize(24)
+         .font('Helvetica-Bold')
+         .text(title, 70, 65, { align: 'left' });
+
+      doc.fontSize(12)
+         .text(subtitle, 70, 95, { align: 'left' });
+
+      // Add generation date and time
+      doc.fillColor('black')
+         .fontSize(10)
+         .font('Helvetica')
+         .text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 50, 130, { align: 'right' });
+
+      // Add horizontal line
+      doc.strokeColor('#CCCCCC')
+         .lineWidth(1)
+         .moveTo(50, 150)
+         .lineTo(doc.page.width - 50, 150)
+         .stroke();
+
+      doc.moveDown(2);
+
+      // Add summary section if available (first item in data array)
+      if (data.length > 0 && data[0].id === 'summary') {
+        const summaryData = data[0];
+
+        doc.fillColor('#333333')
+           .fontSize(14)
+           .font('Helvetica-Bold')
+           .text('Résumé', 50, 170);
+
+        doc.moveDown(0.5);
+
+        // Create a summary box
+        doc.fillColor('#F5F5F5')
+           .rect(50, doc.y, doc.page.width - 100, 80)
+           .fill();
+
+        doc.fillColor('#333333')
+           .fontSize(11)
+           .font('Helvetica')
+           .text(summaryData.sujet, 60, doc.y + 10);
+
+        doc.moveDown(0.5);
+
+        // Add other summary fields based on report type
+        if (reportType === 'users') {
+          doc.text(`Nombre total d'utilisateurs: ${data.length - 1}`, 60);
+        } else if (reportType === 'sales') {
+          doc.text(summaryData.email, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.typeContenu, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.titreContenu, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.catégorie, 60);
+        } else if (reportType === 'complaints') {
+          doc.text(summaryData.description, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.type, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.priorité, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.statut, 60);
+          doc.moveDown(0.5);
+          doc.text(summaryData.contenuConcerné, 60);
+        }
+
+        doc.moveDown(2);
+
+        // Remove summary from data for table display
+        data = data.slice(1);
+      }
+
+      // Add data table
       if (data.length > 0) {
+        // Add table title
+        doc.fillColor('#333333')
+           .fontSize(14)
+           .font('Helvetica-Bold')
+           .text('Données détaillées', 50, doc.y);
+
+        doc.moveDown();
+
         // Add table headers
         const headers = Object.keys(data[0]);
         let yPos = doc.y;
 
-        // Calculate column widths
+        // Calculate column widths - limit to 5 columns per page for readability
         const pageWidth = doc.page.width - 100;
-        const colWidth = pageWidth / headers.length;
+        const maxColumns = Math.min(5, headers.length);
+        const colWidth = pageWidth / maxColumns;
 
-        // Draw headers
-        headers.forEach((header, i) => {
-          doc.font('Helvetica-Bold')
-             .fontSize(10)
-             .text(header, 50 + (i * colWidth), yPos, { width: colWidth, align: 'left' });
-        });
+        // Draw header background
+        doc.fillColor('#E0E0E0')
+           .rect(50, yPos, pageWidth, 20)
+           .fill();
 
-        doc.moveDown();
-        yPos = doc.y;
+        // Draw headers - first set of columns
+        for (let i = 0; i < maxColumns; i++) {
+          if (i < headers.length) {
+            doc.fillColor('#333333')
+               .font('Helvetica-Bold')
+               .fontSize(10)
+               .text(headers[i], 55 + (i * colWidth), yPos + 5, { width: colWidth - 10, align: 'left' });
+          }
+        }
 
-        // Draw data rows
+        yPos += 25;
+
+        // Draw data rows - first set of columns
         data.forEach((row, rowIndex) => {
+          // Add alternating row background
+          if (rowIndex % 2 === 0) {
+            doc.fillColor('#F9F9F9')
+               .rect(50, yPos, pageWidth, 20)
+               .fill();
+          }
+
           // Check if we need a new page
-          if (yPos > doc.page.height - 100) {
+          if (yPos > doc.page.height - 70) {
             doc.addPage();
+
+            // Add header on new page
             yPos = 50;
+
+            // Draw header background on new page
+            doc.fillColor('#E0E0E0')
+               .rect(50, yPos, pageWidth, 20)
+               .fill();
+
+            // Draw headers on new page
+            for (let i = 0; i < maxColumns; i++) {
+              if (i < headers.length) {
+                doc.fillColor('#333333')
+                   .font('Helvetica-Bold')
+                   .fontSize(10)
+                   .text(headers[i], 55 + (i * colWidth), yPos + 5, { width: colWidth - 10, align: 'left' });
+              }
+            }
+
+            yPos += 25;
           }
 
           // Draw row
-          headers.forEach((header, i) => {
-            doc.font('Helvetica')
-               .fontSize(9)
-               .text(row[header] || '', 50 + (i * colWidth), yPos, { width: colWidth, align: 'left' });
-          });
+          for (let i = 0; i < maxColumns; i++) {
+            if (i < headers.length) {
+              const value = row[headers[i]] || '';
+              doc.fillColor('#333333')
+                 .font('Helvetica')
+                 .fontSize(9)
+                 .text(value.toString(), 55 + (i * colWidth), yPos + 5, {
+                   width: colWidth - 10,
+                   align: 'left',
+                   ellipsis: true
+                 });
+            }
+          }
 
           yPos += 20;
-          doc.y = yPos;
         });
+
+        // If there are more columns, add them on new pages
+        if (headers.length > maxColumns) {
+          for (let colSet = 1; colSet < Math.ceil(headers.length / maxColumns); colSet++) {
+            doc.addPage();
+
+            // Add page title
+            doc.fillColor('#333333')
+               .fontSize(14)
+               .font('Helvetica-Bold')
+               .text(`Données détaillées (suite ${colSet})`, 50, 50);
+
+            doc.moveDown();
+
+            yPos = doc.y;
+
+            // Draw header background
+            doc.fillColor('#E0E0E0')
+               .rect(50, yPos, pageWidth, 20)
+               .fill();
+
+            // Draw headers for this set of columns
+            for (let i = 0; i < maxColumns; i++) {
+              const headerIndex = colSet * maxColumns + i;
+              if (headerIndex < headers.length) {
+                doc.fillColor('#333333')
+                   .font('Helvetica-Bold')
+                   .fontSize(10)
+                   .text(headers[headerIndex], 55 + (i * colWidth), yPos + 5, { width: colWidth - 10, align: 'left' });
+              }
+            }
+
+            yPos += 25;
+
+            // Draw data rows for this set of columns
+            data.forEach((row, rowIndex) => {
+              // Add alternating row background
+              if (rowIndex % 2 === 0) {
+                doc.fillColor('#F9F9F9')
+                   .rect(50, yPos, pageWidth, 20)
+                   .fill();
+              }
+
+              // Check if we need a new page
+              if (yPos > doc.page.height - 70) {
+                doc.addPage();
+
+                // Add header on new page
+                yPos = 50;
+
+                // Draw header background on new page
+                doc.fillColor('#E0E0E0')
+                   .rect(50, yPos, pageWidth, 20)
+                   .fill();
+
+                // Draw headers on new page
+                for (let i = 0; i < maxColumns; i++) {
+                  const headerIndex = colSet * maxColumns + i;
+                  if (headerIndex < headers.length) {
+                    doc.fillColor('#333333')
+                       .font('Helvetica-Bold')
+                       .fontSize(10)
+                       .text(headers[headerIndex], 55 + (i * colWidth), yPos + 5, { width: colWidth - 10, align: 'left' });
+                  }
+                }
+
+                yPos += 25;
+              }
+
+              // Draw row
+              for (let i = 0; i < maxColumns; i++) {
+                const headerIndex = colSet * maxColumns + i;
+                if (headerIndex < headers.length) {
+                  const value = row[headers[headerIndex]] || '';
+                  doc.fillColor('#333333')
+                     .font('Helvetica')
+                     .fontSize(9)
+                     .text(value.toString(), 55 + (i * colWidth), yPos + 5, {
+                       width: colWidth - 10,
+                       align: 'left',
+                       ellipsis: true
+                     });
+                }
+              }
+
+              yPos += 20;
+            });
+          }
+        }
       } else {
-        doc.fontSize(12).text('Aucune donnée trouvée pour cette période', { align: 'center' });
+        doc.fontSize(12)
+           .text('Aucune donnée trouvée pour cette période', { align: 'center' });
+      }
+
+      // Add footer
+      const pageCount = doc.bufferedPageRange().count;
+      for (let i = 0; i < pageCount; i++) {
+        doc.switchToPage(i);
+
+        // Add page number
+        doc.fillColor('#999999')
+           .fontSize(8)
+           .text(
+             `Page ${i + 1} sur ${pageCount}`,
+             50,
+             doc.page.height - 50,
+             { align: 'center' }
+           );
+
+        // Add footer line
+        doc.strokeColor('#CCCCCC')
+           .lineWidth(1)
+           .moveTo(50, doc.page.height - 60)
+           .lineTo(doc.page.width - 50, doc.page.height - 60)
+           .stroke();
+
+        // Add footer text
+        doc.fillColor('#999999')
+           .fontSize(8)
+           .text(
+             'WeLearn - Plateforme d\'apprentissage en ligne',
+             50,
+             doc.page.height - 40,
+             { align: 'center' }
+           );
       }
 
       // End the document

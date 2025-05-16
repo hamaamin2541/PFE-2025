@@ -26,7 +26,7 @@ import {
   GraduationCap,
   ClipboardCheck
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTeacher } from '../../context/TeacherContext';
 import { API_BASE_URL } from '../../config/api';
 import './DashboardTeacher.css';
@@ -43,7 +43,8 @@ import TeacherSettings from './TeacherSettings';
 
 const DashboardTeacher = () => {
   const { teacherData, updateTeacherData } = useTeacher();
-  const [activeTab, setActiveTab] = useState('courses');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'courses');
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalEarnings: 0,
@@ -137,7 +138,8 @@ const DashboardTeacher = () => {
       case 'analytics':
         return <TeacherAnalytics />;
       case 'messages':
-        return <TeacherMessages />;
+        // Pass any teacherId from location state to the TeacherMessages component
+        return <TeacherMessages teacherId={location.state?.teacherId} />;
       case 'settings':
         return <TeacherSettings />;
       case 'add-course':

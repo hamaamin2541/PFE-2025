@@ -32,6 +32,14 @@ const messageSchema = new mongoose.Schema({
   starred: {
     type: Boolean,
     default: false
+  },
+  fromAdmin: {
+    type: Boolean,
+    default: false
+  },
+  recipientCount: {
+    type: Number,
+    default: 1
   }
 }, {
   timestamps: true

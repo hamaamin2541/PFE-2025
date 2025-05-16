@@ -37,8 +37,13 @@ function NosProfesseurs() {
       return;
     }
 
-    // Redirect to messages page with teacher ID
-    navigate('/dashboard-student', { state: { activeTab: 'messages', teacherId } });
+    // Redirect to the appropriate dashboard based on user role
+    if (userData.role === 'teacher') {
+      navigate('/dashboard-teacher', { state: { activeTab: 'messages', teacherId } });
+    } else {
+      // Default to student dashboard for students and other roles
+      navigate('/dashboard-student', { state: { activeTab: 'messages', teacherId } });
+    }
   };
 
   const handleRateTeacher = (teacher) => {
