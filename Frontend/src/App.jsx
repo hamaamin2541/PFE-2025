@@ -8,6 +8,10 @@ import { StudentProvider } from './context/StudentContext';
 import { FormationProvider } from './context/FormationContext';
 import { TeacherProvider } from './context/TeacherContext';
 
+// Route protection components
+import PrivateRoute from './components/Auth/PrivateRoute';
+import RoleBasedRoute from './components/Auth/RoleBasedRoute';
+
 // Pages d'authentification
 import SeConnecter from './components/Auth/SeConnecter';
 import Register from './components/Auth/Register';
@@ -76,6 +80,7 @@ function App() {
               <Navbar onShowModal={handleShowModal} />
 
               <Routes>
+                {/* Public Routes - Accessible to everyone */}
                 <Route path="/" element={<Navigate to="/Accueil" />} />
                 <Route path="/Accueil" element={<Accueil onShowModal={handleShowModal} />} />
                 <Route path="/Contact" element={<Contact />} />
@@ -83,22 +88,104 @@ function App() {
                 <Route path="/NosProfesseurs" element={<NosProfesseurs />} />
                 <Route path="/SeConnecter" element={<SeConnecter onCloseModal={handleCloseModal} />} />
                 <Route path="/Register" element={<Register />} />
-                <Route path="/dashboard-student" element={<DashboardStudent />} />
-                <Route path="/dashboard-student/complaints" element={<UserComplaints />} />
-                <Route path="/course/:enrollmentId" element={<CourseView />} />
-                <Route path="/formation/:enrollmentId" element={<FormationView />} />
-                <Route path="/test/:enrollmentId" element={<TestView />} />
-                <Route path="/dashboard-teacher" element={<DashboardTeacher />} />
-                <Route path="/dashboard-teacher/edit-course/:id" element={<EditCourse />} />
-                <Route path="/dashboard-teacher/edit-test/:id" element={<EditTest />} />
-                <Route path="/dashboard-teacher/edit-formation/:id" element={<EditFormation />} />
 
-                //yetregrlou
-            <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/success" element={<Success />} />
-                  <Route path="/cancel"  element={<Cancel />} />
-                {/* Routes d'administration */}
-                <Route path="/admin" element={<AdminLayout />}>
+                {/* Student Routes - Protected for students */}
+                <Route
+                  path="/dashboard-student"
+                  element={
+                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin']} redirectPath="/">
+                      <DashboardStudent />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard-student/complaints"
+                  element={
+                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin']} redirectPath="/">
+                      <UserComplaints />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/course/:enrollmentId"
+                  element={
+                    <PrivateRoute>
+                      <CourseView />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/formation/:enrollmentId"
+                  element={
+                    <PrivateRoute>
+                      <FormationView />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/test/:enrollmentId"
+                  element={
+                    <PrivateRoute>
+                      <TestView />
+                    </PrivateRoute>
+                  }
+                />
+
+                {/* Teacher Routes - Protected for teachers */}
+                <Route
+                  path="/dashboard-teacher"
+                  element={
+                    <RoleBasedRoute allowedRoles={['teacher', 'admin']} redirectPath="/">
+                      <DashboardTeacher />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard-teacher/edit-course/:id"
+                  element={
+                    <RoleBasedRoute allowedRoles={['teacher', 'admin']} redirectPath="/">
+                      <EditCourse />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard-teacher/edit-test/:id"
+                  element={
+                    <RoleBasedRoute allowedRoles={['teacher', 'admin']} redirectPath="/">
+                      <EditTest />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard-teacher/edit-formation/:id"
+                  element={
+                    <RoleBasedRoute allowedRoles={['teacher', 'admin']} redirectPath="/">
+                      <EditFormation />
+                    </RoleBasedRoute>
+                  }
+                />
+
+                {/* Payment Routes - Protected for students */}
+                <Route
+                  path="/checkout"
+                  element={
+                    <RoleBasedRoute allowedRoles={['student']} redirectPath="/">
+                      <Checkout />
+                    </RoleBasedRoute>
+                  }
+                />
+                <Route path="/success" element={<Success />} />
+                <Route path="/cancel" element={<Cancel />} />
+
+                {/* Admin Routes - Protected for admins */}
+                <Route
+                  path="/admin"
+                  element={
+                    <RoleBasedRoute allowedRoles={['admin']} redirectPath="/">
+                      <AdminLayout />
+                    </RoleBasedRoute>
+                  }
+                >
                   <Route index element={<Navigate to="/admin/dashboard" />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="users" element={<UserManagement />} />

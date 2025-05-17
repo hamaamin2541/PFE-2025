@@ -5,7 +5,34 @@ import morgan from 'morgan';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-dotenv.config();
+
+// Get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables first, before any other imports
+// Explicitly specify the path to the .env file
+const envPath = join(__dirname, '.env');
+console.log('Looking for .env file at:', envPath);
+if (fs.existsSync(envPath)) {
+  console.log('.env file exists');
+} else {
+  console.log('.env file does NOT exist at this location');
+}
+
+const result = dotenv.config({ path: envPath });
+console.log('Dotenv config result:', result.error ? `Error loading .env file: ${result.error.message}` : '.env file loaded successfully');
+
+// Check if OPENAI_API_KEY is loaded
+if (process.env.OPENAI_API_KEY) {
+  const keyPreview = process.env.OPENAI_API_KEY.substring(0, 5) + '...';
+  console.log(`OPENAI_API_KEY is loaded (starts with ${keyPreview}, length: ${process.env.OPENAI_API_KEY.length})`);
+} else {
+  console.log('OPENAI_API_KEY is NOT loaded');
+}
+
+console.log('Environment variables loaded:', Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('KEY')).join(', '));
+
 import connectDB from './config/db.js';
 import { errorHandler } from './utils/errorHandler.js'; // Import custom error handler
 import Stripe from 'stripe';
@@ -27,8 +54,7 @@ import teacherRatingRoutes from './routes/teacherRatingRoutes.js';
 import testimonialRoutes from './routes/testimonialRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
-
-dotenv.config();
+import aiRoutes from './routes/aiRoutes.js';
 
 // Make sure you have JWT_SECRET in your environment variables
 if (!process.env.JWT_SECRET) {
@@ -37,9 +63,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 connectDB();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Ensure uploads directory exists
 const uploadsDir = join(__dirname, 'uploads', 'profiles');
@@ -95,6 +118,7 @@ app.use('/api/teacher-ratings', teacherRatingRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/exports', exportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/ai', aiRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
