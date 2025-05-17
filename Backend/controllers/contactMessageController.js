@@ -1,5 +1,7 @@
 import ContactMessage from '../models/ContactMessage.js';
 
+import sendMailContact from '../utils/sendMailContact.js';
+
 // Créer un nouveau message de contact
 export const createContactMessage = async (req, res) => {
   try {
@@ -21,11 +23,8 @@ export const createContactMessage = async (req, res) => {
 
     await contactMessage.save();
 
-    // Fonctionnalité d'envoi d'email désactivée
-    // Pour activer cette fonctionnalité, installez nodemailer avec npm install nodemailer
-    // et décommentez le code suivant :
-    // sendConfirmationEmail(email, name);
-
+    sendMailContact(name, email, subject, message);
+    console.log("email sent");
     res.status(201).json({
       success: true,
       message: 'Votre message a été envoyé avec succès'
