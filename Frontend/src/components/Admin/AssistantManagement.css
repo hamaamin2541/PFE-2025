@@ -1,0 +1,57 @@
+.assistant-management-container {
+  padding: 20px;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #0d6efd;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.eligibility-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eligibility-status h6 {
+  margin-bottom: 0;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.table th {
+  background-color: #f8f9fa;
+}
+
+.badge {
+  font-weight: normal;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.badge.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.badge.bg-dark {
+  background-color: #343a40 !important;
+}

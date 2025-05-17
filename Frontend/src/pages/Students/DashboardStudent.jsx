@@ -1,9 +1,11 @@
 // DashboardStudent.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Button, Image, Card, ProgressBar, Badge, Table, Spinner } from 'react-bootstrap';
-import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, FileText, Layers } from 'lucide-react';
+import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, Star } from 'lucide-react';
 import { useStudent } from '../../context/StudentContext';
 import { useFormation } from '../../context/FormationContext';
+import { useGamification } from '../../context/GamificationContext';
+import PointsDisplay from '../../components/Gamification/PointsDisplay';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/api';
 import Overview from './Overview';
@@ -21,6 +23,7 @@ const DashboardStudent = () => {
   const [profileImage, setProfileImage] = useState("https://randomuser.me/api/portraits/men/32.jpg");
   const { studentData, updateStudentData } = useStudent();
   const { formations, updateFormations } = useFormation();
+  const { points, badges, refreshGamificationData } = useGamification();
   const [isNewStudent, setIsNewStudent] = useState(true);
   const [courses, setCourses] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
@@ -70,6 +73,9 @@ const DashboardStudent = () => {
           setIsNewStudent(true);
           // Initialize notifications from userData or empty array
           setNotifications(userData.notifications || []);
+
+          // Refresh gamification data after student data is loaded
+          refreshGamificationData();
         }
       } catch (error) {
         console.error('Error fetching student data:', error);
@@ -90,12 +96,24 @@ const DashboardStudent = () => {
     // Use the first available user ID
     const userId = userData?._id || studentData?._id;
 
-    if (userId) {
+    let isMounted = true;
+
+    if (userId && isMounted) {
       console.log('Calling updateFormations with userId:', userId);
-      updateFormations(userId);
+      // Wrap in try/catch to prevent unhandled promise rejections
+      try {
+        updateFormations(userId);
+      } catch (error) {
+        console.log('Error updating formations, will use mock data:', error);
+      }
     } else {
       console.log('No user ID found for fetching formations');
     }
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -862,8 +880,18 @@ const DashboardStudent = () => {
             </div>
             <h5>{studentData?.fullName || 'Loading...'}</h5>
             <p className="text-muted">{studentData?.role || 'Étudiant'}</p>
-            <div className="rating mb-3">
-              <span className="ms-1">{studentData?.rating || '0'}</span>
+
+            {/* Points Display */}
+            <div className="points-display mb-3">
+              <PointsDisplay points={points} size="md" showTooltip={true} />
+            </div>
+
+            {/* Badges Display */}
+            <div className="badges-display mb-3">
+              <Badge bg="info" pill className="px-3 py-2">
+                <Award size={16} className="me-1" />
+                {badges?.length || 0} badges
+              </Badge>
             </div>
             <div className="profile-completion mb-3">
               <div className="d-flex justify-content-between align-items-center mb-1">
@@ -891,6 +919,12 @@ const DashboardStudent = () => {
               <Nav.Link active={activeTab === 'contenus'} onClick={() => setActiveTab('contenus')}>
                 <BookOpen size={18} className="me-2" />
                 Mes Contenus
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link onClick={() => navigate('/mes-certificats')}>
+                <Award size={18} className="me-2" />
+                Mes Certificats
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>

@@ -1,0 +1,70 @@
+.study-session-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  max-height: 400px;
+  min-height: 300px;
+}
+
+.message {
+  margin-bottom: 1rem;
+  display: flex;
+}
+
+.message-sent {
+  justify-content: flex-end;
+}
+
+.message-received {
+  justify-content: flex-start;
+}
+
+.message-content {
+  max-width: 80%;
+}
+
+.message-sender {
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
+  color: #6c757d;
+}
+
+.message-bubble {
+  padding: 0.5rem 0.8rem;
+  border-radius: 1rem;
+  word-break: break-word;
+}
+
+.message-sent .message-bubble {
+  background-color: #0d6efd;
+  color: white;
+  border-bottom-right-radius: 0.2rem;
+}
+
+.message-received .message-bubble {
+  background-color: #e9ecef;
+  color: #212529;
+  border-bottom-left-radius: 0.2rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #6c757d;
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+.card-footer {
+  background-color: white;
+  border-top: 1px solid #e9ecef;
+}

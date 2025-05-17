@@ -70,3 +70,17 @@ export const adminOnly = (req, res, next) => {
   console.log('Admin access granted');
   next();
 };
+
+// Middleware pour les assistants et rôles supérieurs (teacher, admin)
+export const assistantOrHigher = (req, res, next) => {
+  console.log('Assistant middleware called, user role:', req.user.role);
+  if (!['assistant', 'teacher', 'admin'].includes(req.user.role)) {
+    console.log('Access denied: User is not an assistant, teacher, or admin');
+    return res.status(403).json({
+      success: false,
+      message: 'Cette action nécessite des privilèges d\'assistant ou supérieurs'
+    });
+  }
+  console.log('Assistant access granted');
+  next();
+};

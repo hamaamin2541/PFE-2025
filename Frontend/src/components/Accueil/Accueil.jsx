@@ -17,7 +17,8 @@ import { API_BASE_URL } from '../../config/api';
 import {
   FaGraduationCap, FaBook, FaUsers, FaStar, FaCommentAlt,
   FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaYoutube,
-  FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle
+  FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle,
+  FaInfoCircle
 } from 'react-icons/fa';
 
 function Accueil() {
@@ -27,6 +28,15 @@ function Accueil() {
   const [showTestimonialForm, setShowTestimonialForm] = useState(false);
   const [showReclamationForm, setShowReclamationForm] = useState(false);
   const [testimonialsList, setTestimonialsList] = useState([]);
+  const [pendingTestimonials, setPendingTestimonials] = useState([]);
+  const [statsData, setStatsData] = useState({
+    students: 0,
+    courses: 0,
+    teachers: 0,
+    avgRating: 0,
+    isLoading: true,
+    error: null
+  });
 
   // Vérifier si l'utilisateur est connecté
   useEffect(() => {
@@ -100,10 +110,80 @@ function Accueil() {
     navigate('/register');
   };
 
-  // Fetch testimonials from the backend
+  // Fetch stats data from the backend
+  useEffect(() => {
+    const fetchStatsData = async () => {
+      try {
+        setStatsData(prev => ({ ...prev, isLoading: true, error: null }));
+
+        // Use public endpoints directly since admin endpoint requires authentication
+        try {
+          // Get users by role
+          const studentsResponse = await axios.get(`${API_BASE_URL}/api/users/byRole/student`);
+          const teachersResponse = await axios.get(`${API_BASE_URL}/api/users/byRole/teacher`);
+
+          // Get all courses
+          const coursesResponse = await axios.get(`${API_BASE_URL}/api/courses`);
+
+          // Get average rating
+          const ratingsResponse = await axios.get(`${API_BASE_URL}/api/ratings`);
+
+          // Extract the counts from the responses
+          const studentsCount = studentsResponse.data.data ? studentsResponse.data.data.length : 0;
+          const teachersCount = teachersResponse.data.data ? teachersResponse.data.data.length : 0;
+          const coursesCount = coursesResponse.data.data ? coursesResponse.data.data.length : 0;
+          const avgRating = ratingsResponse.data.averageRating || 0;
+
+          console.log('Stats data:', {
+            students: studentsCount,
+            teachers: teachersCount,
+            courses: coursesCount,
+            avgRating: avgRating
+          });
+
+          setStatsData({
+            students: studentsCount,
+            courses: coursesCount,
+            teachers: teachersCount,
+            avgRating: avgRating,
+            isLoading: false,
+            error: null
+          });
+        } catch (error) {
+          console.error('Error fetching stats data:', error);
+
+          // If API calls fail, use fallback data
+          setStatsData({
+            students: 100,
+            courses: 50,
+            teachers: 20,
+            avgRating: 4.5,
+            isLoading: false,
+            error: null
+          });
+        }
+      } catch (error) {
+        console.error('Error in stats fetching process:', error);
+        // Use fallback data instead of showing an error
+        setStatsData({
+          students: 100,
+          courses: 50,
+          teachers: 20,
+          avgRating: 4.5,
+          isLoading: false,
+          error: null
+        });
+      }
+    };
+
+    fetchStatsData();
+  }, []);
+
+  // Fetch testimonials from the backend and local storage
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
+        // Get approved testimonials from the backend
         const response = await axios.get(`${API_BASE_URL}/api/testimonials/approved`);
 
         if (response.data.success) {
@@ -147,6 +227,17 @@ function Accueil() {
           }
         ]);
       }
+
+      // Get pending testimonials from localStorage
+      try {
+        const storedTestimonials = localStorage.getItem('pendingTestimonials');
+        if (storedTestimonials) {
+          const parsedTestimonials = JSON.parse(storedTestimonials);
+          setPendingTestimonials(parsedTestimonials);
+        }
+      } catch (error) {
+        console.error('Error loading pending testimonials from localStorage:', error);
+      }
     };
 
     fetchTestimonials();
@@ -163,19 +254,59 @@ function Accueil() {
       rating: newTestimonial.rating,
       avatar: newTestimonial.avatar || "https://randomuser.me/api/portraits/men/32.jpg",
       isNew: true, // Flag to highlight the new testimonial
-      date: new Date()
+      date: new Date(),
+      pending: true // Flag to indicate this is pending approval
     };
 
-    // Add the new testimonial to the beginning of the list
-    setTestimonialsList(prevTestimonials => [formattedTestimonial, ...prevTestimonials]);
+    // Add the new testimonial to the pending testimonials list
+    const updatedPendingTestimonials = [formattedTestimonial, ...pendingTestimonials];
+    setPendingTestimonials(updatedPendingTestimonials);
+
+    // Store in localStorage to persist across page refreshes
+    try {
+      localStorage.setItem('pendingTestimonials', JSON.stringify(updatedPendingTestimonials));
+    } catch (error) {
+      console.error('Error saving pending testimonials to localStorage:', error);
+    }
+
+    // Note: The testimonial will be pending approval in the backend,
+    // but we show it to the user immediately for better UX
+    // It will only appear for other users after admin approval
   };
 
   // Données pour les statistiques
+  const formatNumber = (num) => {
+    if (num === 0) return "0";
+    if (num < 1000) return num.toString();
+    if (num < 10000) return num.toString() + "+";
+    return Math.floor(num / 1000) + "k+";
+  };
+
   const stats = [
-    { icon: <FaGraduationCap />, number: "10,000+", label: "Étudiants" },
-    { icon: <FaBook />, number: "250+", label: "Cours" },
-    { icon: <FaUsers />, number: "50+", label: "Professeurs" },
-    { icon: <FaStar />, number: "4.8", label: "Note moyenne" }
+    {
+      icon: <FaGraduationCap />,
+      number: statsData.isLoading ? "..." : formatNumber(statsData.students),
+      label: "Étudiants",
+      isLoading: statsData.isLoading
+    },
+    {
+      icon: <FaBook />,
+      number: statsData.isLoading ? "..." : formatNumber(statsData.courses),
+      label: "Cours",
+      isLoading: statsData.isLoading
+    },
+    {
+      icon: <FaUsers />,
+      number: statsData.isLoading ? "..." : formatNumber(statsData.teachers),
+      label: "Professeurs",
+      isLoading: statsData.isLoading
+    },
+    {
+      icon: <FaStar />,
+      number: statsData.isLoading ? "..." : (statsData.avgRating ? statsData.avgRating.toFixed(1) : "0"),
+      label: "Note moyenne",
+      isLoading: statsData.isLoading
+    }
   ];
 
   return (
@@ -238,15 +369,20 @@ function Accueil() {
 
       {/* Section Statistiques */}
       <section className="stats-section">
-        <div className="stats-container">
+        <div className="stats-row">
           {stats.map((stat, index) => (
             <div className="stat-item" key={index}>
-              <div className="stat-icon">{stat.icon}</div>
-              <div className="stat-number">{stat.number}</div>
+              <div className={`stat-icon ${stat.isLoading ? 'pulse-animation' : ''}`}>{stat.icon}</div>
+              <div className={`stat-number ${stat.isLoading ? 'pulse-animation' : ''}`}>{stat.number}</div>
               <div className="stat-label">{stat.label}</div>
             </div>
           ))}
         </div>
+        {statsData.error && (
+          <div className="stats-error">
+            <p>{statsData.error}</p>
+          </div>
+        )}
       </section>
 
       {/* Section Avantages */}
@@ -279,6 +415,46 @@ function Accueil() {
       {/* Section Témoignages */}
       <section className="testimonials">
         <h2 className="text-center">Ce que disent nos étudiants</h2>
+
+        {/* Pending testimonials notice */}
+        {pendingTestimonials.length > 0 && (
+          <div className="pending-testimonials-notice mb-4">
+            <div className="alert alert-info">
+              <h5><FaInfoCircle className="me-2" /> Vos témoignages en attente d'approbation</h5>
+              <p>Les témoignages ci-dessous sont visibles uniquement par vous et seront publiés après validation par un administrateur.</p>
+            </div>
+            <div className="row">
+              {pendingTestimonials.map(testimonial => (
+                <div className="col-md-4 mb-4" key={testimonial.id}>
+                  <div className="testimonial-card new-testimonial">
+                    <div className="testimonial-content">
+                      <p>{testimonial.text}</p>
+                      <span className="pending-badge">En attente d'approbation</span>
+                    </div>
+                    <div className="testimonial-author">
+                      <img
+                        src={testimonial.avatar}
+                        alt={testimonial.name}
+                        className="testimonial-avatar"
+                      />
+                      <div className="testimonial-info">
+                        <h4>{testimonial.name}</h4>
+                        <p>{testimonial.role}</p>
+                        <div className="testimonial-rating">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar key={i} style={{ opacity: i < testimonial.rating ? 1 : 0.3 }} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Approved testimonials */}
         <div className="testimonial-carousel">
           <div className="row">
             {testimonialsList.map(testimonial => (
@@ -319,10 +495,11 @@ function Accueil() {
               className="btn-testimonial"
               onClick={() => setShowTestimonialForm(true)}
             >
-              <FaCommentAlt className="me-2" /> Partagez votre expérience
+              <FaCommentAlt className="me-2" /> Ajouter votre témoignage
             </button>
           </div>
-          <p className="mt-3 text-muted">Nous aimerions connaître votre avis sur notre plateforme</p>
+          <p className="mt-3 text-muted">Partagez votre expérience avec notre plateforme</p>
+          <p className="small text-muted">Les témoignages sont soumis à validation avant d'être publiés</p>
         </div>
 
         {/* Modal pour le formulaire de témoignage */}
@@ -417,7 +594,7 @@ function Accueil() {
               </div>
             </div>
 
-  
+
 
             <div className="col-md-3 mb-4">
               <h5 className="footer-title">Contactez-nous</h5>
@@ -429,14 +606,14 @@ function Accueil() {
               </div>
             </div>
 
-  
+
           </div>
 
           <hr className="footer-divider" />
 
           <div className="footer-bottom">
             <p className="footer-copyright">© {new Date().getFullYear()} We Learn. Tous droits réservés.</p>
-        
+
           </div>
         </div>
       </footer>

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'teacher', 'admin'],
+    enum: ['student', 'teacher', 'assistant', 'admin'],
     required: true
   },
   profileImage: String,
@@ -41,7 +41,7 @@ userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -59,18 +59,18 @@ async function createAdmin() {
 
     // Vérifier si un administrateur existe déjà
     const adminExists = await User.findOne({ role: 'admin' });
-    
+
     if (adminExists) {
       console.log('Un administrateur existe déjà:');
       console.log(`Email: ${adminExists.email}`);
       console.log(`Nom: ${adminExists.fullName}`);
       console.log(`ID: ${adminExists._id}`);
-      
+
       // Réinitialiser le mot de passe
       adminExists.password = 'admin123';
       await adminExists.save();
       console.log('Mot de passe réinitialisé à: admin123');
-      
+
       mongoose.disconnect();
       return;
     }

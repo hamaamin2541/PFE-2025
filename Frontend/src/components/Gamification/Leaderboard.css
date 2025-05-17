@@ -1,0 +1,63 @@
+.leaderboard-card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.leaderboard-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+}
+
+.leaderboard-card .table {
+  margin-bottom: 0;
+}
+
+.leaderboard-card .table th {
+  border-top: none;
+  font-weight: 600;
+  color: #6c757d;
+  background-color: #f8f9fa;
+}
+
+.rank-icon {
+  display: inline-block;
+}
+
+.rank-gold {
+  color: #FFD700;
+}
+
+.rank-silver {
+  color: #C0C0C0;
+}
+
+.rank-bronze {
+  color: #CD7F32;
+}
+
+.rank-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.points-badge {
+  font-weight: 600;
+}
+
+.current-user-row {
+  background-color: rgba(13, 110, 253, 0.05);
+}

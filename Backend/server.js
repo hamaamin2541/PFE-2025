@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import path, { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import http from 'http';
+import { Server } from 'socket.io';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +57,12 @@ import testimonialRoutes from './routes/testimonialRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import certificateRoutes from './routes/certificateRoutes.js';
+import studySessionRoutes from './routes/studySessionRoutes.js';
+import gamificationRoutes from './routes/gamificationRoutes.js';
+import studyTimeRoutes from './routes/studyTimeRoutes.js';
+import courseQuestionRoutes from './routes/courseQuestionRoutes.js';
+import assistantRoutes from './routes/assistantRoutes.js';
 
 // Make sure you have JWT_SECRET in your environment variables
 if (!process.env.JWT_SECRET) {
@@ -77,8 +85,9 @@ const uploadsVideosDir = join(__dirname, 'uploads/videos');
 const uploadsProfilesDir = join(__dirname, 'uploads/profiles');
 const uploadsComplaintsDir = join(__dirname, 'uploads/complaints');
 const uploadsExportsDir = join(__dirname, 'uploads/exports');
+const uploadsCertificatesDir = join(__dirname, 'uploads/certificates');
 
-[publicImagesDir, uploadsBaseDir, uploadsVideosDir, uploadsProfilesDir, uploadsComplaintsDir, uploadsExportsDir].forEach(dir => {
+[publicImagesDir, uploadsBaseDir, uploadsVideosDir, uploadsProfilesDir, uploadsComplaintsDir, uploadsExportsDir, uploadsCertificatesDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     console.log(`Created directory: ${dir}`);
@@ -119,6 +128,12 @@ app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/exports', exportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/study-sessions', studySessionRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/study-time', studyTimeRoutes);
+app.use('/api/course-questions', courseQuestionRoutes);
+app.use('/api/assistants', assistantRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
@@ -154,13 +169,54 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
+// Create HTTP server
+const server = http.createServer(app);
 
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
-app.listen(PORT, () => {
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Join a study session room
+  socket.on('join-study-session', (sessionId) => {
+    socket.join(`study-session-${sessionId}`);
+    console.log(`User ${socket.id} joined study session ${sessionId}`);
+  });
+
+  // Handle video player events
+  socket.on('video-play', (data) => {
+    socket.to(`study-session-${data.sessionId}`).emit('video-play', data);
+  });
+
+  socket.on('video-pause', (data) => {
+    socket.to(`study-session-${data.sessionId}`).emit('video-pause', data);
+  });
+
+  socket.on('video-seek', (data) => {
+    socket.to(`study-session-${data.sessionId}`).emit('video-seek', data);
+  });
+
+  // Handle chat messages
+  socket.on('send-message', (data) => {
+    io.to(`study-session-${data.sessionId}`).emit('receive-message', data);
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-
-  // Créer un administrateur par défaut
-
 });
 
 // Error handling middleware

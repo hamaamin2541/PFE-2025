@@ -129,16 +129,59 @@ export const updateEnrollmentProgress = async (req, res) => {
       });
     }
 
+    // Check if this is a completion event
+    const wasCompleted = enrollment.status === 'completed';
+    const isNowCompleted = status === 'completed' || progress === 100;
+
     // Update enrollment
     const updatedEnrollment = await Enrollment.findByIdAndUpdate(
       enrollmentId,
       {
         progress: progress !== undefined ? progress : enrollment.progress,
         status: status || enrollment.status,
-        lastAccessDate: Date.now()
+        lastAccessDate: Date.now(),
+        completionDate: isNowCompleted && !wasCompleted ? Date.now() : enrollment.completionDate
       },
       { new: true }
-    );
+    ).populate('course test formation');
+
+    // Import gamification service
+    const gamificationService = await import('../services/gamificationService.js');
+
+    // Handle gamification for completion events
+    if (isNowCompleted && !wasCompleted) {
+      // Course completion
+      if (enrollment.itemType === 'course' && enrollment.course) {
+        await gamificationService.handleCourseCompletion(
+          req.user._id,
+          enrollment.course._id
+        );
+      }
+
+      // Quiz/Test completion
+      if (enrollment.itemType === 'test' && enrollment.test) {
+        // Assume a score of 80% for now (in a real app, you'd get the actual score)
+        const score = 80;
+        await gamificationService.handleQuizCompletion(
+          req.user._id,
+          enrollment.test._id,
+          score
+        );
+      }
+
+      // Formation completion
+      if (enrollment.itemType === 'formation' && enrollment.formation) {
+        // Award points for formation completion (similar to course)
+        await gamificationService.awardPoints(
+          req.user._id,
+          100,
+          `completing formation ${enrollment.formation._id}`
+        );
+      }
+    }
+
+    // Update streak regardless of completion
+    await gamificationService.updateStreak(req.user._id);
 
     res.status(200).json({
       success: true,

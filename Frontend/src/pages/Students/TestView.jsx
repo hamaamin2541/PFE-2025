@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Form } from 'react-bootstrap';
-import { ArrowLeft, Clock, Award, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Form, Toast, ToastContainer } from 'react-bootstrap';
+import { ArrowLeft, Clock, Award, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Save, Download } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE_URL } from '../../config/api';
+import { API_BASE_URL, api } from '../../config/api';
+import { useGamification } from '../../context/GamificationContext';
+import { useStudyTime } from '../../context/StudyTimeContext';
+import { useStudyTimeTracking } from '../../services/studyTimeService';
 
 const TestView = () => {
   const { enrollmentId } = useParams();
   const navigate = useNavigate();
+  const { refreshGamificationData } = useGamification();
+  const { refreshWeeklyStats } = useStudyTime();
   const [enrollment, setEnrollment] = useState(null);
   const [test, setTest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +24,35 @@ const TestView = () => {
   const [testCompleted, setTestCompleted] = useState(false);
   const [score, setScore] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
+  const [certificateSuccess, setCertificateSuccess] = useState(false);
+  const [certificateError, setCertificateError] = useState(null);
+  const [certificateData, setCertificateData] = useState(null);
+  const [activeStudyTime, setActiveStudyTime] = useState(null);
+  const studyTimeTrackingRef = useRef(null);
+
+  // Initialize study time tracking
+  useEffect(() => {
+    if (test && test._id) {
+      // Create a tracking object
+      studyTimeTrackingRef.current = useStudyTimeTracking('test', test._id);
+
+      // Start tracking when component mounts
+      const startTracking = async () => {
+        const session = await studyTimeTrackingRef.current.startTracking();
+        setActiveStudyTime(session);
+      };
+
+      startTracking();
+
+      // End tracking when component unmounts
+      return () => {
+        if (studyTimeTrackingRef.current) {
+          studyTimeTrackingRef.current.endTracking(testCompleted);
+        }
+      };
+    }
+  }, [test, testCompleted]);
 
   useEffect(() => {
     const fetchEnrollment = async () => {
@@ -43,7 +77,7 @@ const TestView = () => {
           if (response.data.data.itemType === 'test' && response.data.data.test) {
             setTest(response.data.data.test);
             setProgress(response.data.data.progress || 0);
-            
+
             // If test is already completed
             if (response.data.data.progress === 100) {
               setTestCompleted(true);
@@ -77,7 +111,7 @@ const TestView = () => {
       // Auto-submit when time is up
       handleSubmitTest();
     }
-    
+
     return () => clearTimeout(timer);
   }, [testStarted, timeLeft, testCompleted]);
 
@@ -107,8 +141,6 @@ const TestView = () => {
 
   const handleSubmitTest = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
       // Calculate score
       let correctAnswers = 0;
       test.questions.forEach(question => {
@@ -116,25 +148,71 @@ const TestView = () => {
           correctAnswers++;
         }
       });
-      
+
       const scorePercentage = Math.round((correctAnswers / test.questions.length) * 100);
-      
+
       // Update enrollment with score and progress
-      await axios.put(`${API_BASE_URL}/api/enrollments/${enrollmentId}`, {
+      await api.put(`/api/enrollments/${enrollmentId}`, {
         progress: 100,
         status: 'completed',
         score: scorePercentage
-      }, {
+      });
+
+      setTestCompleted(true);
+      setScore(scorePercentage);
+      setProgress(100);
+
+      // Refresh gamification data after test completion
+      console.log('Test completed! Refreshing gamification data...');
+
+      // End the study time tracking with completion flag
+      if (studyTimeTrackingRef.current) {
+        await studyTimeTrackingRef.current.endTracking(true);
+
+        // Start a new session for any additional time spent on the page
+        const session = await studyTimeTrackingRef.current.startTracking();
+        setActiveStudyTime(session);
+      }
+
+      // Refresh the weekly study stats
+      setTimeout(() => refreshWeeklyStats(), 1500);
+
+      setTimeout(() => refreshGamificationData(), 1000); // Small delay to allow backend to process
+    } catch (err) {
+      console.error('Error submitting test:', err);
+    }
+  };
+
+  const handleGenerateCertificate = async () => {
+    try {
+      setIsGeneratingCertificate(true);
+      setCertificateError(null);
+
+      const token = localStorage.getItem('token');
+
+      // First check if certificate already exists
+      const response = await axios.post(`${API_BASE_URL}/api/certificates/generate/${enrollmentId}`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      setTestCompleted(true);
-      setScore(scorePercentage);
-      setProgress(100);
+
+      if (response.data.success) {
+        setCertificateSuccess(true);
+        setCertificateData(response.data.data);
+
+        // Download the certificate
+        window.open(`${API_BASE_URL}/api/certificates/download/${response.data.data.certificateId}`, '_blank');
+
+        setTimeout(() => setCertificateSuccess(false), 5000);
+      } else {
+        setCertificateError('Erreur lors de la génération du certificat');
+      }
     } catch (err) {
-      console.error('Error submitting test:', err);
+      console.error('Error generating certificate:', err);
+      setCertificateError(err.response?.data?.message || 'Erreur lors de la génération du certificat');
+    } finally {
+      setIsGeneratingCertificate(false);
     }
   };
 
@@ -185,6 +263,45 @@ const TestView = () => {
   if (testCompleted) {
     return (
       <Container className="py-5">
+        <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1 }}>
+          {certificateSuccess && (
+            <Toast bg="success" onClose={() => {
+              setCertificateSuccess(false);
+              setTimeout(() => setCertificateData(null), 500);
+            }} show={certificateSuccess} delay={5000} autohide>
+              <Toast.Header>
+                <strong className="me-auto">Certificat généré</strong>
+              </Toast.Header>
+              <Toast.Body className="text-white">
+                Votre certificat a été généré avec succès. Le téléchargement devrait démarrer automatiquement.
+                {certificateData && certificateData.certificateId && (
+                  <div className="mt-2">
+                    Si le téléchargement ne démarre pas, <a
+                      href={`${API_BASE_URL}/api/certificates/download/${certificateData.certificateId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white font-weight-bold"
+                      style={{ textDecoration: 'underline' }}
+                    >
+                      cliquez ici
+                    </a>.
+                  </div>
+                )}
+              </Toast.Body>
+            </Toast>
+          )}
+          {certificateError && (
+            <Toast bg="danger" onClose={() => setCertificateError(null)} show={!!certificateError} delay={5000} autohide>
+              <Toast.Header>
+                <strong className="me-auto">Erreur</strong>
+              </Toast.Header>
+              <Toast.Body className="text-white">
+                {certificateError}
+              </Toast.Body>
+            </Toast>
+          )}
+        </ToastContainer>
+
         <Button variant="outline-primary" className="mb-4" onClick={handleBackClick}>
           <ArrowLeft size={16} className="me-2" />
           Retour aux tests
@@ -196,22 +313,41 @@ const TestView = () => {
           </div>
           <h2 className="mb-3">Test terminé !</h2>
           <h4 className="mb-4">Votre score: <span className={score >= 70 ? "text-success" : "text-warning"}>{score}%</span></h4>
-          
+
           {score >= 70 ? (
-            <Alert variant="success">
-              <CheckCircle size={20} className="me-2" />
-              Félicitations ! Vous avez réussi le test.
-            </Alert>
+            <>
+              <Alert variant="success">
+                <CheckCircle size={20} className="me-2" />
+                Félicitations ! Vous avez réussi le test.
+              </Alert>
+
+              <div className="mt-4 d-flex justify-content-center gap-3">
+                <Button
+                  variant="success"
+                  onClick={handleGenerateCertificate}
+                  disabled={isGeneratingCertificate}
+                >
+                  <Award size={16} className="me-2" />
+                  {isGeneratingCertificate ? 'Génération...' : 'Obtenir mon certificat'}
+                </Button>
+
+                <Button variant="outline-primary" onClick={handleBackClick}>
+                  Retour au tableau de bord
+                </Button>
+              </div>
+            </>
           ) : (
-            <Alert variant="warning">
-              <AlertCircle size={20} className="me-2" />
-              Vous n'avez pas atteint le score minimum requis. Vous pouvez réessayer plus tard.
-            </Alert>
+            <>
+              <Alert variant="warning">
+                <AlertCircle size={20} className="me-2" />
+                Vous n'avez pas atteint le score minimum requis. Vous pouvez réessayer plus tard.
+              </Alert>
+
+              <Button variant="primary" className="mt-4" onClick={handleBackClick}>
+                Retour au tableau de bord
+              </Button>
+            </>
           )}
-          
-          <Button variant="primary" className="mt-4" onClick={handleBackClick}>
-            Retour au tableau de bord
-          </Button>
         </Card>
       </Container>
     );
@@ -232,7 +368,7 @@ const TestView = () => {
               <Card.Body className="text-center p-5">
                 <h2 className="mb-4">{test.title}</h2>
                 <p className="mb-4">{test.description}</p>
-                
+
                 <div className="d-flex justify-content-center mb-4">
                   <Badge bg="info" className="me-2 p-2">
                     <Clock size={16} className="me-1" />
@@ -242,15 +378,15 @@ const TestView = () => {
                     Questions: {test.questions.length}
                   </Badge>
                 </div>
-                
+
                 <Alert variant="warning">
                   <AlertCircle size={20} className="me-2" />
                   Une fois que vous commencez le test, le chronomètre démarre. Vous ne pourrez pas mettre en pause.
                 </Alert>
-                
-                <Button 
-                  variant="primary" 
-                  size="lg" 
+
+                <Button
+                  variant="primary"
+                  size="lg"
                   className="mt-4"
                   onClick={startTest}
                 >
@@ -281,11 +417,14 @@ const TestView = () => {
                 <span className={timeLeft < 60 ? "text-danger fw-bold" : ""}>
                   Temps restant: {formatTime(timeLeft)}
                 </span>
+                <Badge bg="primary" className="ms-3 px-2">
+                  Session d'étude active
+                </Badge>
               </div>
             </Card.Header>
             <Card.Body>
               <h4 className="mb-4">{question.text}</h4>
-              
+
               <Form>
                 {question.options.map((option, index) => (
                   <Form.Check
@@ -302,26 +441,26 @@ const TestView = () => {
               </Form>
             </Card.Body>
             <Card.Footer className="d-flex justify-content-between">
-              <Button 
-                variant="outline-secondary" 
+              <Button
+                variant="outline-secondary"
                 onClick={handlePrevQuestion}
                 disabled={currentQuestion === 0}
               >
                 <ChevronLeft size={16} className="me-1" />
                 Précédent
               </Button>
-              
+
               {currentQuestion < test.questions.length - 1 ? (
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={handleNextQuestion}
                 >
                   Suivant
                   <ChevronRight size={16} className="ms-1" />
                 </Button>
               ) : (
-                <Button 
-                  variant="success" 
+                <Button
+                  variant="success"
                   onClick={handleSubmitTest}
                 >
                   <Save size={16} className="me-1" />
@@ -330,12 +469,12 @@ const TestView = () => {
               )}
             </Card.Footer>
           </Card>
-          
+
           <div className="mt-4">
-            <ProgressBar 
-              now={(currentQuestion + 1) / test.questions.length * 100} 
-              variant="info" 
-              className="mb-2" 
+            <ProgressBar
+              now={(currentQuestion + 1) / test.questions.length * 100}
+              variant="info"
+              className="mb-2"
             />
             <div className="d-flex justify-content-between">
               <small>Question 1</small>

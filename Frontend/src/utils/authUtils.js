@@ -28,7 +28,7 @@ export const isAuthenticated = () => {
 export const getCurrentUser = () => {
   const userString = localStorage.getItem('user');
   if (!userString) return null;
-  
+
   try {
     return JSON.parse(userString);
   } catch (error) {
@@ -72,18 +72,26 @@ export const isAdmin = () => {
 };
 
 /**
+ * Vérifie si l'utilisateur est un assistant
+ * @returns {Boolean} True si l'utilisateur est un assistant
+ */
+export const isAssistant = () => {
+  return hasRole('assistant');
+};
+
+/**
  * Crée une instance axios avec les en-têtes d'authentification
  * @returns {Object} Instance axios configurée
  */
 export const authAxios = () => {
   const token = localStorage.getItem('token');
-  
+
   const instance = axios.create({
     headers: {
       'Authorization': `Bearer ${token}`
     }
   });
-  
+
   // Intercepteur pour gérer les erreurs d'authentification
   instance.interceptors.response.use(
     response => response,
@@ -95,7 +103,7 @@ export const authAxios = () => {
       return Promise.reject(error);
     }
   );
-  
+
   return instance;
 };
 
@@ -107,5 +115,6 @@ export default {
   isTeacher,
   isStudent,
   isAdmin,
+  isAssistant,
   authAxios
 };

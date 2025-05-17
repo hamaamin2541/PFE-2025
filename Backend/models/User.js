@@ -9,7 +9,7 @@
     email: {
       type: String,
       required: [true, 'Please provide your email'],
-      
+
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
     },
     password: {
@@ -20,7 +20,7 @@
     },
     role: {
       type: String,
-      enum: ['student', 'teacher', 'admin'],
+      enum: ['student', 'teacher', 'assistant', 'admin'],
       required: true
     },
     studentCard: String,
@@ -33,6 +33,41 @@
     specialty: String,
     bio: String,
     phone: String,
+    // Gamification fields
+    points: {
+      type: Number,
+      default: 0
+    },
+    badges: [{
+      badgeId: {
+        type: String,
+        required: true
+      },
+      name: {
+        type: String,
+        required: true
+      },
+      description: String,
+      icon: String,
+      earnedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    // Streak tracking
+    streak: {
+      currentStreak: {
+        type: Number,
+        default: 0
+      },
+      lastActivity: {
+        type: Date
+      },
+      highestStreak: {
+        type: Number,
+        default: 0
+      }
+    },
     ratings: [{
       user: {
         type: mongoose.Schema.Types.ObjectId,

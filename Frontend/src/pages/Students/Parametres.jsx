@@ -207,16 +207,16 @@ const Parametres = ({
               <div className="profile-stats w-100 mb-3">
                 <Row className="text-center">
                   <Col xs={4}>
-                    <div className="stat-value fw-bold">0</div>
-                    <div className="stat-label small text-muted">Cours</div>
+                    <div className="stat-value fw-bold">{initialData?.points || 0}</div>
+                    <div className="stat-label small text-muted">Points</div>
                   </Col>
                   <Col xs={4}>
-                    <div className="stat-value fw-bold">0</div>
-                    <div className="stat-label small text-muted">Tests</div>
+                    <div className="stat-value fw-bold">{initialData?.badges?.length || 0}</div>
+                    <div className="stat-label small text-muted">Badges</div>
                   </Col>
                   <Col xs={4}>
-                    <div className="stat-value fw-bold">0</div>
-                    <div className="stat-label small text-muted">Formations</div>
+                    <div className="stat-value fw-bold">{initialData?.streak?.currentStreak || 0}</div>
+                    <div className="stat-label small text-muted">Série</div>
                   </Col>
                 </Row>
               </div>

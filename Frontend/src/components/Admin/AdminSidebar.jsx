@@ -64,6 +64,16 @@ const AdminSidebar = ({ onLogout }) => {
             </li>
 
             <li className="sidebar-menu-item">
+              <Link
+                to="/admin/assistants"
+                className={`sidebar-menu-link ${isActive('/admin/assistants') ? 'active' : ''}`}
+              >
+                <Users size={18} className="sidebar-menu-icon" />
+                <span className="sidebar-menu-text">Assistants</span>
+              </Link>
+            </li>
+
+            <li className="sidebar-menu-item">
               <div
                 className={`sidebar-menu-link ${isMenuActive(['/admin/courses', '/admin/tests', '/admin/formations']) ? 'active-parent' : ''}`}
                 onClick={() => {

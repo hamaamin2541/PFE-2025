@@ -1,0 +1,78 @@
+.badge-item {
+  display: flex;
+  align-items: center;
+}
+
+.badge-sm {
+  justify-content: center;
+}
+
+.badge-md, .badge-lg {
+  justify-content: flex-start;
+}
+
+.badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  color: #0d6efd;
+  margin-right: 10px;
+}
+
+.badge-sm .badge-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+}
+
+.badge-md .badge-icon {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+}
+
+.badge-lg .badge-icon {
+  width: 64px;
+  height: 64px;
+  padding: 12px;
+  background-color: #e9f0ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-name {
+  font-weight: 600;
+  color: #212529;
+}
+
+.badge-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.badge-card {
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  height: 100%;
+}
+
+.badge-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooltip customization */
+.tooltip-inner {
+  max-width: 220px;
+  padding: 10px;
+  text-align: center;
+}

@@ -1,0 +1,37 @@
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.points-sm {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.points-md {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+}
+
+.points-lg {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.points-bronze {
+  background-color: #cd7f32;
+  color: white;
+}
+
+.points-silver {
+  background-color: #c0c0c0;
+  color: #333;
+}
+
+.points-gold {
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}

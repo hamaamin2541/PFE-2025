@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Accordion, Toast, ToastContainer } from 'react-bootstrap';
-import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, FileText, Users, Clock } from 'lucide-react';
 import axios from 'axios';
-import { API_BASE_URL } from '../../config/api';
+import { API_BASE_URL, api } from '../../config/api';
+import StudySessionInvite from '../../components/StudyWithFriend/StudySessionInvite';
+import CourseQuestionList from '../../components/CourseQA/CourseQuestionList';
+import { useGamification } from '../../context/GamificationContext';
+import { useStudyTime } from '../../context/StudyTimeContext';
+import { useStudyTimeTracking } from '../../services/studyTimeService';
 
 const CourseView = () => {
   const { enrollmentId } = useParams();
   const navigate = useNavigate();
+  const { refreshGamificationData } = useGamification();
+  const { refreshWeeklyStats } = useStudyTime();
   const [enrollment, setEnrollment] = useState(null);
   const [course, setCourse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +25,37 @@ const CourseView = () => {
   const [exportSuccess, setExportSuccess] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [exportResponse, setExportResponse] = useState(null);
+  const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
+  const [certificateSuccess, setCertificateSuccess] = useState(false);
+  const [showStudyInviteModal, setShowStudyInviteModal] = useState(false);
+  const [studySessionCreated, setStudySessionCreated] = useState(null);
+  const [certificateError, setCertificateError] = useState(null);
+  const [certificateData, setCertificateData] = useState(null);
+  const [activeStudyTime, setActiveStudyTime] = useState(null);
+  const studyTimeTrackingRef = useRef(null);
+
+  // Initialize study time tracking
+  useEffect(() => {
+    if (course && course._id) {
+      // Create a tracking object
+      studyTimeTrackingRef.current = useStudyTimeTracking('course', course._id);
+
+      // Start tracking when component mounts
+      const startTracking = async () => {
+        const session = await studyTimeTrackingRef.current.startTracking();
+        setActiveStudyTime(session);
+      };
+
+      startTracking();
+
+      // End tracking when component unmounts
+      return () => {
+        if (studyTimeTrackingRef.current) {
+          studyTimeTrackingRef.current.endTracking(progress === 100);
+        }
+      };
+    }
+  }, [course, progress]);
 
   useEffect(() => {
     const fetchEnrollment = async () => {
@@ -61,18 +99,33 @@ const CourseView = () => {
 
   const updateProgress = async (newProgress) => {
     try {
-      const token = localStorage.getItem('token');
+      const isCompleting = newProgress === 100;
 
-      await axios.put(`${API_BASE_URL}/api/enrollments/${enrollmentId}`, {
+      await api.put(`/api/enrollments/${enrollmentId}`, {
         progress: newProgress,
-        status: newProgress === 100 ? 'completed' : 'active'
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        status: isCompleting ? 'completed' : 'active'
       });
 
       setProgress(newProgress);
+
+      // If the course is being completed, refresh gamification data to show new points/badges
+      if (isCompleting) {
+        console.log('Course completed! Refreshing gamification data...');
+
+        // End the study time tracking with completion flag
+        if (studyTimeTrackingRef.current) {
+          await studyTimeTrackingRef.current.endTracking(true);
+
+          // Start a new session for any additional time spent on the page
+          const session = await studyTimeTrackingRef.current.startTracking();
+          setActiveStudyTime(session);
+        }
+
+        // Refresh the weekly study stats
+        setTimeout(() => refreshWeeklyStats(), 1500);
+
+        setTimeout(() => refreshGamificationData(), 1000); // Small delay to allow backend to process
+      }
     } catch (err) {
       console.error('Error updating progress:', err);
     }
@@ -94,6 +147,45 @@ const CourseView = () => {
 
   const handleBackClick = () => {
     navigate('/dashboard-student');
+  };
+
+  const handleStudyInviteSuccess = (sessionData) => {
+    setStudySessionCreated(sessionData);
+    // Optionally navigate to the study session page
+    // navigate(`/study-session/${sessionData._id}`);
+  };
+
+  const handleGenerateCertificate = async () => {
+    try {
+      setIsGeneratingCertificate(true);
+      setCertificateError(null);
+
+      const token = localStorage.getItem('token');
+
+      // First check if certificate already exists
+      const response = await axios.post(`${API_BASE_URL}/api/certificates/generate/${enrollmentId}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setCertificateSuccess(true);
+        setCertificateData(response.data.data);
+
+        // Download the certificate
+        window.open(`${API_BASE_URL}/api/certificates/download/${response.data.data.certificateId}`, '_blank');
+
+        setTimeout(() => setCertificateSuccess(false), 5000);
+      } else {
+        setCertificateError('Erreur lors de la génération du certificat');
+      }
+    } catch (err) {
+      console.error('Error generating certificate:', err);
+      setCertificateError(err.response?.data?.message || 'Erreur lors de la génération du certificat');
+    } finally {
+      setIsGeneratingCertificate(false);
+    }
   };
 
   const handleExportCourse = async (format = 'pdf') => {
@@ -281,7 +373,68 @@ const CourseView = () => {
             </Toast.Body>
           </Toast>
         )}
+        {certificateSuccess && (
+          <Toast bg="success" onClose={() => {
+            setCertificateSuccess(false);
+            setTimeout(() => setCertificateData(null), 500);
+          }} show={certificateSuccess} delay={5000} autohide>
+            <Toast.Header>
+              <strong className="me-auto">Certificat généré</strong>
+            </Toast.Header>
+            <Toast.Body className="text-white">
+              Votre certificat a été généré avec succès. Le téléchargement devrait démarrer automatiquement.
+              {certificateData && certificateData.certificateId && (
+                <div className="mt-2">
+                  Si le téléchargement ne démarre pas, <a
+                    href={`${API_BASE_URL}/api/certificates/download/${certificateData.certificateId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white font-weight-bold"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    cliquez ici
+                  </a>.
+                </div>
+              )}
+            </Toast.Body>
+          </Toast>
+        )}
+        {certificateError && (
+          <Toast bg="danger" onClose={() => setCertificateError(null)} show={!!certificateError} delay={5000} autohide>
+            <Toast.Header>
+              <strong className="me-auto">Erreur</strong>
+            </Toast.Header>
+            <Toast.Body className="text-white">
+              {certificateError}
+            </Toast.Body>
+          </Toast>
+        )}
       </ToastContainer>
+
+      {/* Study Session Invite Modal */}
+      <StudySessionInvite
+        show={showStudyInviteModal}
+        onHide={() => setShowStudyInviteModal(false)}
+        courseId={course?._id}
+        onSuccess={handleStudyInviteSuccess}
+      />
+
+      {studySessionCreated && (
+        <Alert variant="success" dismissible onClose={() => setStudySessionCreated(null)}>
+          <Alert.Heading>Invitation envoyée !</Alert.Heading>
+          <p>
+            Votre invitation à étudier ensemble a été envoyée avec succès.
+          </p>
+          <div className="d-flex justify-content-end">
+            <Button
+              variant="outline-success"
+              onClick={() => navigate(`/study-session/${studySessionCreated._id}`)}
+            >
+              Accéder à la session
+            </Button>
+          </div>
+        </Alert>
+      )}
 
       <Button variant="outline-primary" className="mb-4" onClick={handleBackClick}>
         <ArrowLeft size={16} className="me-2" />
@@ -370,6 +523,9 @@ const CourseView = () => {
               </Accordion.Item>
             ))}
           </Accordion>
+
+          {/* Course Q&A Section */}
+          {course._id && <CourseQuestionList courseId={course._id} />}
         </Col>
 
         <Col md={4}>
@@ -407,7 +563,11 @@ const CourseView = () => {
               </div>
 
               {progress === 100 ? (
-                <Button variant="success" className="w-100 mt-3">
+                <Button
+                  variant="success"
+                  className="w-100 mt-3"
+                  onClick={() => handleGenerateCertificate()}
+                >
                   <Award size={16} className="me-2" />
                   Voir le certificat
                 </Button>
@@ -421,6 +581,28 @@ const CourseView = () => {
                   Marquer tout comme terminé
                 </Button>
               )}
+
+              <Button
+                variant="outline-info"
+                className="w-100 mt-2 d-flex align-items-center justify-content-center"
+                onClick={() => setShowStudyInviteModal(true)}
+              >
+                <Users size={16} className="me-2" />
+                Étudier avec un ami
+              </Button>
+
+              {/* Study Time Indicator */}
+              <div className="mt-3 p-2 border rounded bg-light">
+                <div className="d-flex align-items-center mb-2">
+                  <Clock size={16} className="me-2 text-primary" />
+                  <small className="text-muted">Session d'étude en cours</small>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <Badge bg="primary" className="px-3 py-2">
+                    Session active
+                  </Badge>
+                </div>
+              </div>
 
               <hr className="my-3" />
 

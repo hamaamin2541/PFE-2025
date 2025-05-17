@@ -7,6 +7,10 @@ import Chatbot from './components/Chat/Chatbot';
 import { StudentProvider } from './context/StudentContext';
 import { FormationProvider } from './context/FormationContext';
 import { TeacherProvider } from './context/TeacherContext';
+import { GamificationProvider } from './context/GamificationContext';
+import { StudyTimeProvider } from './context/StudyTimeContext';
+import CertificateVerification from './pages/CertificateVerification';
+import QuestionDetail from './components/CourseQA/QuestionDetail';
 
 // Route protection components
 import PrivateRoute from './components/Auth/PrivateRoute';
@@ -35,6 +39,8 @@ import TestView from './pages/Students/TestView';
 import Tests from './pages/Students/Tests';
 import Messages from './pages/Students/Messages';
 import Parametres from './pages/Students/Parametres';
+import MesCertificats from './pages/Students/MesCertificats';
+import StudySession from './pages/Students/StudySession';
 
 // Pages professeur
 import TeacherMessages from './pages/Teacher/TeacherMessages';
@@ -61,6 +67,8 @@ import SettingsManagement from './pages/Admin/SettingsManagement';
 import ExportsManagement from './pages/Admin/ExportsManagement';
 import ReportsManagement from './pages/Admin/ReportsManagement';
 import ContentManagement from './pages/Admin/Content/ContentManagement';
+import TestimonialManagement from './pages/Admin/TestimonialManagement';
+import AssistantManagement from './components/Admin/AssistantManagement';
 
 // User Components
 import UserComplaints from './pages/User/UserComplaints';
@@ -75,9 +83,11 @@ function App() {
     <StudentProvider>
       <FormationProvider>
         <TeacherProvider>
-          <BrowserRouter>
-            <div className="app-container">
-              <Navbar onShowModal={handleShowModal} />
+          <GamificationProvider>
+            <StudyTimeProvider>
+              <BrowserRouter>
+                <div className="app-container">
+                  <Navbar onShowModal={handleShowModal} />
 
               <Routes>
                 {/* Public Routes - Accessible to everyone */}
@@ -88,6 +98,7 @@ function App() {
                 <Route path="/NosProfesseurs" element={<NosProfesseurs />} />
                 <Route path="/SeConnecter" element={<SeConnecter onCloseModal={handleCloseModal} />} />
                 <Route path="/Register" element={<Register />} />
+                <Route path="/verify/certificate/:certificateId" element={<CertificateVerification />} />
 
                 {/* Student Routes - Protected for students */}
                 <Route
@@ -127,6 +138,30 @@ function App() {
                   element={
                     <PrivateRoute>
                       <TestView />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/mes-certificats"
+                  element={
+                    <PrivateRoute>
+                      <MesCertificats />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/study-session/:sessionId"
+                  element={
+                    <PrivateRoute>
+                      <StudySession />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/course-question/:questionId"
+                  element={
+                    <PrivateRoute>
+                      <QuestionDetail />
                     </PrivateRoute>
                   }
                 />
@@ -204,6 +239,8 @@ function App() {
                   <Route path="exports" element={<ExportsManagement />} />
                   <Route path="settings" element={<SettingsManagement />} />
                   <Route path="profile" element={<Navigate to="/admin/dashboard" />} />
+                  <Route path="user-experiences" element={<TestimonialManagement />} />
+                  <Route path="assistants" element={<AssistantManagement />} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/Accueil" />} />
@@ -214,6 +251,8 @@ function App() {
               <ChatBubble />
             </div>
           </BrowserRouter>
+          </StudyTimeProvider>
+          </GamificationProvider>
         </TeacherProvider>
       </FormationProvider>
     </StudentProvider>
