@@ -45,6 +45,10 @@ const enrollmentSchema = new mongoose.Schema({
     enum: ['active', 'completed', 'paused'],
     default: 'active'
   },
+  completedSections: {
+    type: [Number], // Array of section indices that have been completed
+    default: []
+  },
   completionDate: {
     type: Date
   },

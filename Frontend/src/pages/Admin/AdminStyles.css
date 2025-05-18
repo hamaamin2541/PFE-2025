@@ -1,4 +1,4 @@
-/* Admin Layout Styles */
+/* Admin Layout Styles - Sleek Black Design */
 html {
   scroll-behavior: smooth;
 }
@@ -6,7 +6,7 @@ html {
 body {
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #6c757d #f8f9fa;
+  scrollbar-color: var(--gray) var(--primary-light);
 }
 
 body::-webkit-scrollbar {
@@ -14,22 +14,12 @@ body::-webkit-scrollbar {
 }
 
 body::-webkit-scrollbar-track {
-  background: #f8f9fa;
+  background: var(--primary-light);
 }
 
 body::-webkit-scrollbar-thumb {
-  background-color: #6c757d;
-  border-radius: 4px;
-}
-
-/* Base styles for better readability and structure */
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  overflow-x: hidden;
-  font-size: 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-md);
 }
 
 .admin-layout {
@@ -38,47 +28,47 @@ body {
   display: flex;
   overflow-x: hidden;
   position: relative;
-  background-color: #f5f7fa;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  color: #343a40;
+  background-color: var(--light-gray);
+  font-family: var(--font-family-base);
+  color: var(--dark-gray);
   line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
-/* Amélioration de la typographie globale */
+/* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.3;
-  color: #212529;
-  margin-bottom: 1rem;
+  color: var(--black);
+  margin-bottom: var(--spacing-md);
 }
 
 p {
-  margin-bottom: 1rem;
-  color: #495057;
+  margin-bottom: var(--spacing-md);
+  color: var(--dark-gray);
 }
 
 a {
-  color: #4361ee;
+  color: var(--accent-color);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--transition-normal) var(--transition-ease);
 }
 
 a:hover {
-  color: #2a4bdb;
+  color: var(--accent-light);
   text-decoration: none;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles - Sleek Black */
 .admin-sidebar-container {
   width: 260px;
   height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  z-index: var(--z-index-fixed);
+  transition: all var(--transition-normal) var(--transition-ease);
+  box-shadow: var(--shadow-md);
 }
 
 .admin-sidebar-container.closed {
@@ -92,7 +82,7 @@ a:hover {
 .admin-content-container {
   flex: 1;
   margin-left: 260px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal) var(--transition-ease);
   width: calc(100% - 260px);
   min-height: 100vh;
   display: flex;
@@ -108,12 +98,12 @@ a:hover {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #1a2236 0%, #1e2a3a 100%);
+  background-color: var(--primary-color);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #6c757d #343a40;
-  box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.1);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-sidebar::-webkit-scrollbar {
@@ -121,33 +111,33 @@ a:hover {
 }
 
 .admin-sidebar::-webkit-scrollbar-track {
-  background: #343a40;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .admin-sidebar::-webkit-scrollbar-thumb {
-  background-color: #6c757d;
-  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-full);
 }
 
-/* Amélioration de l'apparence générale de la sidebar */
+/* Improve sidebar appearance */
 .admin-sidebar * {
   user-select: none;
+  color: var(--white);
 }
 
-/* Navbar Styles */
+/* Navbar Styles - Sleek Black */
 .admin-navbar {
   height: 64px;
-  padding: 0 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e9ecef;
+  padding: 0 var(--spacing-xl);
+  background-color: var(--primary-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   position: sticky;
   top: 0;
   z-index: 1020;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal) var(--transition-ease);
   display: flex;
   align-items: center;
-  margin-bottom: 1px;
 }
 
 .admin-navbar::before {
@@ -157,8 +147,8 @@ a:hover {
   left: 0;
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg, #4361ee, #3a56d4);
-  transition: width 0.3s ease;
+  background: var(--accent-gradient);
+  transition: width var(--transition-normal) var(--transition-ease);
   z-index: 1;
 }
 
@@ -166,43 +156,42 @@ a:hover {
   width: 100%;
 }
 
-/* Amélioration du conteneur de la navbar */
+/* Navbar container */
 .admin-navbar .container-fluid {
-  padding: 0 0.5rem;
+  padding: 0 var(--spacing-sm);
   height: 100%;
   display: flex;
   align-items: center;
 }
 
-/* Séparateur vertical pour les éléments de la navbar */
+/* Vertical separator for navbar elements */
 .navbar-separator {
   height: 24px;
   width: 1px;
-  background-color: #e9ecef;
-  margin: 0 1rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 var(--spacing-md);
 }
 
 .sidebar-toggle {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--border-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal) var(--transition-ease);
   background-color: transparent;
-  color: #4361ee;
+  color: var(--white);
   border: none;
 }
 
 .sidebar-toggle:hover {
-  background-color: rgba(67, 97, 238, 0.1);
-  color: #2a4bdb;
-  transform: rotate(5deg);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent-light);
 }
 
 .sidebar-toggle:focus {
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
   outline: none;
 }
 
@@ -212,13 +201,13 @@ a:hover {
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #4361ee, #3a56d4);
-  color: white;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
-  margin-right: 12px;
+  background: var(--accent-gradient);
+  color: var(--white);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  box-shadow: var(--shadow-md);
+  margin-right: var(--spacing-md);
   position: relative;
   overflow: hidden;
 }
@@ -236,22 +225,21 @@ a:hover {
 }
 
 .brand-text {
-  font-weight: 700;
-  font-size: 18px;
-  color: #212529;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--white);
   letter-spacing: 0.02em;
 }
 
-/* Main Content Area */
+/* Main Content Area - Clean and Spacious */
 .admin-content {
   flex: 1;
-  padding: 2rem;
-  background-color: #f5f7fa;
+  padding: var(--spacing-2xl);
+  background-color: var(--light-gray);
   overflow-y: auto;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal) var(--transition-ease);
   position: relative;
   z-index: 1;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .admin-content::after {
@@ -261,9 +249,9 @@ a:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(0, 0, 0, 0.02);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-normal) var(--transition-ease);
   pointer-events: none;
   z-index: -1;
 }

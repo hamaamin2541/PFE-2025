@@ -54,7 +54,7 @@ const ITEM_MODELS = {
   test:      Test
 };
 
-// Pour savoir dans quel champ de l’item on pousse l’utilisateur
+// Pour savoir dans quel champ de l'item on pousse l'utilisateur
 const ITEM_PUSH_FIELD = {
   course:    'students',
   formation: 'students',
@@ -79,25 +79,43 @@ export const enroll = async (req, res) => {
     // 2. Filtre AND : user + itemType + champ correspondant
     const filter = {
       user:       userId,
-      itemType,             // s’assure de ne pas confondre plusieurs types
+      itemType,             // s'assure de ne pas confondre plusieurs types
       [itemType]: itemId    // ex. { test: ObjectId(...) }
     };
 
     let enrollment = await Enrollment.findOne(filter);
     if (enrollment) {
       return res.status(200).json({
-        success: false,
-        enrolled: false,
+        success: true,
+        enrolled: true,
         message: 'Vous êtes déjà inscrit à cet item',
+        enrollment
       });
     }
 
-    // 4. S’il n’existe pas, on crée un nouvel enrollment
+    // 3. S'il n'existe pas, on crée un nouvel enrollment
     enrollment = await Enrollment.create(filter);
+
+    // 4. Update the item's students/participants array
+    const Model = ITEM_MODELS[itemType];
+    const pushField = ITEM_PUSH_FIELD[itemType];
+    
+    if (Model && pushField) {
+      await Model.findByIdAndUpdate(
+        itemId,
+        { $addToSet: { [pushField]: userId } }
+      );
+    }
+
+    // 5. Add enrollment to user's enrollments array
+    await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { enrollments: enrollment._id } }
+    );
 
     return res.status(201).json({
       success: true,
-      enrolled: false,
+      enrolled: true,
       enrollment
     });
   }
@@ -114,7 +132,7 @@ export const enroll = async (req, res) => {
 export const updateEnrollmentProgress = async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const { progress, status } = req.body;
+    const { progress, status, completedSectionIndex } = req.body;
 
     // Check if enrollment exists and belongs to user
     const enrollment = await Enrollment.findOne({
@@ -133,15 +151,30 @@ export const updateEnrollmentProgress = async (req, res) => {
     const wasCompleted = enrollment.status === 'completed';
     const isNowCompleted = status === 'completed' || progress === 100;
 
+    // Prepare update object
+    const updateObj = {
+      progress: progress !== undefined ? progress : enrollment.progress,
+      status: status || enrollment.status,
+      lastAccessDate: Date.now(),
+      completionDate: isNowCompleted && !wasCompleted ? Date.now() : enrollment.completionDate
+    };
+
+    // If a section was completed, add it to the completedSections array if not already there
+    if (completedSectionIndex !== undefined) {
+      // Get current completed sections
+      const completedSections = enrollment.completedSections || [];
+
+      // Add the section if it's not already in the array
+      if (!completedSections.includes(completedSectionIndex)) {
+        completedSections.push(completedSectionIndex);
+        updateObj.completedSections = completedSections;
+      }
+    }
+
     // Update enrollment
     const updatedEnrollment = await Enrollment.findByIdAndUpdate(
       enrollmentId,
-      {
-        progress: progress !== undefined ? progress : enrollment.progress,
-        status: status || enrollment.status,
-        lastAccessDate: Date.now(),
-        completionDate: isNowCompleted && !wasCompleted ? Date.now() : enrollment.completionDate
-      },
+      updateObj,
       { new: true }
     ).populate('course test formation');
 

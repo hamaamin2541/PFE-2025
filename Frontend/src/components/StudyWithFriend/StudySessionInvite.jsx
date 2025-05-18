@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { Users, Calendar, Mail } from 'lucide-react';
+import { Users, Calendar, Mail, BookOpen, BookCopy } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 
-const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
+const StudySessionInvite = ({ show, onHide, courseId, formationId, contentType, onSuccess }) => {
   const [guestEmail, setGuestEmail] = useState('');
   const [scheduleSession, setScheduleSession] = useState(false);
   const [scheduledTime, setScheduledTime] = useState('');
@@ -14,28 +14,35 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!guestEmail.trim()) {
       setError('Veuillez entrer l\'email de votre ami');
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const token = localStorage.getItem('token');
-      
+
+      // Create payload based on content type
       const payload = {
-        courseId,
         guestEmail
       };
-      
+
+      // Add the appropriate content ID
+      if (formationId) {
+        payload.formationId = formationId;
+      } else {
+        payload.courseId = courseId;
+      }
+
       // Add scheduled time if enabled
       if (scheduleSession && scheduledTime) {
         payload.scheduledTime = new Date(scheduledTime).toISOString();
       }
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/study-sessions`,
         payload,
@@ -45,15 +52,15 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
           }
         }
       );
-      
+
       if (response.data.success) {
         setSuccess(true);
-        
+
         // Call the success callback if provided
         if (onSuccess) {
           onSuccess(response.data.data);
         }
-        
+
         // Reset form after a delay
         setTimeout(() => {
           setGuestEmail('');
@@ -65,7 +72,7 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
       }
     } catch (error) {
       console.error('Error creating study session:', error);
-      
+
       if (error.response && error.response.data && error.response.data.message) {
         setError(error.response.data.message);
       } else {
@@ -87,11 +94,15 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
         <Modal.Title className="d-flex align-items-center">
-          <Users size={20} className="me-2" />
-          Étudier avec un ami
+          {formationId ? (
+            <BookCopy size={20} className="me-2 text-info" />
+          ) : (
+            <BookOpen size={20} className="me-2 text-primary" />
+          )}
+          Étudier {formationId ? 'la formation' : 'le cours'} avec un ami
         </Modal.Title>
       </Modal.Header>
-      
+
       <Modal.Body>
         {success ? (
           <Alert variant="success">
@@ -102,7 +113,7 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
             {error && (
               <Alert variant="danger">{error}</Alert>
             )}
-            
+
             <Form.Group className="mb-3">
               <Form.Label>Email de votre ami</Form.Label>
               <div className="input-group">
@@ -121,7 +132,7 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
                 Votre ami doit être inscrit sur la plateforme.
               </Form.Text>
             </Form.Group>
-            
+
             <Form.Group className="mb-3">
               <Form.Check
                 type="checkbox"
@@ -130,7 +141,7 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
                 onChange={(e) => setScheduleSession(e.target.checked)}
               />
             </Form.Group>
-            
+
             {scheduleSession && (
               <Form.Group className="mb-3">
                 <Form.Label>Date et heure</Form.Label>
@@ -154,15 +165,15 @@ const StudySessionInvite = ({ show, onHide, courseId, onSuccess }) => {
           </Form>
         )}
       </Modal.Body>
-      
+
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide} disabled={isLoading}>
           Annuler
         </Button>
-        
+
         {!success && (
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleSubmit}
             disabled={isLoading || !guestEmail.trim() || (scheduleSession && !scheduledTime)}
           >

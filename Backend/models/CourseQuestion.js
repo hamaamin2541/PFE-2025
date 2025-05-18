@@ -24,6 +24,20 @@ const answerSchema = new mongoose.Schema({
   },
   inappropriateReason: {
     type: String
+  },
+  // Track if this answer was provided by an assistant
+  isAssistantAnswer: {
+    type: Boolean,
+    default: false
+  },
+  // Track if this answer was marked as helpful by the question asker
+  isMarkedHelpful: {
+    type: Boolean,
+    default: false
+  },
+  // Track when the answer was marked as helpful
+  markedHelpfulAt: {
+    type: Date
   }
 }, { _id: true });
 
@@ -57,6 +71,29 @@ const courseQuestionSchema = new mongoose.Schema({
     ref: 'User'
   },
   resolvedAt: {
+    type: Date
+  },
+  // Track if the question was resolved by an assistant
+  resolvedByAssistant: {
+    type: Boolean,
+    default: false
+  },
+  // Track response time (in minutes) for the first answer
+  firstResponseTime: {
+    type: Number
+  },
+  // Track if an assistant was the first to respond
+  firstResponseByAssistant: {
+    type: Boolean,
+    default: false
+  },
+  // Track the assistant who claimed this question (if any)
+  assignedAssistant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  // Track when the question was assigned to an assistant
+  assignedAt: {
     type: Date
   },
   isInappropriate: {

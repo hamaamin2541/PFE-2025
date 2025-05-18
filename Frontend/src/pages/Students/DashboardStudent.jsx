@@ -1,7 +1,7 @@
 // DashboardStudent.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Nav, Button, Image, Card, ProgressBar, Badge, Table, Spinner } from 'react-bootstrap';
-import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, Star } from 'lucide-react';
+import { Home, BookOpen, CheckCircle, MessageSquare, Settings, Bell, Play, Award, Download, Star, Users, HelpCircle, Share2 } from 'lucide-react';
 import { useStudent } from '../../context/StudentContext';
 import { useFormation } from '../../context/FormationContext';
 import { useGamification } from '../../context/GamificationContext';
@@ -14,7 +14,11 @@ import Tests from './Tests';
 import Messages from './Messages';
 import Parametres from './Parametres';
 import MesContenus from './MesContenus';
+import StudySessions from './StudySessions';
+import AssistantDashboard from '../../components/Assistant/AssistantDashboard';
+import CommunityWall from '../../pages/CommunityWall';
 import './StudentDashboard.css';  // Nouveau fichier CSS correspondant au style enseignant
+import '../../components/Assistant/AssistantDashboard.css';
 import { initializeNewStudent } from '../../services/studentInitializer';
 const DashboardStudent = () => {
   const location = useLocation();
@@ -69,6 +73,7 @@ const DashboardStudent = () => {
           localStorage.setItem('studentData', JSON.stringify(userData));
           // Store user role for context providers
           localStorage.setItem('userRole', 'student');
+          localStorage.setItem('userId', userData._id);
           updateStudentData(userData);
           setIsNewStudent(true);
           // Initialize notifications from userData or empty array
@@ -76,6 +81,9 @@ const DashboardStudent = () => {
 
           // Refresh gamification data after student data is loaded
           refreshGamificationData();
+
+          // Fetch study session invitations
+          fetchStudySessionInvitations(token);
         }
       } catch (error) {
         console.error('Error fetching student data:', error);
@@ -87,6 +95,45 @@ const DashboardStudent = () => {
 
     fetchStudentData();
   }, []);
+
+  // Function to fetch study session invitations
+  const fetchStudySessionInvitations = async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/study-sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Filter for pending invitations where the current user is the guest
+        const userId = localStorage.getItem('userId');
+        const pendingInvitations = data.data.filter(
+          session => session.status === 'pending' && session.guest?._id === userId
+        );
+
+        // Add study session invitations to notifications
+        if (pendingInvitations.length > 0) {
+          const studySessionNotifications = pendingInvitations.map(invitation => ({
+            message: `Vous avez une invitation à étudier "${invitation.course?.title}" avec ${invitation.host?.fullName}`,
+            time: new Date(invitation.createdAt).toLocaleString(),
+            type: 'study-session',
+            id: invitation._id,
+            action: () => setActiveTab('studySessions')
+          }));
+
+          setNotifications(prevNotifications => [
+            ...studySessionNotifications,
+            ...prevNotifications
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching study sessions:', error);
+    }
+  };
 
   useEffect(() => {
     // Try to get user data from different sources
@@ -388,6 +435,19 @@ const DashboardStudent = () => {
     );
   };
 
+  // Check if the current user is an assistant
+  const isAssistantUser = () => {
+    // Try to get the role from multiple sources to ensure it works
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = localStorage.getItem('userRole');
+    const studentData = JSON.parse(localStorage.getItem('studentData') || '{}');
+
+    // Check all possible sources for the assistant role
+    return user.role === 'assistant' ||
+           userRole === 'assistant' ||
+           studentData.role === 'assistant';
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -405,6 +465,12 @@ const DashboardStudent = () => {
           isSubmitting={isSubmitting}
           initialData={studentData}
         />;
+      case 'studySessions':
+        return <StudySessions />;
+      case 'communityWall':
+        return <CommunityWall />;
+      case 'assistant':
+        return <AssistantDashboard />;
       default:
         return null;
     }
@@ -852,9 +918,29 @@ const DashboardStudent = () => {
     <div className="notification-dropdown" style={{ display: showNotifications ? 'block' : 'none' }}>
       {notifications.length > 0 ? (
         notifications.map((notif, index) => (
-          <div key={index} className="notification-item p-2">
-            <p className="mb-1">{notif.message}</p>
+          <div
+            key={index}
+            className="notification-item p-2"
+            onClick={() => {
+              if (notif.action) {
+                notif.action();
+                setShowNotifications(false);
+              }
+            }}
+            style={{ cursor: notif.action ? 'pointer' : 'default' }}
+          >
+            <div className="d-flex justify-content-between align-items-center">
+              <p className="mb-1">{notif.message}</p>
+              {notif.type === 'study-session' && (
+                <Badge bg="warning" pill>Session</Badge>
+              )}
+            </div>
             <small className="text-muted">{notif.time}</small>
+            {notif.type === 'study-session' && (
+              <div className="mt-1">
+                <small className="text-primary">Cliquez pour voir l'invitation</small>
+              </div>
+            )}
           </div>
         ))
       ) : (
@@ -928,6 +1014,18 @@ const DashboardStudent = () => {
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link active={activeTab === 'studySessions'} onClick={() => setActiveTab('studySessions')}>
+                <Users size={18} className="me-2" />
+                Sessions d'étude
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link active={activeTab === 'communityWall'} onClick={() => setActiveTab('communityWall')}>
+                <Share2 size={18} className="me-2" />
+                Mur Communautaire
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link active={activeTab === 'messages'} onClick={() => setActiveTab('messages')}>
                 <MessageSquare size={18} className="me-2" />
                 Messages
@@ -939,6 +1037,23 @@ const DashboardStudent = () => {
                 Paramètres
               </Nav.Link>
             </Nav.Item>
+
+            {/* Assistant Dashboard Tab - Only visible for assistant users */}
+            {isAssistantUser() && (
+              <Nav.Item className="mt-4">
+                <div className="assistant-role-divider mb-2">
+                  <span className="badge bg-info px-3 py-2">Fonctions Assistant</span>
+                </div>
+                <Nav.Link
+                  active={activeTab === 'assistant'}
+                  onClick={() => setActiveTab('assistant')}
+                  className="assistant-nav-link"
+                >
+                  <HelpCircle size={18} className="me-2" />
+                  Tableau Assistant
+                </Nav.Link>
+              </Nav.Item>
+            )}
           </Nav>
         </Col>
 
@@ -950,6 +1065,9 @@ const DashboardStudent = () => {
                   {activeTab === 'contenus' && 'Mes Contenus'}
                   {activeTab === 'messages' && 'Messages'}
                   {activeTab === 'parametres' && 'Paramètres'}
+                  {activeTab === 'studySessions' && 'Sessions d\'étude'}
+                  {activeTab === 'communityWall' && 'Mur Communautaire'}
+                  {activeTab === 'assistant' && 'Tableau de Bord Assistant'}
               </h2>
               <div className="d-flex align-items-center">
                 <div className="notification-icon me-3 position-relative">

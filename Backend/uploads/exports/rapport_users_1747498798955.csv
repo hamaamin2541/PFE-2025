@@ -1,0 +1,4 @@
+"id","nom","email","role","téléphone","spécialité","biographie","dateInscription","dernièreConnexion","nombreInscriptions","jourDepuisInscription","jourDepuisDerniereConnexion","statutActivité"
+"6828b1d57c1ef224fb52f51e","hamùaprof","hamaprof@gmail.com","Enseignant","27405306","Non renseignée","hama","17/05/2025 17:57:09","Jamais",0,0,"N/A","Jamais connecté"
+"6828ab096203afe28ab94467","test","test@gmail.com","Étudiant","Non renseigné","Non renseignée","Non renseignée","17/05/2025 17:28:09","Jamais",3,0,"N/A","Jamais connecté"
+"68289f7f925845e60be657ed","Admin","admin@welearn.com","Administrateur","Non renseigné","Non renseignée","Non renseignée","17/05/2025 16:38:55","Jamais",0,0,"N/A","Jamais connecté"

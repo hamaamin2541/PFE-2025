@@ -1,0 +1,59 @@
+.assistant-dashboard {
+  padding: 20px;
+  background-color: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.assistant-header {
+  border-bottom: 1px solid var(--light-gray);
+  padding-bottom: 15px;
+}
+
+.assistant-badge {
+  background-color: #17a2b8;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.assistant-stats-card {
+  transition: transform 0.3s ease;
+}
+
+.assistant-stats-card:hover {
+  transform: translateY(-5px);
+}
+
+.question-item {
+  border-left: 3px solid var(--primary-color);
+  padding-left: 15px;
+  margin-bottom: 15px;
+}
+
+.help-request-item {
+  border-left: 3px solid var(--warning-color);
+  padding-left: 15px;
+  margin-bottom: 15px;
+}
+
+.assistant-action-btn {
+  border-radius: 20px;
+  padding: 5px 15px;
+}
+
+.assistant-tabs .nav-link {
+  color: var(--dark-gray);
+  font-weight: 500;
+}
+
+.assistant-tabs .nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary-color);
+}

@@ -255,3 +255,53 @@
 .cursor-pointer {
   cursor: pointer;
 }
+
+/* Progress circle styles */
+.progress-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  border: 5px solid #0d6efd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.progress-circle h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Points badge styles */
+.points-badge {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.points-gold {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.points-silver {
+  background-color: #6c757d;
+  color: white;
+}
+
+.points-bronze {
+  background-color: #cd7f32;
+  color: white;
+}
+
+.points-sm {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.points-lg {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}

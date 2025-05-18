@@ -1,0 +1,118 @@
+.community-wall-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.post-card {
+  border-radius: 10px;
+  transition: transform 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+}
+
+.post-avatar img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  background-color: #4361ee;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.avatar-placeholder-sm {
+  width: 30px;
+  height: 30px;
+  background-color: #4361ee;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.post-content {
+  white-space: pre-line;
+}
+
+.post-image img {
+  max-height: 400px;
+  width: 100%;
+  object-fit: contain;
+}
+
+.image-preview-container {
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview {
+  max-height: 200px;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reaction-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.reaction-button {
+  display: flex;
+  align-items: center;
+  border-radius: 20px;
+  padding: 5px 10px;
+}
+
+.comment-avatar img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  padding: 8px 12px;
+  border-radius: 18px;
+}
+
+/* Loading spinner */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .reaction-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

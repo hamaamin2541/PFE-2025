@@ -15,6 +15,7 @@ import {
   LogIn,
   UserPlus,
   ChevronDown,
+  Users,
 } from 'lucide-react';
 import './Navbar.css';
 import logo from '../../Assets/logo.png';
@@ -68,7 +69,8 @@ const Navbar = () => {
     const role = localStorage.getItem('userRole');
     if (role === 'teacher') {
       navigate('/dashboard-teacher');
-    } else if (role === 'student') {
+    } else if (role === 'student' || role === 'assistant') {
+      // Both students and assistants use the student dashboard
       navigate('/dashboard-student');
     } else if (role === 'admin') {
       navigate('/admin/dashboard');
@@ -168,6 +170,19 @@ const Navbar = () => {
                 {t('NosProfesseurs')}
               </Link>
             </li>
+
+            {isLoggedIn && (
+              <li className="navbar-custom-nav-item">
+                <Link
+                  className="navbar-custom-nav-link"
+                  to="/community-wall"
+                  onClick={() => setExpanded(false)}
+                >
+                  <Users className="navbar-icon" size={18} />
+                  Mur Communautaire
+                </Link>
+              </li>
+            )}
 
             <li className="navbar-custom-nav-item">
               <Dropdown>

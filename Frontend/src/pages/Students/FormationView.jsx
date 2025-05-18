@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Accordion, Toast, ToastContainer } from 'react-bootstrap';
-import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, Clock, Users } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL, api } from '../../config/api';
 import { useGamification } from '../../context/GamificationContext';
 import { useStudyTime } from '../../context/StudyTimeContext';
 import { useStudyTimeTracking } from '../../services/studyTimeService';
+import StudySessionInvite from '../../components/StudyWithFriend/StudySessionInvite';
 
 const FormationView = () => {
   const { enrollmentId } = useParams();
@@ -19,8 +20,11 @@ const FormationView = () => {
   const [error, setError] = useState(null);
   const [activeModule, setActiveModule] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [completedModules, setCompletedModules] = useState([]);
   const [isGeneratingCertificate, setIsGeneratingCertificate] = useState(false);
   const [certificateSuccess, setCertificateSuccess] = useState(false);
+  const [showStudyInviteModal, setShowStudyInviteModal] = useState(false);
+  const [studySessionCreated, setStudySessionCreated] = useState(null);
   const [certificateError, setCertificateError] = useState(null);
   const [certificateData, setCertificateData] = useState(null);
   const [activeStudyTime, setActiveStudyTime] = useState(null);
@@ -72,6 +76,8 @@ const FormationView = () => {
           if (response.data.data.itemType === 'formation' && response.data.data.formation) {
             setFormation(response.data.data.formation);
             setProgress(response.data.data.progress || 0);
+            // Set completed modules from enrollment data
+            setCompletedModules(response.data.data.completedSections || []);
           } else {
             setError('Ce n\'est pas une formation valide');
           }
@@ -89,14 +95,29 @@ const FormationView = () => {
     fetchEnrollment();
   }, [enrollmentId]);
 
+  // This function is used for marking the entire formation as complete
   const updateProgress = async (newProgress) => {
     try {
       const isCompleting = newProgress === 100;
 
-      await api.put(`/api/enrollments/${enrollmentId}`, {
-        progress: newProgress,
-        status: isCompleting ? 'completed' : 'active'
-      });
+      // If completing the entire formation, mark all modules as completed
+      if (isCompleting && formation && formation.modules) {
+        const allModuleIndices = formation.modules.map((_, index) => index);
+
+        await api.put(`/api/enrollments/${enrollmentId}`, {
+          progress: newProgress,
+          status: 'completed',
+          completedSectionIndex: allModuleIndices[allModuleIndices.length - 1] // Mark the last module as completed
+        });
+
+        // Update completed modules state
+        setCompletedModules(allModuleIndices);
+      } else {
+        await api.put(`/api/enrollments/${enrollmentId}`, {
+          progress: newProgress,
+          status: isCompleting ? 'completed' : 'active'
+        });
+      }
 
       setProgress(newProgress);
 
@@ -124,17 +145,69 @@ const FormationView = () => {
   };
 
   const handleResourceClick = (resource) => {
-    // If the resource has a file path, open it in a new tab
+    // If the resource has a file path, download it
     if (resource.file) {
-      window.open(`${API_BASE_URL}/${resource.file}`, '_blank');
+      // Create an anchor element for downloading
+      const a = document.createElement('a');
+
+      // Extract the filename from the path
+      const filename = resource.file.split('/').pop();
+
+      // Construct the correct URL
+      const resourceUrl = `${API_BASE_URL}/uploads/courses/resources/${filename}`;
+
+      console.log("Downloading resource from:", resourceUrl);
+
+      a.href = resourceUrl;
+      a.download = resource.name || filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
-  const handleModuleComplete = (moduleIndex) => {
-    // Calculate new progress based on completed module
-    const totalModules = formation.modules.length;
-    const newProgress = Math.min(Math.round(((moduleIndex + 1) / totalModules) * 100), 100);
-    updateProgress(newProgress);
+  const handleModuleComplete = async (moduleIndex) => {
+    try {
+      // Calculate new progress based on completed module
+      const totalModules = formation.modules.length;
+      const newProgress = Math.min(Math.round(((moduleIndex + 1) / totalModules) * 100), 100);
+
+      // Send the completed module index to the backend
+      await api.put(`/api/enrollments/${enrollmentId}`, {
+        progress: newProgress,
+        status: newProgress === 100 ? 'completed' : 'active',
+        completedSectionIndex: moduleIndex // Using the same field as courses for consistency
+      });
+
+      // Update local state
+      setProgress(newProgress);
+
+      // Update completed modules
+      if (!completedModules.includes(moduleIndex)) {
+        setCompletedModules([...completedModules, moduleIndex]);
+      }
+
+      // If the formation is being completed, refresh gamification data
+      if (newProgress === 100) {
+        console.log('Formation completed! Refreshing gamification data...');
+
+        // End the study time tracking with completion flag
+        if (studyTimeTrackingRef.current) {
+          await studyTimeTrackingRef.current.endTracking(true);
+
+          // Start a new session for any additional time spent on the page
+          const session = await studyTimeTrackingRef.current.startTracking();
+          setActiveStudyTime(session);
+        }
+
+        // Refresh the weekly study stats
+        setTimeout(() => refreshWeeklyStats(), 1500);
+
+        setTimeout(() => refreshGamificationData(), 1000); // Small delay to allow backend to process
+      }
+    } catch (err) {
+      console.error('Error updating module completion:', err);
+    }
   };
 
   const handleGenerateCertificate = async () => {
@@ -172,6 +245,15 @@ const FormationView = () => {
 
   const handleBackClick = () => {
     navigate('/dashboard-student');
+  };
+
+  const handleStudyInviteSuccess = (session) => {
+    setStudySessionCreated(session);
+
+    // Show toast notification
+    setTimeout(() => {
+      setStudySessionCreated(null);
+    }, 5000);
   };
 
   if (isLoading) {
@@ -246,6 +328,16 @@ const FormationView = () => {
             </Toast.Body>
           </Toast>
         )}
+        {studySessionCreated && (
+          <Toast bg="info" onClose={() => setStudySessionCreated(null)} show={!!studySessionCreated} delay={5000} autohide>
+            <Toast.Header>
+              <strong className="me-auto">Session d'étude créée</strong>
+            </Toast.Header>
+            <Toast.Body className="text-white">
+              Votre invitation a été envoyée avec succès. Vous pouvez voir toutes vos sessions d'étude dans la section "Sessions d'étude" de votre tableau de bord.
+            </Toast.Body>
+          </Toast>
+        )}
       </ToastContainer>
 
       <Button variant="outline-primary" className="mb-4" onClick={handleBackClick}>
@@ -287,52 +379,88 @@ const FormationView = () => {
 
           <h5 className="mb-3">Modules de la formation</h5>
           <Accordion defaultActiveKey={activeModule.toString()}>
-            {formation.modules && formation.modules.map((module, index) => (
-              <Accordion.Item key={index} eventKey={index.toString()}>
-                <Accordion.Header>
-                  <div className="d-flex justify-content-between align-items-center w-100 pe-3">
-                    <span>{module.title}</span>
-                    {index < (progress / (100 / formation.modules.length)) && (
-                      <Badge bg="success" pill>Terminé</Badge>
-                    )}
-                  </div>
-                </Accordion.Header>
-                <Accordion.Body>
-                  <p>{module.description}</p>
+            {formation.modules && formation.modules.map((module, index) => {
+              // Determine if this module is accessible
+              // Module 0 (first module) is always accessible
+              // Other modules are accessible only if the previous module is completed
+              const isPreviousModuleCompleted = index === 0 || completedModules.includes(index - 1);
+              const isModuleCompleted = completedModules.includes(index);
+              const isModuleAccessible = isPreviousModuleCompleted;
 
-                  {module.resources && module.resources.length > 0 && (
-                    <div className="mt-3">
-                      <h6>Ressources</h6>
-                      <div className="list-group">
-                        {module.resources.map((resource, idx) => (
-                          <Button
-                            key={idx}
-                            variant="outline-warning"
-                            className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
-                            onClick={() => handleResourceClick(resource)}
-                          >
-                            <span>{resource.name}</span>
-                            <div>
-                              <Badge bg="info" className="me-2">{resource.type}</Badge>
-                              <Download size={16} />
-                            </div>
-                          </Button>
-                        ))}
+              return (
+                <Accordion.Item
+                  key={index}
+                  eventKey={isModuleAccessible ? index.toString() : ''}
+                  className={!isModuleAccessible ? 'opacity-75' : ''}
+                >
+                  <Accordion.Header
+                    onClick={(e) => {
+                      if (!isModuleAccessible) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Vous devez terminer le module précédent avant d\'accéder à celui-ci.');
+                      }
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center w-100 pe-3">
+                      <span>
+                        {module.title}
+                        {!isModuleAccessible && (
+                          <span className="ms-2 text-muted">
+                            <i className="fas fa-lock"></i> (Verrouillé)
+                          </span>
+                        )}
+                      </span>
+                      <div>
+                        {isModuleCompleted && (
+                          <Badge bg="success" pill>Terminé</Badge>
+                        )}
+                        {!isModuleAccessible && (
+                          <Badge bg="secondary" pill className="ms-2">Verrouillé</Badge>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </Accordion.Header>
+                  {isModuleAccessible && (
+                    <Accordion.Body>
+                      <p>{module.description}</p>
 
-                  <Button
-                    variant="success"
-                    className="mt-3"
-                    onClick={() => handleModuleComplete(index)}
-                  >
-                    <CheckCircle size={16} className="me-2" />
-                    Marquer comme terminé
-                  </Button>
-                </Accordion.Body>
-              </Accordion.Item>
-            ))}
+                      {module.resources && module.resources.length > 0 && (
+                        <div className="mt-3">
+                          <h6>Ressources</h6>
+                          <div className="list-group">
+                            {module.resources.map((resource, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline-warning"
+                                className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
+                                onClick={() => handleResourceClick(resource)}
+                              >
+                                <span>{resource.name}</span>
+                                <div>
+                                  <Badge bg="info" className="me-2">{resource.type}</Badge>
+                                  <Download size={16} />
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        variant="success"
+                        className="mt-3"
+                        onClick={() => handleModuleComplete(index)}
+                        disabled={isModuleCompleted}
+                      >
+                        <CheckCircle size={16} className="me-2" />
+                        {isModuleCompleted ? 'Déjà terminé' : 'Marquer comme terminé'}
+                      </Button>
+                    </Accordion.Body>
+                  )}
+                </Accordion.Item>
+              );
+            })}
           </Accordion>
         </Col>
 
@@ -400,6 +528,25 @@ const FormationView = () => {
                   </Badge>
                 </div>
               </div>
+
+              {/* Study with Friend Button */}
+              <Button
+                variant="info"
+                className="w-100 mt-3"
+                onClick={() => setShowStudyInviteModal(true)}
+              >
+                <Users size={16} className="me-2" />
+                Étudier avec un ami
+              </Button>
+
+              {/* Study Session Invite Modal */}
+              <StudySessionInvite
+                show={showStudyInviteModal}
+                onHide={() => setShowStudyInviteModal(false)}
+                formationId={formation._id}
+                contentType="formation"
+                onSuccess={handleStudyInviteSuccess}
+              />
             </Card.Body>
           </Card>
         </Col>

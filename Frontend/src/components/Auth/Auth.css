@@ -12,21 +12,21 @@
   --gray-color: #6c757d;
   --white: #ffffff;
   --black: #000000;
-  
+
   --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--accent-color));
   --gradient-secondary: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
-  
+
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
   --shadow-xl: 0 20px 30px rgba(0, 0, 0, 0.2);
-  
+
   --border-radius-sm: 4px;
   --border-radius-md: 8px;
   --border-radius-lg: 16px;
   --border-radius-xl: 24px;
   --border-radius-full: 9999px;
-  
+
   --transition-fast: 0.2s;
   --transition-normal: 0.3s;
   --transition-slow: 0.5s;
@@ -262,12 +262,79 @@
   color: var(--danger-color);
 }
 
+/* Social Login */
+.social-login-section {
+  margin-top: 2rem;
+}
+
+.social-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.social-divider::before,
+.social-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.social-divider span {
+  padding: 0 1rem;
+  color: var(--gray-color);
+  font-size: 0.9rem;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.social-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  transition: all var(--transition-normal) var(--transition-ease);
+  box-shadow: var(--shadow-md);
+}
+
+.social-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.social-btn:disabled {
+  opacity: 0.7;
+  transform: none;
+}
+
+.facebook-btn {
+  background-color: #1877F2;
+}
+
+.google-btn {
+  background-color: #DB4437;
+}
+
+.github-btn {
+  background-color: #333;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .auth-card {
     padding: 1.5rem;
   }
-  
+
   .auth-title {
     font-size: 1.5rem;
   }
@@ -277,9 +344,15 @@
   .auth-card {
     padding: 1.25rem;
   }
-  
+
   .auth-form .form-control,
   .auth-form .form-select {
     padding: 0.6rem 0.8rem;
+  }
+
+  .social-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
   }
 }

@@ -1,19 +1,51 @@
 import StudySession from '../models/StudySession.js';
 import User from '../models/User.js';
 import Course from '../models/Course.js';
+import mongoose from 'mongoose';
 import crypto from 'crypto';
 
 // Create a new study session
 export const createStudySession = async (req, res) => {
   try {
-    const { courseId, guestEmail, scheduledTime } = req.body;
+    const { courseId, formationId, guestEmail, scheduledTime } = req.body;
+    const contentType = formationId ? 'formation' : 'course';
+    const contentId = formationId || courseId;
 
-    // Validate course exists
-    const course = await Course.findById(courseId);
-    if (!course) {
+    // Check if either courseId or formationId is provided
+    if (!courseId && !formationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Either courseId or formationId must be provided'
+      });
+    }
+
+    // Check if the user already has an active study session
+    const existingSession = await StudySession.findOne({
+      $or: [
+        { host: req.user._id, status: { $in: ['pending', 'active'] } },
+        { guest: req.user._id, status: { $in: ['pending', 'active'] } }
+      ]
+    });
+
+    if (existingSession) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vous avez déjà une session d\'étude active. Vous ne pouvez pas en créer une nouvelle avant de terminer ou d\'annuler la session existante.'
+      });
+    }
+
+    // Validate content exists (course or formation)
+    let content;
+    if (contentType === 'course') {
+      content = await Course.findById(contentId);
+    } else {
+      content = await mongoose.model('Formation').findById(contentId);
+    }
+
+    if (!content) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: contentType === 'course' ? 'Cours non trouvé' : 'Formation non trouvée'
       });
     }
 
@@ -22,7 +54,7 @@ export const createStudySession = async (req, res) => {
     if (!guestUser) {
       return res.status(404).json({
         success: false,
-        message: 'User with this email not found'
+        message: 'Utilisateur avec cet email non trouvé'
       });
     }
 
@@ -30,22 +62,45 @@ export const createStudySession = async (req, res) => {
     if (guestUser._id.toString() === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'You cannot invite yourself'
+        message: 'Vous ne pouvez pas vous inviter vous-même'
+      });
+    }
+
+    // Check if the guest already has an active study session
+    const guestExistingSession = await StudySession.findOne({
+      $or: [
+        { host: guestUser._id, status: { $in: ['pending', 'active'] } },
+        { guest: guestUser._id, status: { $in: ['pending', 'active'] } }
+      ]
+    });
+
+    if (guestExistingSession) {
+      return res.status(400).json({
+        success: false,
+        message: 'L\'utilisateur invité a déjà une session d\'étude active'
       });
     }
 
     // Generate a unique invite token
     const inviteToken = crypto.randomBytes(20).toString('hex');
 
-    // Create the study session
-    const studySession = new StudySession({
-      course: courseId,
+    // Create the study session with the appropriate content type
+    const studySessionData = {
       host: req.user._id,
       guest: guestUser._id,
       inviteToken,
+      contentType,
       scheduledTime: scheduledTime || undefined
-    });
+    };
 
+    // Add the appropriate content ID based on content type
+    if (contentType === 'course') {
+      studySessionData.course = contentId;
+    } else {
+      studySessionData.formation = contentId;
+    }
+
+    const studySession = new StudySession(studySessionData);
     await studySession.save();
 
     // Return the created session
@@ -73,13 +128,28 @@ export const getUserStudySessions = async (req, res) => {
       ]
     })
     .populate('course', 'title description coverImage')
+    .populate('formation', 'title description coverImage')
     .populate('host', 'fullName email profileImage')
     .populate('guest', 'fullName email profileImage')
     .sort({ createdAt: -1 });
 
+    // Process the study sessions to add a unified content field for the frontend
+    const processedSessions = studySessions.map(session => {
+      const sessionObj = session.toObject();
+
+      // Add a content field that contains either the course or formation data
+      if (session.contentType === 'formation' && session.formation) {
+        sessionObj.content = session.formation;
+      } else {
+        sessionObj.content = session.course;
+      }
+
+      return sessionObj;
+    });
+
     res.status(200).json({
       success: true,
-      data: studySessions
+      data: processedSessions
     });
   } catch (error) {
     console.error('Error fetching study sessions:', error);
@@ -98,13 +168,14 @@ export const getStudySessionById = async (req, res) => {
 
     const studySession = await StudySession.findById(sessionId)
       .populate('course', 'title description coverImage sections')
+      .populate('formation', 'title description coverImage modules')
       .populate('host', 'fullName email profileImage')
       .populate('guest', 'fullName email profileImage');
 
     if (!studySession) {
       return res.status(404).json({
         success: false,
-        message: 'Study session not found'
+        message: 'Session d\'étude non trouvée'
       });
     }
 
@@ -115,13 +186,29 @@ export const getStudySessionById = async (req, res) => {
     ) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to access this study session'
+        message: 'Vous n\'êtes pas autorisé à accéder à cette session d\'étude'
       });
+    }
+
+    // Add a content field that contains either the course or formation data
+    const sessionData = studySession.toObject();
+    if (studySession.contentType === 'formation' && studySession.formation) {
+      sessionData.content = studySession.formation;
+      // Map formation modules to match the expected structure in the frontend
+      if (sessionData.content && sessionData.content.modules) {
+        sessionData.content.sections = sessionData.content.modules.map(module => ({
+          title: module.title,
+          description: module.description,
+          resources: module.resources || []
+        }));
+      }
+    } else {
+      sessionData.content = studySession.course;
     }
 
     res.status(200).json({
       success: true,
-      data: studySession
+      data: sessionData
     });
   } catch (error) {
     console.error('Error fetching study session:', error);

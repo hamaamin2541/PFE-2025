@@ -1,5 +1,5 @@
 .study-session-container {
-  max-width: 1200px;
+  max-width: 1400px;
 }
 
 .session-header {
@@ -11,13 +11,22 @@
   border: 1px solid #e9ecef;
   border-radius: 0.25rem;
   overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.course-section:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .section-header {
   padding: 0.75rem 1rem;
   background-color: #f8f9fa;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .section-header:hover {
@@ -33,21 +42,68 @@
   padding: 1rem;
   background-color: white;
   border-top: 1px solid #e9ecef;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .resources-list {
   margin-top: 1rem;
 }
 
+.list-group-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
 .list-group-item.active {
   background-color: #0d6efd;
   border-color: #0d6efd;
+  border-left: 3px solid #0a58ca;
+  transform: translateX(5px);
 }
 
 .list-group-item:hover {
   background-color: #f8f9fa;
+  border-left: 3px solid #dee2e6;
 }
 
 .list-group-item.active:hover {
   background-color: #0b5ed7;
+  border-left: 3px solid #0a58ca;
+}
+
+.chat-card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+.course-content-card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Pulse animation for the message input when focused */
+#message-input:focus {
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(13, 110, 253, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+  }
 }

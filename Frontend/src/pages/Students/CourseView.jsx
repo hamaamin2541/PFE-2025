@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Accordion, Toast, ToastContainer } from 'react-bootstrap';
-import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, FileText, Users, Clock } from 'lucide-react';
+import { ArrowLeft, BookOpen, Play, Download, Award, CheckCircle, FileText, Users, Clock, HelpCircle } from 'lucide-react';
+import RequestAssistantHelp from '../../components/Assistant/RequestAssistantHelp';
 import axios from 'axios';
 import { API_BASE_URL, api } from '../../config/api';
 import StudySessionInvite from '../../components/StudyWithFriend/StudySessionInvite';
@@ -21,6 +22,7 @@ const CourseView = () => {
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [completedSections, setCompletedSections] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [exportError, setExportError] = useState(null);
@@ -29,6 +31,7 @@ const CourseView = () => {
   const [certificateSuccess, setCertificateSuccess] = useState(false);
   const [showStudyInviteModal, setShowStudyInviteModal] = useState(false);
   const [studySessionCreated, setStudySessionCreated] = useState(null);
+  const [showAssistantHelpModal, setShowAssistantHelpModal] = useState(false);
   const [certificateError, setCertificateError] = useState(null);
   const [certificateData, setCertificateData] = useState(null);
   const [activeStudyTime, setActiveStudyTime] = useState(null);
@@ -80,6 +83,8 @@ const CourseView = () => {
           if (response.data.data.itemType === 'course' && response.data.data.course) {
             setCourse(response.data.data.course);
             setProgress(response.data.data.progress || 0);
+            // Set completed sections from enrollment data
+            setCompletedSections(response.data.data.completedSections || []);
           } else {
             setError('Ce n\'est pas un cours valide');
           }
@@ -97,14 +102,26 @@ const CourseView = () => {
     fetchEnrollment();
   }, [enrollmentId]);
 
+  // This function is used for marking the entire course as complete
   const updateProgress = async (newProgress) => {
     try {
       const isCompleting = newProgress === 100;
 
-      await api.put(`/api/enrollments/${enrollmentId}`, {
-        progress: newProgress,
-        status: isCompleting ? 'completed' : 'active'
-      });
+      // If completing the entire course, mark all sections as completed
+      if (isCompleting && course && course.sections) {
+        const allSectionIndices = course.sections.map((_, index) => index);
+
+        await api.put(`/api/enrollments/${enrollmentId}`, {
+          progress: newProgress,
+          status: 'completed',
+          completedSectionIndex: allSectionIndices[allSectionIndices.length - 1] // Mark the last section as completed
+        });
+      } else {
+        await api.put(`/api/enrollments/${enrollmentId}`, {
+          progress: newProgress,
+          status: isCompleting ? 'completed' : 'active'
+        });
+      }
 
       setProgress(newProgress);
 
@@ -132,17 +149,69 @@ const CourseView = () => {
   };
 
   const handleResourceClick = (resource) => {
-    // If the resource has a file path, open it in a new tab
+    // If the resource has a file path, download it
     if (resource.file) {
-      window.open(`${API_BASE_URL}/${resource.file}`, '_blank');
+      // Create an anchor element for downloading
+      const a = document.createElement('a');
+
+      // Extract the filename from the path
+      const filename = resource.file.split('/').pop();
+
+      // Construct the correct URL
+      const resourceUrl = `${API_BASE_URL}/uploads/courses/resources/${filename}`;
+
+      console.log("Downloading resource from:", resourceUrl);
+
+      a.href = resourceUrl;
+      a.download = resource.name || filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
-  const handleSectionComplete = (sectionIndex) => {
-    // Calculate new progress based on completed section
-    const totalSections = course.sections.length;
-    const newProgress = Math.min(Math.round(((sectionIndex + 1) / totalSections) * 100), 100);
-    updateProgress(newProgress);
+  const handleSectionComplete = async (sectionIndex) => {
+    try {
+      // Calculate new progress based on completed section
+      const totalSections = course.sections.length;
+      const newProgress = Math.min(Math.round(((sectionIndex + 1) / totalSections) * 100), 100);
+
+      // Send the completed section index to the backend
+      await api.put(`/api/enrollments/${enrollmentId}`, {
+        progress: newProgress,
+        status: newProgress === 100 ? 'completed' : 'active',
+        completedSectionIndex: sectionIndex
+      });
+
+      // Update local state
+      setProgress(newProgress);
+
+      // Update completed sections
+      if (!completedSections.includes(sectionIndex)) {
+        setCompletedSections([...completedSections, sectionIndex]);
+      }
+
+      // If the course is being completed, refresh gamification data
+      if (newProgress === 100) {
+        console.log('Course completed! Refreshing gamification data...');
+
+        // End the study time tracking with completion flag
+        if (studyTimeTrackingRef.current) {
+          await studyTimeTrackingRef.current.endTracking(true);
+
+          // Start a new session for any additional time spent on the page
+          const session = await studyTimeTrackingRef.current.startTracking();
+          setActiveStudyTime(session);
+        }
+
+        // Refresh the weekly study stats
+        setTimeout(() => refreshWeeklyStats(), 1500);
+
+        setTimeout(() => refreshGamificationData(), 1000); // Small delay to allow backend to process
+      }
+    } catch (err) {
+      console.error('Error updating section completion:', err);
+    }
   };
 
   const handleBackClick = () => {
@@ -419,6 +488,14 @@ const CourseView = () => {
         onSuccess={handleStudyInviteSuccess}
       />
 
+      {/* Request Assistant Help Modal */}
+      <RequestAssistantHelp
+        show={showAssistantHelpModal}
+        onHide={() => setShowAssistantHelpModal(false)}
+        courseId={course?._id}
+        courseName={course?.title}
+      />
+
       {studySessionCreated && (
         <Alert variant="success" dismissible onClose={() => setStudySessionCreated(null)}>
           <Alert.Heading>Invitation envoyée !</Alert.Heading>
@@ -476,52 +553,88 @@ const CourseView = () => {
 
           <h5 className="mb-3">Contenu du cours</h5>
           <Accordion defaultActiveKey={activeSection.toString()}>
-            {course.sections && course.sections.map((section, index) => (
-              <Accordion.Item key={index} eventKey={index.toString()}>
-                <Accordion.Header>
-                  <div className="d-flex justify-content-between align-items-center w-100 pe-3">
-                    <span>{section.title}</span>
-                    {index < (progress / (100 / course.sections.length)) && (
-                      <Badge bg="success" pill>Terminé</Badge>
-                    )}
-                  </div>
-                </Accordion.Header>
-                <Accordion.Body>
-                  <p>{section.description}</p>
+            {course.sections && course.sections.map((section, index) => {
+              // Determine if this section is accessible
+              // Section 0 (first section) is always accessible
+              // Other sections are accessible only if the previous section is completed
+              const isPreviousSectionCompleted = index === 0 || completedSections.includes(index - 1);
+              const isSectionCompleted = completedSections.includes(index);
+              const isSectionAccessible = isPreviousSectionCompleted;
 
-                  {section.resources && section.resources.length > 0 && (
-                    <div className="mt-3">
-                      <h6>Ressources</h6>
-                      <div className="list-group">
-                        {section.resources.map((resource, idx) => (
-                          <Button
-                            key={idx}
-                            variant="outline-primary"
-                            className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
-                            onClick={() => handleResourceClick(resource)}
-                          >
-                            <span>{resource.name}</span>
-                            <div>
-                              <Badge bg="info" className="me-2">{resource.type}</Badge>
-                              <Download size={16} />
-                            </div>
-                          </Button>
-                        ))}
+              return (
+                <Accordion.Item
+                  key={index}
+                  eventKey={isSectionAccessible ? index.toString() : ''}
+                  className={!isSectionAccessible ? 'opacity-75' : ''}
+                >
+                  <Accordion.Header
+                    onClick={(e) => {
+                      if (!isSectionAccessible) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Vous devez terminer le chapitre précédent avant d\'accéder à celui-ci.');
+                      }
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center w-100 pe-3">
+                      <span>
+                        {section.title}
+                        {!isSectionAccessible && (
+                          <span className="ms-2 text-muted">
+                            <i className="fas fa-lock"></i> (Verrouillé)
+                          </span>
+                        )}
+                      </span>
+                      <div>
+                        {isSectionCompleted && (
+                          <Badge bg="success" pill>Terminé</Badge>
+                        )}
+                        {!isSectionAccessible && (
+                          <Badge bg="secondary" pill className="ms-2">Verrouillé</Badge>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </Accordion.Header>
+                  {isSectionAccessible && (
+                    <Accordion.Body>
+                      <p>{section.description}</p>
 
-                  <Button
-                    variant="success"
-                    className="mt-3"
-                    onClick={() => handleSectionComplete(index)}
-                  >
-                    <CheckCircle size={16} className="me-2" />
-                    Marquer comme terminé
-                  </Button>
-                </Accordion.Body>
-              </Accordion.Item>
-            ))}
+                      {section.resources && section.resources.length > 0 && (
+                        <div className="mt-3">
+                          <h6>Ressources</h6>
+                          <div className="list-group">
+                            {section.resources.map((resource, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline-primary"
+                                className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
+                                onClick={() => handleResourceClick(resource)}
+                              >
+                                <span>{resource.name}</span>
+                                <div>
+                                  <Badge bg="info" className="me-2">{resource.type}</Badge>
+                                  <Download size={16} />
+                                </div>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        variant="success"
+                        className="mt-3"
+                        onClick={() => handleSectionComplete(index)}
+                        disabled={isSectionCompleted}
+                      >
+                        <CheckCircle size={16} className="me-2" />
+                        {isSectionCompleted ? 'Déjà terminé' : 'Marquer comme terminé'}
+                      </Button>
+                    </Accordion.Body>
+                  )}
+                </Accordion.Item>
+              );
+            })}
           </Accordion>
 
           {/* Course Q&A Section */}
@@ -589,6 +702,15 @@ const CourseView = () => {
               >
                 <Users size={16} className="me-2" />
                 Étudier avec un ami
+              </Button>
+
+              <Button
+                variant="outline-secondary"
+                className="w-100 mt-2 d-flex align-items-center justify-content-center"
+                onClick={() => setShowAssistantHelpModal(true)}
+              >
+                <HelpCircle size={16} className="me-2" />
+                Demander l'aide d'un assistant
               </Button>
 
               {/* Study Time Indicator */}

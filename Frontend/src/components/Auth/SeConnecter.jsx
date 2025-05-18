@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSpinner, FaEnvelope, FaLock, FaUserGraduate } from 'react-icons/fa';
+import {
+  FaSpinner, FaEnvelope, FaLock, FaUserGraduate,
+  FaFacebookF, FaGoogle, FaGithub
+} from 'react-icons/fa';
 import { API_BASE_URL } from '../../config/api';
 import './Auth.css';
 
@@ -9,6 +12,7 @@ function SeConnecter({ onCloseModal }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [socialLoading, setSocialLoading] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -18,6 +22,22 @@ function SeConnecter({ onCloseModal }) {
     } else if (id === 'password') {
       setPassword(value);
     }
+  };
+
+  // Social login handlers
+  const handleSocialLogin = (provider) => {
+    setSocialLoading(provider);
+    setError('');
+
+    // This would typically redirect to OAuth provider
+    // For now, we'll just show a message that this feature is coming soon
+    setTimeout(() => {
+      setError(`La connexion via ${provider} sera bientôt disponible.`);
+      setSocialLoading('');
+    }, 1000);
+
+    // When implemented, this would redirect to the OAuth provider
+    // window.location.href = `${API_BASE_URL}/api/auth/${provider}`;
   };
 
   const handleSubmit = async (e) => {
@@ -45,6 +65,13 @@ function SeConnecter({ onCloseModal }) {
 
       const data = await response.json();
 
+      // Check if account needs verification
+      if (response.status === 403 && data.requiresVerification) {
+        // Redirect to verification page with userId
+        navigate('/verify-account', { state: { userId: data.userId } });
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la connexion');
       }
@@ -67,6 +94,10 @@ function SeConnecter({ onCloseModal }) {
           navigate('/dashboard-student');
         } else if (data.user.role === 'teacher') {
           navigate('/dashboard-teacher');
+        } else if (data.user.role === 'assistant') {
+          // Assistants use the student dashboard with their elevated permissions
+          navigate('/dashboard-student');
+          console.log('Assistant logged in successfully, redirecting to student dashboard');
         }
       }
     } catch (err) {
@@ -146,6 +177,54 @@ function SeConnecter({ onCloseModal }) {
 
           <div className="mt-4 text-center">
             <p>Vous n'avez pas de compte ? <Link to="/Register" className="auth-link">Inscrivez-vous</Link></p>
+          </div>
+
+          {/* Social Login Section */}
+          <div className="social-login-section mt-4">
+            <div className="social-divider">
+              <span>ou connectez-vous avec</span>
+            </div>
+
+            <div className="social-buttons mt-3">
+              <button
+                type="button"
+                className="social-btn facebook-btn"
+                onClick={() => handleSocialLogin('Facebook')}
+                disabled={!!socialLoading}
+              >
+                {socialLoading === 'Facebook' ? (
+                  <FaSpinner className="fa-spin" />
+                ) : (
+                  <FaFacebookF />
+                )}
+              </button>
+
+              <button
+                type="button"
+                className="social-btn google-btn"
+                onClick={() => handleSocialLogin('Google')}
+                disabled={!!socialLoading}
+              >
+                {socialLoading === 'Google' ? (
+                  <FaSpinner className="fa-spin" />
+                ) : (
+                  <FaGoogle />
+                )}
+              </button>
+
+              <button
+                type="button"
+                className="social-btn github-btn"
+                onClick={() => handleSocialLogin('GitHub')}
+                disabled={!!socialLoading}
+              >
+                {socialLoading === 'GitHub' ? (
+                  <FaSpinner className="fa-spin" />
+                ) : (
+                  <FaGithub />
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

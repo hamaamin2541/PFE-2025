@@ -21,7 +21,17 @@ api.interceptors.request.use(
     const isPublicEndpoint =
       config.url.includes('/api/auth/login') ||
       config.url.includes('/api/auth/register') ||
+      config.url.includes('/api/auth/reset-password-request') ||
+      config.url.includes('/api/auth/reset-password') ||
       config.url.includes('/api/gamification/test');
+
+    // Add extra logging for study time endpoints
+    const isStudyTimeEndpoint = config.url.includes('/api/study-time');
+    if (isStudyTimeEndpoint) {
+      console.log('API Request to study time endpoint:', config.url);
+      console.log('Request method:', config.method);
+      console.log('Request data:', config.data);
+    }
 
     if (token) {
       // Verify token format
@@ -37,9 +47,9 @@ api.interceptors.request.use(
           // Token format looks valid, add it to the request
           config.headers['Authorization'] = `Bearer ${token}`;
 
-          // Add extra logging for gamification endpoints
-          if (config.url.includes('/api/gamification')) {
-            console.log('API Request to gamification endpoint:', config.url);
+          // Add extra logging for specific endpoints
+          if (config.url.includes('/api/gamification') || isStudyTimeEndpoint) {
+            console.log('API Request to monitored endpoint:', config.url);
             console.log('API Request headers:', JSON.stringify(config.headers));
           }
         }
@@ -116,6 +126,29 @@ api.interceptors.response.use(
           message: `Gamification API error: ${error.response.status} - ${error.response.statusText}`
         }
       });
+    }
+
+    // Handle errors for study time endpoints
+    if (error.response && error.config.url.includes('/api/study-time')) {
+      console.warn(`Study Time API error: ${error.response.status} - ${error.response.statusText}`);
+      console.warn('Study Time API error details:', error.response.data);
+      console.warn('Study Time API request URL:', error.config.url);
+      console.warn('Study Time API request method:', error.config.method);
+      console.warn('Study Time API request data:', error.config.data);
+      console.warn('Study Time API request headers:', JSON.stringify(error.config.headers));
+
+      // For 404 errors, provide a mock response
+      if (error.response.status === 404) {
+        console.warn('Study Time endpoint not found. This feature may not be fully implemented on the server.');
+        return Promise.resolve({
+          data: {
+            success: true,
+            data: {},
+            isMockData: true,
+            message: 'Study Time endpoint not available, using mock data'
+          }
+        });
+      }
     }
 
     return Promise.reject(error);

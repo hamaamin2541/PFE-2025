@@ -9,15 +9,21 @@
     email: {
       type: String,
       required: [true, 'Please provide your email'],
-
       match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
     },
     password: {
       type: String,
       required: [true, 'Please provide a password'],
       minlength: 6,
-
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    verificationCode: String,
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
+    verificationExpires: Date,
     role: {
       type: String,
       enum: ['student', 'teacher', 'assistant', 'admin'],
@@ -89,11 +95,18 @@
   });
 
   userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-      next();
+    // Set isVerified to true for admin accounts
+    if (this.role === 'admin' && this.isNew) {
+      this.isVerified = true;
     }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+
+    // Hash password if modified
+    if (this.isModified('password')) {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+
+    next();
   });
 
   export default mongoose.model('User', userSchema);

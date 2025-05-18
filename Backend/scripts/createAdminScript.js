@@ -80,7 +80,8 @@ async function createAdmin() {
       fullName: 'Admin',
       email: 'admin@welearn.com',
       password: 'admin123',
-      role: 'admin'
+      role: 'admin',
+      isVerified: true // Set admin account as verified by default
     };
 
     const admin = new User(adminData);

@@ -65,14 +65,14 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
   // Send a new message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     if (!newMessage.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const token = localStorage.getItem('token');
-      
+
       // Send message to the server
       const response = await axios.post(
         `${API_BASE_URL}/api/study-sessions/${sessionId}/messages`,
@@ -83,7 +83,7 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
           }
         }
       );
-      
+
       if (response.data.success) {
         // Emit message to other participants via socket
         if (socket) {
@@ -94,7 +94,7 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
             timestamp: new Date()
           });
         }
-        
+
         // Clear input field
         setNewMessage('');
       }
@@ -112,12 +112,7 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
   };
 
   return (
-    <Card className="study-session-chat">
-      <Card.Header className="d-flex align-items-center">
-        <MessageSquare size={18} className="me-2" />
-        <span>Discussion en direct</span>
-      </Card.Header>
-      
+    <div className="study-session-chat">
       <div className="chat-messages">
         {messages.length === 0 ? (
           <div className="text-center text-muted p-4">
@@ -125,52 +120,61 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
             <p>Commencez la discussion avec votre ami!</p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div 
-              key={index} 
-              className={`message ${message.sender._id === currentUser._id ? 'message-sent' : 'message-received'}`}
-            >
-              <div className="message-content">
-                <div className="message-sender">
-                  {message.sender._id !== currentUser._id && (
-                    <span>{message.sender.fullName}</span>
-                  )}
-                </div>
-                <div className="message-bubble">
-                  {message.content}
-                </div>
-                <div className="message-time">
-                  {formatTimestamp(message.timestamp)}
+          messages.map((message, index) => {
+            // Add null checks to prevent errors
+            const isCurrentUser = currentUser && message.sender && message.sender._id === currentUser._id;
+            const senderName = message.sender?.fullName || 'Utilisateur';
+
+            return (
+              <div
+                key={index}
+                className={`message ${isCurrentUser ? 'message-sent' : 'message-received'}`}
+              >
+                <div className="message-content">
+                  <div className="message-sender">
+                    {!isCurrentUser && (
+                      <span>{senderName}</span>
+                    )}
+                  </div>
+                  <div className="message-bubble">
+                    {message.content || ''}
+                  </div>
+                  <div className="message-time">
+                    {formatTimestamp(message.timestamp || new Date())}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
-      
-      <Card.Footer className="p-2">
+
+      <div className="chat-input-container p-2">
         <Form onSubmit={handleSendMessage}>
           <div className="d-flex">
             <Form.Control
+              id="message-input"
               type="text"
               placeholder="Tapez votre message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               disabled={isLoading}
+              className="chat-input"
+              autoComplete="off"
             />
-            <Button 
-              type="submit" 
-              variant="primary" 
-              className="ms-2"
+            <Button
+              type="submit"
+              variant="primary"
+              className="ms-2 send-button"
               disabled={isLoading || !newMessage.trim()}
             >
               <Send size={16} />
             </Button>
           </div>
         </Form>
-      </Card.Footer>
-    </Card>
+      </div>
+    </div>
   );
 };
 

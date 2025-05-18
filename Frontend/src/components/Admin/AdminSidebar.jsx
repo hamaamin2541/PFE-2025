@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BookOpen, MessageSquare, AlertTriangle,
   BarChart2, FileText, Settings, LogOut, ChevronDown, ChevronRight,
-  Mail, Database, Download
+  Mail, Database, Download, Share2
 } from 'lucide-react';
 import { Collapse } from 'react-bootstrap';
 
@@ -162,6 +162,16 @@ const AdminSidebar = ({ onLogout }) => {
               >
                 <MessageSquare size={18} className="sidebar-menu-icon" />
                 <span className="sidebar-menu-text">Expériences Utilisateurs</span>
+              </Link>
+            </li>
+
+            <li className="sidebar-menu-item">
+              <Link
+                to="/admin/community-wall"
+                className={`sidebar-menu-link ${isActive('/admin/community-wall') ? 'active' : ''}`}
+              >
+                <Share2 size={18} className="sidebar-menu-icon" />
+                <span className="sidebar-menu-text">Mur Communautaire</span>
               </Link>
             </li>
           </ul>

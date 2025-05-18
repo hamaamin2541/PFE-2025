@@ -1,67 +1,8 @@
-/* Variables CSS */
-:root {
-  --primary-color: #4361ee;
-  --secondary-color: #3a0ca3;
-  --accent-color: #7209b7;
-  --light-color: #f8f9fa;
-  --dark-color: #2d3748;
-  --text-color: #4a5568;
-  --success-color: #2ecc71;
-  --warning-color: #f39c12;
-  --danger-color: #e74c3c;
-  --info-color: #3498db;
-
-  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  --gradient-secondary: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
-  --gradient-accent: linear-gradient(135deg, #00C2FF, #FFD93D);
-
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
-  --shadow-xl: 0 20px 30px rgba(0, 0, 0, 0.2);
-
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 24px;
-  --border-radius-full: 9999px;
-
-  --transition-fast: 0.2s;
-  --transition-normal: 0.3s;
-  --transition-slow: 0.5s;
-  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
-
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-  --font-size-5xl: 3rem;
-
-  --font-weight-light: 300;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
-
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
-}
-
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--light-color);
-  color: var(--dark-color);
+  font-family: var(--font-family-base);
+  background-color: var(--light-gray);
+  color: var(--dark-gray);
   line-height: 1.6;
 }
 
@@ -71,10 +12,10 @@ body {
   position: relative;
 }
 
-/* HERO SECTION */
+/* HERO SECTION - Sleek Black */
 .hero {
-  background: var(--gradient-primary);
-  color: white;
+  background: var(--primary-color);
+  color: var(--white);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -83,6 +24,7 @@ body {
   position: relative;
   overflow: hidden;
   min-height: 80vh;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero::before {
@@ -92,20 +34,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
   opacity: 0.2;
-  z-index: 0;
-}
-
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
   z-index: 0;
 }
 
@@ -116,20 +46,20 @@ body {
 }
 
 .hero-content h1 {
-  font-size: var(--font-size-5xl);
-  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-lg);
   line-height: 1.2;
   animation: fadeInDown 1s var(--transition-ease);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: var(--white);
 }
 
 .hero-content p {
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-xl);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--gray);
   animation: fadeInUp 1s var(--transition-ease) 0.2s both;
-  font-weight: var(--font-weight-light);
+  font-weight: var(--font-weight-normal);
 }
 
 .hero-buttons {
@@ -140,23 +70,22 @@ body {
 }
 
 .btn-primary, .btn-secondary {
-  padding: 1rem 2rem;
+  padding: 0.875rem 1.75rem;
   border: none;
-  border-radius: var(--border-radius-full);
+  border-radius: var(--border-radius-lg);
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-normal) var(--transition-ease);
   box-shadow: var(--shadow-md);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
 }
 
 .btn-primary {
-  background: white;
-  color: var(--primary-color);
+  background: var(--accent-color);
+  color: var(--white);
 }
 
 .btn-primary::before, .btn-secondary::before {
@@ -167,7 +96,7 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: all var(--transition-slow) var(--transition-ease);
+  transition: all var(--transition-normal) var(--transition-ease);
 }
 
 .btn-primary:hover, .btn-secondary:hover {
@@ -180,18 +109,19 @@ body {
 }
 
 .btn-primary:hover {
-  background: #f0f0f0;
+  background: var(--accent-dark);
 }
 
 .btn-secondary {
   background: transparent;
-  color: white;
-  border: 2px solid white;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-secondary:hover {
-  background: white;
-  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border-color: var(--white);
 }
 
 .hero-features {
@@ -227,6 +157,7 @@ body {
   height: 100%;
   width: 100%;
   transition: transform var(--transition-normal) var(--transition-ease);
+  object-fit: cover;
 }
 
 .hero-images img:hover {
@@ -236,32 +167,30 @@ body {
 .circle-container {
   width: 220px;
   height: 310px;
-  border-radius: 12px;
+  border-radius: var(--border-radius-xl);
   overflow: hidden;
   position: relative;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   transition: all var(--transition-normal) var(--transition-ease);
 }
 
 .yellow {
   animation: float 6s ease-in-out infinite;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--primary-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .blue {
   animation: float 6s ease-in-out infinite 2s;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--primary-light);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ABOUT SECTION */
 .about {
   padding: var(--spacing-3xl) 8%;
   text-align: center;
-  background-color: var(--light-color);
+  background-color: var(--light-gray);
   position: relative;
   overflow: hidden;
 }
@@ -273,16 +202,16 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%234361ee' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%23111827' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
   opacity: 0.5;
   z-index: 0;
 }
 
 .about h2 {
-  font-size: var(--font-size-4xl);
+  font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
   margin-bottom: var(--spacing-2xl);
-  color: var(--dark-color);
+  color: var(--primary-color);
   position: relative;
   display: inline-block;
   animation: fadeInUp 1s var(--transition-ease);
@@ -294,9 +223,9 @@ body {
   bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: var(--gradient-primary);
+  width: 60px;
+  height: 3px;
+  background: var(--accent-color);
   border-radius: var(--border-radius-full);
 }
 

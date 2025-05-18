@@ -18,29 +18,29 @@ async function createAdmin() {
 
     // Vérifier si un administrateur existe déjà
     const adminExists = await User.findOne({ role: 'admin' });
-    
+
     if (adminExists) {
       console.log('Un administrateur existe déjà:'.yellow);
       console.log(`Email: ${adminExists.email}`.green);
       console.log(`Nom: ${adminExists.fullName}`.green);
       console.log(`ID: ${adminExists._id}`.green);
-      
+
       // Demander confirmation pour réinitialiser le mot de passe
       console.log('\nVoulez-vous réinitialiser le mot de passe? (y/n)'.yellow);
       process.stdin.once('data', async (data) => {
         const input = data.toString().trim().toLowerCase();
-        
+
         if (input === 'y' || input === 'yes') {
           // Réinitialiser le mot de passe
           adminExists.password = 'admin123';
           await adminExists.save();
           console.log('Mot de passe réinitialisé à: admin123'.green);
         }
-        
+
         mongoose.disconnect();
         process.exit(0);
       });
-      
+
       return;
     }
 
@@ -49,7 +49,8 @@ async function createAdmin() {
       fullName: 'Admin',
       email: 'admin@welearn.com',
       password: 'admin123',
-      role: 'admin'
+      role: 'admin',
+      isVerified: true // Set admin account as verified by default
     };
 
     const admin = new User(adminData);

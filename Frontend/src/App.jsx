@@ -19,6 +19,9 @@ import RoleBasedRoute from './components/Auth/RoleBasedRoute';
 // Pages d'authentification
 import SeConnecter from './components/Auth/SeConnecter';
 import Register from './components/Auth/Register';
+import MotDePasseOublie from './components/Auth/MotDePasseOublie';
+import ResetPassword from './components/Auth/ResetPassword';
+import VerifyAccount from './components/Auth/VerifyAccount';
 
 // Pages publiques
 import Accueil from './components/Accueil/Accueil';
@@ -69,9 +72,11 @@ import ReportsManagement from './pages/Admin/ReportsManagement';
 import ContentManagement from './pages/Admin/Content/ContentManagement';
 import TestimonialManagement from './pages/Admin/TestimonialManagement';
 import AssistantManagement from './components/Admin/AssistantManagement';
+import CommunityWallManagement from './pages/Admin/CommunityWallManagement';
 
 // User Components
 import UserComplaints from './pages/User/UserComplaints';
+import CommunityWall from './pages/CommunityWall';
 
 function App() {
   const [showModal, setShowModal] = useState(false);
@@ -98,13 +103,26 @@ function App() {
                 <Route path="/NosProfesseurs" element={<NosProfesseurs />} />
                 <Route path="/SeConnecter" element={<SeConnecter onCloseModal={handleCloseModal} />} />
                 <Route path="/Register" element={<Register />} />
+                <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/verify-account" element={<VerifyAccount />} />
                 <Route path="/verify/certificate/:certificateId" element={<CertificateVerification />} />
+
+                {/* Community Wall - Protected for authenticated users */}
+                <Route
+                  path="/community-wall"
+                  element={
+                    <PrivateRoute>
+                      <CommunityWall />
+                    </PrivateRoute>
+                  }
+                />
 
                 {/* Student Routes - Protected for students */}
                 <Route
                   path="/dashboard-student"
                   element={
-                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin']} redirectPath="/">
+                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin', 'assistant']} redirectPath="/">
                       <DashboardStudent />
                     </RoleBasedRoute>
                   }
@@ -112,7 +130,7 @@ function App() {
                 <Route
                   path="/dashboard-student/complaints"
                   element={
-                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin']} redirectPath="/">
+                    <RoleBasedRoute allowedRoles={['student', 'teacher', 'admin', 'assistant']} redirectPath="/">
                       <UserComplaints />
                     </RoleBasedRoute>
                   }
@@ -241,6 +259,7 @@ function App() {
                   <Route path="profile" element={<Navigate to="/admin/dashboard" />} />
                   <Route path="user-experiences" element={<TestimonialManagement />} />
                   <Route path="assistants" element={<AssistantManagement />} />
+                  <Route path="community-wall" element={<CommunityWallManagement />} />
                 </Route>
 
                 <Route path="*" element={<Navigate to="/Accueil" />} />

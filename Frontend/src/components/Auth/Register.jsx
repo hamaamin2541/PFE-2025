@@ -26,6 +26,8 @@ const Register = () => {
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [userId, setUserId] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -68,7 +70,7 @@ const Register = () => {
       setIsLoading(false);
       return;
     }
-    
+
 
     if (role === 'student') {
       if (!/^\d{8}$/.test(studentCard)) {
@@ -117,11 +119,11 @@ const Register = () => {
         email,
         password,
         role,
-        ...(role === 'student' && { 
+        ...(role === 'student' && {
           studentCard,
           ...initializeNewStudent // Initialize empty data
         }),
-        ...(role === 'teacher' && { 
+        ...(role === 'teacher' && {
           teacherId,
           paymentInfo: {
             cardNumber: cardNumber.replace(/\s/g, ''),
@@ -145,15 +147,27 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Navigate based on role
-        if (data.user.role === 'teacher') {
-          navigate('/dashboard-teacher');
-        } else if (data.user.role === 'student') {
-          navigate('/dashboard-student');
+        // Check if we need to verify the account
+        if (data.user && !data.user.isVerified) {
+          setSuccess(true);
+          setUserId(data.user._id);
+
+          // Show success message for 3 seconds before redirecting to verification page
+          setTimeout(() => {
+            navigate('/verify-account', { state: { userId: data.user._id } });
+          }, 3000);
+        } else {
+          // If account doesn't need verification (unlikely with our new system)
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.user.role);
+          localStorage.setItem('user', JSON.stringify(data.user));
+
+          // Navigate based on role
+          if (data.user.role === 'teacher') {
+            navigate('/dashboard-teacher');
+          } else if (data.user.role === 'student') {
+            navigate('/dashboard-student');
+          }
         }
       } else {
         setError(data.message || 'Erreur lors de l\'inscription');
@@ -172,7 +186,7 @@ const Register = () => {
         <div className="shape shape-2"></div>
         <div className="shape shape-3"></div>
       </div>
-      
+
       <div className="auth-card auth-card-wide">
         <div className="auth-header">
           {formData.role === 'teacher' ? (
@@ -183,8 +197,14 @@ const Register = () => {
           <h2 className="auth-title">Créer un compte</h2>
           <p className="auth-subtitle">Rejoignez notre communauté d'apprentissage</p>
         </div>
-        
+
         {error && <div className="auth-alert auth-alert-danger">{error}</div>}
+        {success && (
+          <div className="auth-alert auth-alert-success">
+            Compte créé avec succès ! Veuillez vérifier votre email pour le code de vérification.
+            Vous allez être redirigé vers la page de vérification...
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="row">
@@ -194,13 +214,13 @@ const Register = () => {
                   <FaUser className="me-2" style={{ color: 'var(--primary-color)' }} />
                   Nom complet
                 </label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="fullName" 
-                  value={formData.fullName} 
+                <input
+                  type="text"
+                  className="form-control"
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleChange}
-                  placeholder="Entrez votre nom complet" 
+                  placeholder="Entrez votre nom complet"
                 />
               </div>
 
@@ -209,30 +229,30 @@ const Register = () => {
                   <FaEnvelope className="me-2" style={{ color: 'var(--primary-color)' }} />
                   Adresse Email
                 </label>
-                <input 
-                  type="email" 
-                  className="form-control" 
-                  name="email" 
-                  value={formData.email} 
+                <input
+                  type="email"
+                  className="form-control"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  placeholder="exemple@email.com" 
+                  placeholder="exemple@email.com"
                 />
               </div>
             </div>
-            
+
             <div className="col-md-6">
               <div className="mb-3">
                 <label className="form-label">
                   <FaLock className="me-2" style={{ color: 'var(--primary-color)' }} />
                   Mot de passe
                 </label>
-                <input 
-                  type="password" 
-                  className="form-control" 
-                  name="password" 
-                  value={formData.password} 
+                <input
+                  type="password"
+                  className="form-control"
+                  name="password"
+                  value={formData.password}
                   onChange={handleChange}
-                  placeholder="Créez un mot de passe sécurisé" 
+                  placeholder="Créez un mot de passe sécurisé"
                 />
               </div>
 
@@ -241,18 +261,18 @@ const Register = () => {
                   <FaLock className="me-2" style={{ color: 'var(--primary-color)' }} />
                   Confirmer le mot de passe
                 </label>
-                <input 
-                  type="password" 
-                  className="form-control" 
-                  name="confirmPassword" 
-                  value={formData.confirmPassword} 
+                <input
+                  type="password"
+                  className="form-control"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Confirmez votre mot de passe" 
+                  placeholder="Confirmez votre mot de passe"
                 />
               </div>
             </div>
           </div>
-          
+
           <div className="mb-3">
             <label className="form-label">
               <FaUserTag className="me-2" style={{ color: 'var(--primary-color)' }} />
@@ -272,13 +292,13 @@ const Register = () => {
                 <FaIdCard className="me-2" style={{ color: 'var(--primary-color)' }} />
                 Numéro carte étudiant
               </label>
-              <input 
-                type="text" 
-                className="form-control" 
-                name="studentCard" 
-                value={formData.studentCard} 
+              <input
+                type="text"
+                className="form-control"
+                name="studentCard"
+                value={formData.studentCard}
                 onChange={handleChange}
-                placeholder="Entrez votre numéro de carte étudiant" 
+                placeholder="Entrez votre numéro de carte étudiant"
               />
             </div>
           )}
@@ -291,13 +311,13 @@ const Register = () => {
                   <FaIdCard className="me-2" style={{ color: 'var(--secondary-color)' }} />
                   Identifiant enseignant
                 </label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="teacherId" 
-                  value={formData.teacherId} 
+                <input
+                  type="text"
+                  className="form-control"
+                  name="teacherId"
+                  value={formData.teacherId}
                   onChange={handleChange}
-                  placeholder="Votre identifiant d'enseignant" 
+                  placeholder="Votre identifiant d'enseignant"
                 />
               </div>
 
@@ -306,14 +326,14 @@ const Register = () => {
                   <FaCreditCard className="me-2" style={{ color: 'var(--secondary-color)' }} />
                   Numéro carte bancaire
                 </label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="cardNumber" 
-                  value={formData.cardNumber} 
-                  onChange={handleChange} 
+                <input
+                  type="text"
+                  className="form-control"
+                  name="cardNumber"
+                  value={formData.cardNumber}
+                  onChange={handleChange}
                   maxLength="16"
-                  placeholder="XXXX XXXX XXXX XXXX" 
+                  placeholder="XXXX XXXX XXXX XXXX"
                 />
               </div>
 
@@ -323,38 +343,38 @@ const Register = () => {
                     <FaCalendarAlt className="me-2" style={{ color: 'var(--secondary-color)' }} />
                     Mois
                   </label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    name="expiryMonth" 
-                    value={formData.expiryMonth} 
-                    onChange={handleChange} 
-                    placeholder="MM" 
-                    maxLength="2" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="expiryMonth"
+                    value={formData.expiryMonth}
+                    onChange={handleChange}
+                    placeholder="MM"
+                    maxLength="2"
                   />
                 </div>
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Année</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    name="expiryYear" 
-                    value={formData.expiryYear} 
-                    onChange={handleChange} 
-                    placeholder="YY" 
-                    maxLength="2" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="expiryYear"
+                    value={formData.expiryYear}
+                    onChange={handleChange}
+                    placeholder="YY"
+                    maxLength="2"
                   />
                 </div>
                 <div className="col-md-4 mb-3">
                   <label className="form-label">Code</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    name="securityCode" 
-                    value={formData.securityCode} 
-                    onChange={handleChange} 
-                    placeholder="CVV" 
-                    maxLength="3" 
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="securityCode"
+                    value={formData.securityCode}
+                    onChange={handleChange}
+                    placeholder="CVV"
+                    maxLength="3"
                   />
                 </div>
               </div>
@@ -364,13 +384,13 @@ const Register = () => {
                   <FaUser className="me-2" style={{ color: 'var(--secondary-color)' }} />
                   Nom du titulaire
                 </label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="cardHolderName" 
-                  value={formData.cardHolderName} 
+                <input
+                  type="text"
+                  className="form-control"
+                  name="cardHolderName"
+                  value={formData.cardHolderName}
                   onChange={handleChange}
-                  placeholder="Nom tel qu'il apparaît sur la carte" 
+                  placeholder="Nom tel qu'il apparaît sur la carte"
                 />
               </div>
             </>
@@ -384,7 +404,7 @@ const Register = () => {
               </>
             ) : 'S\'inscrire'}
           </button>
-          
+
           <div className="mt-4 text-center">
             <p>Vous avez déjà un compte ? <Link to="/SeConnecter" className="auth-link">Connectez-vous</Link></p>
           </div>

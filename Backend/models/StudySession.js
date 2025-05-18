@@ -4,7 +4,22 @@ const studySessionSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: true
+    required: function() {
+      return !this.formation; // Course is required only if formation is not provided
+    }
+  },
+  formation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Formation',
+    required: function() {
+      return !this.course; // Formation is required only if course is not provided
+    }
+  },
+  contentType: {
+    type: String,
+    enum: ['course', 'formation'],
+    required: true,
+    default: 'course'
   },
   host: {
     type: mongoose.Schema.Types.ObjectId,

@@ -16,12 +16,11 @@ const connectDB = async () => {
 
             let new_user = new UserModel({
                 fullName: "Admin",
-
                 email: email,
                 password: 'Hama@Hama1*',
                 phoneNumber: "+216 55 555 555",
-
                 role: 'admin',
+                isVerified: true // Set admin account as verified by default
             });
             await new_user.save();
             console.log(`webmaster account has been added : ${new_user.email}`);

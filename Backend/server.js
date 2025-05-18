@@ -63,6 +63,8 @@ import gamificationRoutes from './routes/gamificationRoutes.js';
 import studyTimeRoutes from './routes/studyTimeRoutes.js';
 import courseQuestionRoutes from './routes/courseQuestionRoutes.js';
 import assistantRoutes from './routes/assistantRoutes.js';
+import assistantHelpRoutes from './routes/assistantHelpRoutes.js';
+import postRoutes from './routes/postRoutes.js';
 
 // Make sure you have JWT_SECRET in your environment variables
 if (!process.env.JWT_SECRET) {
@@ -134,6 +136,8 @@ app.use('/api/gamification', gamificationRoutes);
 app.use('/api/study-time', studyTimeRoutes);
 app.use('/api/course-questions', courseQuestionRoutes);
 app.use('/api/assistants', assistantRoutes);
+app.use('/api/assistant', assistantHelpRoutes);
+app.use('/api/posts', postRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
@@ -191,6 +195,12 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.id} joined study session ${sessionId}`);
   });
 
+  // Join community wall room
+  socket.on('join-community-wall', () => {
+    socket.join('community-wall');
+    console.log(`User ${socket.id} joined community wall`);
+  });
+
   // Handle video player events
   socket.on('video-play', (data) => {
     socket.to(`study-session-${data.sessionId}`).emit('video-play', data);
@@ -207,6 +217,19 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send-message', (data) => {
     io.to(`study-session-${data.sessionId}`).emit('receive-message', data);
+  });
+
+  // Handle community wall events
+  socket.on('new-post', (data) => {
+    io.to('community-wall').emit('post-created', data);
+  });
+
+  socket.on('new-comment', (data) => {
+    io.to('community-wall').emit('comment-added', data);
+  });
+
+  socket.on('new-reaction', (data) => {
+    io.to('community-wall').emit('reaction-added', data);
   });
 
   // Handle disconnection
