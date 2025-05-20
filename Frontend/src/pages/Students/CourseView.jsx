@@ -10,6 +10,7 @@ import CourseQuestionList from '../../components/CourseQA/CourseQuestionList';
 import { useGamification } from '../../context/GamificationContext';
 import { useStudyTime } from '../../context/StudyTimeContext';
 import { useStudyTimeTracking } from '../../services/studyTimeService';
+import '../../styles/CertificateVerification.css';
 
 const CourseView = () => {
   const { enrollmentId } = useParams();
@@ -231,6 +232,19 @@ const CourseView = () => {
 
       const token = localStorage.getItem('token');
 
+      if (!token) {
+        setCertificateError('Vous devez être connecté pour générer un certificat. Veuillez vous reconnecter.');
+        return;
+      }
+
+      // Make sure the enrollment ID is valid
+      if (!enrollmentId) {
+        setCertificateError('ID d\'inscription invalide. Veuillez rafraîchir la page et réessayer.');
+        return;
+      }
+
+      console.log('Generating certificate for enrollment:', enrollmentId);
+
       // First check if certificate already exists
       const response = await axios.post(`${API_BASE_URL}/api/certificates/generate/${enrollmentId}`, {}, {
         headers: {
@@ -242,16 +256,29 @@ const CourseView = () => {
         setCertificateSuccess(true);
         setCertificateData(response.data.data);
 
-        // Download the certificate
-        window.open(`${API_BASE_URL}/api/certificates/download/${response.data.data.certificateId}`, '_blank');
+        if (response.data.data && response.data.data.certificateId) {
+          // Download the certificate
+          const downloadUrl = `${API_BASE_URL}/api/certificates/download/${response.data.data.certificateId}`;
+          console.log('Opening certificate download URL:', downloadUrl);
+          window.open(downloadUrl, '_blank');
+        } else {
+          console.error('Certificate ID missing in response:', response.data);
+          setCertificateError('Le certificat a été généré mais l\'ID est manquant. Veuillez réessayer.');
+        }
 
         setTimeout(() => setCertificateSuccess(false), 5000);
       } else {
-        setCertificateError('Erreur lors de la génération du certificat');
+        setCertificateError(response.data.message || 'Erreur lors de la génération du certificat');
       }
     } catch (err) {
       console.error('Error generating certificate:', err);
-      setCertificateError(err.response?.data?.message || 'Erreur lors de la génération du certificat');
+      const errorMessage = err.response?.data?.message || 'Erreur lors de la génération du certificat. Veuillez réessayer.';
+      setCertificateError(errorMessage);
+
+      // If there's a network error, provide more specific guidance
+      if (!err.response) {
+        setCertificateError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet et réessayer.');
+      }
     } finally {
       setIsGeneratingCertificate(false);
     }
@@ -676,14 +703,27 @@ const CourseView = () => {
               </div>
 
               {progress === 100 ? (
-                <Button
-                  variant="success"
-                  className="w-100 mt-3"
-                  onClick={() => handleGenerateCertificate()}
-                >
-                  <Award size={16} className="me-2" />
-                  Voir le certificat
-                </Button>
+                <div className="certificate-button-container mt-3 mb-2">
+                  <div className="certificate-achievement p-2 text-center mb-2 bg-light rounded">
+                    <Award size={24} className="text-success mb-1" />
+                    <p className="mb-0 small">Félicitations ! Vous avez terminé ce cours.</p>
+                  </div>
+                  <Button
+                    variant="success"
+                    size="lg"
+                    className="w-100 certificate-button d-flex align-items-center justify-content-center"
+                    onClick={() => handleGenerateCertificate()}
+                    style={{
+                      background: 'linear-gradient(45deg, #28a745, #20c997)',
+                      border: 'none',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Award size={20} className="me-2" />
+                    <span>Télécharger mon certificat</span>
+                  </Button>
+                </div>
               ) : (
                 <Button
                   variant="primary"

@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { protect, adminOnly } from '../middleware/auth.js';
+import { protect, adminOnly } from '../middleware/authMiddleware.js';
 import {
   createTestimonial,
   getApprovedTestimonials,

@@ -1,0 +1,53 @@
+.course-recommendations {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.75rem;
+}
+
+.recommendation-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-image {
+  height: 160px;
+  object-fit: cover;
+}
+
+.recommendation-image-placeholder {
+  height: 160px;
+}
+
+.recommendation-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.recommendation-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.recommendation-price {
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .recommendation-card {
+    margin-bottom: 1rem;
+  }
+}

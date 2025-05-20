@@ -1,6 +1,24 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'http://localhost:5001';
+// Get API base URL from environment variables or use default
+// In development, Vite exposes environment variables with VITE_ prefix
+const getApiBaseUrl = () => {
+  // Check for environment variable
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+
+  // Fallback to default based on current hostname
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5001';
+  }
+
+  // For production, assume API is on same domain but different port
+  return `${window.location.protocol}//${hostname}:5001`;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 // Create a custom axios instance with default configuration
 export const api = axios.create({

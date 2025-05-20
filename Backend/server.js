@@ -65,6 +65,7 @@ import courseQuestionRoutes from './routes/courseQuestionRoutes.js';
 import assistantRoutes from './routes/assistantRoutes.js';
 import assistantHelpRoutes from './routes/assistantHelpRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
 
 // Make sure you have JWT_SECRET in your environment variables
 if (!process.env.JWT_SECRET) {
@@ -98,8 +99,15 @@ const uploadsCertificatesDir = join(__dirname, 'uploads/certificates');
 
 const app = express();
 
+// Parse CORS origins from environment variable or use default in development
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
+console.log('CORS origins:', corsOrigins);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite's default port
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -138,6 +146,7 @@ app.use('/api/course-questions', courseQuestionRoutes);
 app.use('/api/assistants', assistantRoutes);
 app.use('/api/assistant', assistantHelpRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
@@ -176,10 +185,10 @@ const PORT = process.env.PORT || 5001;
 // Create HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.io
+// Initialize Socket.io with the same CORS origins as the Express app
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: corsOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }

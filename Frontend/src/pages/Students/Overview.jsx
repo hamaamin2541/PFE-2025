@@ -10,6 +10,7 @@ import PointsDisplay from '../../components/Gamification/PointsDisplay';
 import Leaderboard from '../../components/Gamification/Leaderboard';
 import WeeklyStudyStats from '../../components/StudyStats/WeeklyStudyStats';
 import HistoricalStudyStats from '../../components/StudyStats/HistoricalStudyStats';
+import CourseRecommendations from '../../components/Recommendation/CourseRecommendations';
 import { API_BASE_URL } from '../../config/api';
 import './DashboardStudent';
 
@@ -240,6 +241,13 @@ const Overview = () => {
                   </div>
                 </Card.Body>
               </Card>
+            </Col>
+          </Row>
+
+          {/* Course Recommendations */}
+          <Row className="mb-4">
+            <Col md={12}>
+              <CourseRecommendations limit={3} />
             </Col>
           </Row>
 

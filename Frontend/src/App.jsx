@@ -22,6 +22,7 @@ import Register from './components/Auth/Register';
 import MotDePasseOublie from './components/Auth/MotDePasseOublie';
 import ResetPassword from './components/Auth/ResetPassword';
 import VerifyAccount from './components/Auth/VerifyAccount';
+import TestResetPassword from './components/Auth/TestResetPassword';
 
 // Pages publiques
 import Accueil from './components/Accueil/Accueil';
@@ -107,6 +108,7 @@ function App() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/verify-account" element={<VerifyAccount />} />
                 <Route path="/verify/certificate/:certificateId" element={<CertificateVerification />} />
+                <Route path="/test-reset-password" element={<TestResetPassword />} />
 
                 {/* Community Wall - Protected for authenticated users */}
                 <Route

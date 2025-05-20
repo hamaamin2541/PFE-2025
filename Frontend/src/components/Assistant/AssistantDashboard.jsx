@@ -478,7 +478,7 @@ const AssistantDashboard = () => {
                     </td>
                     <td>
                       {question.isAssignedToMe ? (
-                        <Link to={`/question/${question._id}`}>
+                        <Link to={`/course-question/${question._id}`}>
                           <Button variant="primary" size="sm">
                             Répondre
                           </Button>
@@ -492,7 +492,7 @@ const AssistantDashboard = () => {
                           >
                             Prendre en charge
                           </Button>
-                          <Link to={`/question/${question._id}`}>
+                          <Link to={`/course-question/${question._id}`}>
                             <Button variant="outline-primary" size="sm">
                               Voir
                             </Button>

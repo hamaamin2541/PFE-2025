@@ -5,7 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { getAllAdvice, createAdvice } from '../controllers/teacherAdviceController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Badge, Spinner, Alert, Modal, Tabs, Tab } from 'react-bootstrap';
-import { CheckCircle, XCircle, Eye, MessageSquare, ThumbsUp, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, MessageSquare, ThumbsUp, Heart, Clock, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import './CommunityWallManagement.css';
@@ -141,7 +141,7 @@ const CommunityWallManagement = () => {
         setSuccess(`Commentaire ${status === 'approved' ? 'approuvé' : 'rejeté'} avec succès`);
 
         // Update pending comments list
-        setPendingComments(prevComments => 
+        setPendingComments(prevComments =>
           prevComments.filter(comment => comment._id !== commentId)
         );
 
@@ -151,9 +151,9 @@ const CommunityWallManagement = () => {
             if (post._id === postId) {
               return {
                 ...post,
-                comments: post.comments.map(comment => 
-                  comment._id === commentId 
-                    ? { ...comment, status } 
+                comments: post.comments.map(comment =>
+                  comment._id === commentId
+                    ? { ...comment, status }
                     : comment
                 )
               };
@@ -207,9 +207,9 @@ const CommunityWallManagement = () => {
                   <div className="d-flex align-items-center">
                     <div className="avatar-sm me-2">
                       {post.user.profileImage ? (
-                        <img 
-                          src={`${API_BASE_URL}/${post.user.profileImage}`} 
-                          alt={post.user.fullName} 
+                        <img
+                          src={`${API_BASE_URL}/${post.user.profileImage}`}
+                          alt={post.user.fullName}
                           className="rounded-circle"
                           onError={(e) => {
                             e.target.src = "https://via.placeholder.com/30";
@@ -224,7 +224,7 @@ const CommunityWallManagement = () => {
                     <div>
                       <div className="fw-bold">{post.user.fullName}</div>
                       <small className="text-muted">
-                        {post.user.role === 'teacher' ? 'Enseignant' : 
+                        {post.user.role === 'teacher' ? 'Enseignant' :
                          post.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
                       </small>
                     </div>
@@ -253,9 +253,16 @@ const CommunityWallManagement = () => {
                 </td>
                 <td>
                   <div className="d-flex align-items-center">
+                    <div className="me-3 d-flex align-items-center">
+                      <ThumbsUp size={14} className="me-1" style={{ color: '#1877F2' }} />
+                      <span className="fw-bold">{post.reactionCounts?.like || 0}</span>
+                    </div>
+                    <div className="me-3 d-flex align-items-center">
+                      <Heart size={14} className="me-1" style={{ color: '#E41E3F' }} />
+                      <span className="fw-bold">{post.reactionCounts?.love || 0}</span>
+                    </div>
                     <div className="me-3">
-                      <ThumbsUp size={14} className="me-1" />
-                      <span>{post.totalReactions || 0}</span>
+                      <small className="text-muted">({post.totalReactions || 0} total)</small>
                     </div>
                     <div>
                       <MessageSquare size={14} className="me-1" />
@@ -273,7 +280,7 @@ const CommunityWallManagement = () => {
                     >
                       <Eye size={16} />
                     </Button>
-                    
+
                     {isPending && (
                       <>
                         <Button
@@ -329,9 +336,9 @@ const CommunityWallManagement = () => {
                   <div className="d-flex align-items-center">
                     <div className="avatar-sm me-2">
                       {comment.user.profileImage ? (
-                        <img 
-                          src={`${API_BASE_URL}/${comment.user.profileImage}`} 
-                          alt={comment.user.fullName} 
+                        <img
+                          src={`${API_BASE_URL}/${comment.user.profileImage}`}
+                          alt={comment.user.fullName}
                           className="rounded-circle"
                           onError={(e) => {
                             e.target.src = "https://via.placeholder.com/30";
@@ -346,7 +353,7 @@ const CommunityWallManagement = () => {
                     <div>
                       <div className="fw-bold">{comment.user.fullName}</div>
                       <small className="text-muted">
-                        {comment.user.role === 'teacher' ? 'Enseignant' : 
+                        {comment.user.role === 'teacher' ? 'Enseignant' :
                          comment.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
                       </small>
                     </div>
@@ -401,25 +408,25 @@ const CommunityWallManagement = () => {
   return (
     <Container fluid className="py-4">
       <h4 className="mb-4">Gestion du Mur Communautaire</h4>
-      
+
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
           {success}
         </Alert>
       )}
-      
+
       <Card className="shadow-sm mb-4">
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">Modération du contenu</h5>
-            <Button 
-              variant="outline-primary" 
+            <Button
+              variant="outline-primary"
               size="sm"
               onClick={fetchPosts}
               disabled={isLoading}
@@ -437,14 +444,14 @@ const CommunityWallManagement = () => {
               )}
             </Button>
           </div>
-          
+
           <Tabs
             activeKey={activeTab}
             onSelect={(k) => setActiveTab(k)}
             className="mb-3"
           >
-            <Tab 
-              eventKey="pending" 
+            <Tab
+              eventKey="pending"
               title={
                 <span>
                   Posts en attente
@@ -458,8 +465,8 @@ const CommunityWallManagement = () => {
             >
               {renderPostsTable(pendingPosts, true)}
             </Tab>
-            <Tab 
-              eventKey="comments" 
+            <Tab
+              eventKey="comments"
               title={
                 <span>
                   Commentaires en attente
@@ -479,7 +486,7 @@ const CommunityWallManagement = () => {
           </Tabs>
         </Card.Body>
       </Card>
-      
+
       {/* Post Detail Modal */}
       <Modal
         show={showPostModal}
@@ -496,9 +503,9 @@ const CommunityWallManagement = () => {
               <div className="d-flex align-items-center mb-3">
                 <div className="avatar-md me-3">
                   {selectedPost.user.profileImage ? (
-                    <img 
-                      src={`${API_BASE_URL}/${selectedPost.user.profileImage}`} 
-                      alt={selectedPost.user.fullName} 
+                    <img
+                      src={`${API_BASE_URL}/${selectedPost.user.profileImage}`}
+                      alt={selectedPost.user.fullName}
                       className="rounded-circle"
                       onError={(e) => {
                         e.target.src = "https://via.placeholder.com/50";
@@ -513,7 +520,7 @@ const CommunityWallManagement = () => {
                 <div>
                   <h5 className="mb-0">{selectedPost.user.fullName}</h5>
                   <div className="text-muted">
-                    {selectedPost.user.role === 'teacher' ? 'Enseignant' : 
+                    {selectedPost.user.role === 'teacher' ? 'Enseignant' :
                      selectedPost.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
                     <span className="mx-1">•</span>
                     <Clock size={14} className="me-1" />
@@ -527,16 +534,16 @@ const CommunityWallManagement = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="post-content-full mb-4">
                 {selectedPost.content}
               </div>
-              
+
               {selectedPost.image && (
                 <div className="post-image-full mb-4">
-                  <img 
-                    src={`${API_BASE_URL}/${selectedPost.image}`} 
-                    alt="Post attachment" 
+                  <img
+                    src={`${API_BASE_URL}/${selectedPost.image}`}
+                    alt="Post attachment"
                     className="img-fluid rounded"
                     onError={(e) => {
                       e.target.src = "https://via.placeholder.com/600x400?text=Image+non+disponible";
@@ -544,31 +551,38 @@ const CommunityWallManagement = () => {
                   />
                 </div>
               )}
-              
-              <div className="post-stats d-flex align-items-center mb-3">
+
+              <div className="post-stats d-flex align-items-center mb-3 p-3 bg-light rounded">
+                <div className="me-3 d-flex align-items-center">
+                  <ThumbsUp size={16} className="me-1" style={{ color: '#1877F2' }} />
+                  <span className="fw-bold fs-5">{selectedPost.reactionCounts?.like || 0}</span>
+                </div>
+                <div className="me-3 d-flex align-items-center">
+                  <Heart size={16} className="me-1" style={{ color: '#E41E3F' }} />
+                  <span className="fw-bold fs-5">{selectedPost.reactionCounts?.love || 0}</span>
+                </div>
                 <div className="me-3">
-                  <ThumbsUp size={16} className="me-1" />
-                  <span>{selectedPost.totalReactions || 0} réactions</span>
+                  <span className="text-muted">Total: {selectedPost.totalReactions || 0} réactions</span>
                 </div>
                 <div>
                   <MessageSquare size={16} className="me-1" />
                   <span>{selectedPost.comments ? selectedPost.comments.length : 0} commentaires</span>
                 </div>
               </div>
-              
+
               <hr />
-              
+
               <h6 className="mb-3">Commentaires</h6>
-              
+
               {selectedPost.comments && selectedPost.comments.length > 0 ? (
                 selectedPost.comments.map(comment => (
                   <div key={comment._id} className="comment-item mb-3">
                     <div className="d-flex">
                       <div className="avatar-sm me-2">
                         {comment.user.profileImage ? (
-                          <img 
-                            src={`${API_BASE_URL}/${comment.user.profileImage}`} 
-                            alt={comment.user.fullName} 
+                          <img
+                            src={`${API_BASE_URL}/${comment.user.profileImage}`}
+                            alt={comment.user.fullName}
                             className="rounded-circle"
                             onError={(e) => {
                               e.target.src = "https://via.placeholder.com/30";
@@ -594,17 +608,17 @@ const CommunityWallManagement = () => {
                             </small>
                           </div>
                           <Badge bg={
-                            comment.status === 'approved' ? 'success' : 
+                            comment.status === 'approved' ? 'success' :
                             comment.status === 'rejected' ? 'danger' : 'warning'
                           }>
-                            {comment.status === 'approved' ? 'Approuvé' : 
+                            {comment.status === 'approved' ? 'Approuvé' :
                              comment.status === 'rejected' ? 'Rejeté' : 'En attente'}
                           </Badge>
                         </div>
                         <div className="comment-bubble mt-1">
                           {comment.content}
                         </div>
-                        
+
                         {comment.status === 'pending' && (
                           <div className="mt-2">
                             <Button

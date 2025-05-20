@@ -4,29 +4,72 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import generator from 'generate-password';
 import crypto from 'crypto';
+import sendNewPassword  from '../utils/forgotPassword.js';
 
-// Create a nodemailer transporter with updated configuration
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // Use SSL
-    auth: {
-        user: "lamarimedamin1@gmail.com",
-        pass: "drqx qcpt jexm wosz", // App password, not regular password
-    },
-    tls: {
-        rejectUnauthorized: false // Accept self-signed certificates
-    },
-    debug: true // Enable debug output
+// Create a nodemailer transporter using ethereal email for testing
+// This will create a temporary test email account for development
+async function createTestEmailAccount() {
+  try {
+    // Generate a test SMTP service account from ethereal.email
+    const testAccount = await nodemailer.createTestAccount();
+    console.log('Created test email account:');
+    console.log('- Email:', testAccount.user);
+    console.log('- Password:', testAccount.pass);
+
+    // Create a transporter using the test account
+    const testTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+
+    console.log('Test email transporter created successfully');
+    return testTransporter;
+  } catch (error) {
+    console.error('Failed to create test email account:', error);
+
+    // Fallback to environment variables if test account creation fails
+    console.log('Falling back to configured email settings');
+    return nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE || "gmail",
+      host: process.env.EMAIL_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.EMAIL_PORT || "465"),
+      secure: process.env.EMAIL_SECURE === "false" ? false : true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false
+      },
+      debug: process.env.NODE_ENV === 'development'
+    });
+  }
+}
+
+// Initialize the transporter
+let transporter;
+createTestEmailAccount().then(t => {
+  transporter = t;
+  console.log('Email transporter initialized');
 });
 
 
+/**
+ * Generate a JWT token for authentication
+ * @param {string} id - User ID
+ * @param {string} role - User role
+ * @returns {string} JWT token
+ */
 const generateToken = (id, role) => {
   return jwt.sign(
     { id, role },
     process.env.JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };
 
@@ -61,7 +104,7 @@ export const register = async (req, res) => {
       console.log(`Sending verification email to: ${email}`);
 
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Vérification de votre compte',
         html: `
@@ -210,7 +253,7 @@ export const add_newuser = async (req, res) => {
       console.log(`Attempting to send welcome email to: ${email}`);
 
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Confirmation de votre compte',
         html: `
@@ -493,13 +536,20 @@ export const resetPasswordRequest = async (req, res) => {
 
     // Create reset URL - make sure to use the correct port (5173 for Vite dev server)
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    console.log(`Generated reset URL: ${resetUrl}`);
 
     // Send email with better error handling
     try {
       console.log(`Attempting to send password reset email to: ${email}`);
 
+      // Make sure transporter is initialized
+      if (!transporter) {
+        console.log('Transporter not initialized yet, creating it now...');
+        transporter = await createTestEmailAccount();
+      }
+
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: '"WeLearn Password Reset" <reset@welearn.com>',
         to: email,
         subject: 'Réinitialisation de votre mot de passe',
         html: `
@@ -566,13 +616,37 @@ export const resetPasswordRequest = async (req, res) => {
             </div>
           </body>
           </html>
+        `,
+        // Add plain text version for better deliverability
+        text: `
+          Réinitialisation de votre mot de passe
+
+          Vous avez demandé la réinitialisation de votre mot de passe.
+
+          Pour créer un nouveau mot de passe, veuillez cliquer sur le lien ci-dessous ou le copier dans votre navigateur :
+
+          ${resetUrl}
+
+          Ce lien expirera dans 1 heure.
+
+          Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet e-mail.
+
+          © 2024 WeLearn. Tous droits réservés.
         `
       };
 
       const info = await transporter.sendMail(mailOptions);
       console.log('Password reset email sent successfully');
       console.log('Message ID:', info.messageId);
-      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+
+      // Get the preview URL for Ethereal emails
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log('Preview URL:', previewUrl);
+
+      // Store the preview URL in a global variable or database for access
+      global.lastEmailPreviewUrl = previewUrl;
+      console.log('IMPORTANT: To view the email, open this URL in your browser:', previewUrl);
+
     } catch (emailError) {
       console.error('Error sending password reset email:', emailError);
       // We still return success to the client for security reasons
@@ -653,7 +727,7 @@ export const verifyAccount = async (req, res) => {
       console.log(`Sending verification confirmation email to: ${user.email}`);
 
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: 'Compte vérifié avec succès',
         html: `
@@ -785,7 +859,7 @@ export const resendVerificationCode = async (req, res) => {
       console.log(`Resending verification email to: ${user.email}`);
 
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: 'Nouveau code de vérification',
         html: `
@@ -881,8 +955,10 @@ export const resendVerificationCode = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+    console.log(`Reset password request received with token: ${token.substring(0, 10)}...`);
 
     if (!token || !newPassword) {
+      console.log('Missing token or new password');
       return res.status(400).json({
         success: false,
         message: 'Token and new password are required'
@@ -890,17 +966,21 @@ export const resetPassword = async (req, res) => {
     }
 
     // Find user with valid token
+    console.log(`Looking for user with reset token: ${token.substring(0, 10)}...`);
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!user) {
+      console.log('No user found with valid token');
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired token'
       });
     }
+
+    console.log(`Found user: ${user.email} with valid reset token`);
 
     // Update password
     user.password = newPassword;
@@ -913,7 +993,7 @@ export const resetPassword = async (req, res) => {
       console.log(`Attempting to send password change confirmation email to: ${user.email}`);
 
       const mailOptions = {
-        from: 'Admin Salle <lamarimedamin1@gmail.com>',
+        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
         to: user.email,
         subject: 'Votre mot de passe a été modifié',
         html: `
@@ -979,12 +1059,85 @@ export const resetPassword = async (req, res) => {
       // Continue with the response even if email fails
     }
 
+    console.log('Password reset successful for user:', user.email);
     res.status(200).json({
       success: true,
       message: 'Password has been reset successfully'
     });
   } catch (error) {
     console.error('Password reset error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Send a new password to user's email
+export const sendPasswordToEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate a new random password
+    const newPassword = generator.generate({
+      length: 12,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true
+    });
+
+    // Update user's password in the database
+    user.password = newPassword;
+    await user.save();
+
+    // Send the new password to the user's email
+    try {
+      console.log(`Sending new password to: ${user.email}`);
+
+      await sendNewPassword(user.fullName, user.email, newPassword);
+
+      console.log('New password email sent successfully');
+
+      return res.status(200).json({
+        success: true,
+        message: 'A new password has been sent to your email'
+      });
+    } catch (emailError) {
+      console.error('Error sending new password email:', emailError);
+
+      // Revert the password change if email fails
+      const oldUser = await User.findOne({ email });
+      if (oldUser) {
+        oldUser.password = user.password; // Revert to previous password hash
+        await oldUser.save();
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send new password email'
+      });
+    }
+  } catch (error) {
+    console.error('Send password to email error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

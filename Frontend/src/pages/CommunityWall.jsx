@@ -48,10 +48,10 @@ const CommunityWall = () => {
     // Listen for new comments
     socket.on('comment-added', ({ postId, comment }) => {
       if (comment.status === 'approved') {
-        setPosts(prevPosts => 
-          prevPosts.map(post => 
-            post._id === postId 
-              ? { ...post, comments: [...post.comments, comment] } 
+        setPosts(prevPosts =>
+          prevPosts.map(post =>
+            post._id === postId
+              ? { ...post, comments: [...post.comments, comment] }
               : post
           )
         );
@@ -60,10 +60,10 @@ const CommunityWall = () => {
 
     // Listen for new reactions
     socket.on('reaction-added', ({ postId, reactionCounts, totalReactions }) => {
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post._id === postId 
-            ? { ...post, reactionCounts, totalReactions } 
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post._id === postId
+            ? { ...post, reactionCounts, totalReactions }
             : post
         )
       );
@@ -87,14 +87,14 @@ const CommunityWall = () => {
       setError(null);
 
       const response = await axios.get(`${API_BASE_URL}/api/posts/approved?page=${page}&limit=10`);
-      
+
       if (response.data.success) {
         if (page === 1) {
           setPosts(response.data.data);
         } else {
           setPosts(prevPosts => [...prevPosts, ...response.data.data]);
         }
-        
+
         // Check if there are more posts to load
         setHasMore(page < response.data.pagination.pages);
       }
@@ -110,7 +110,7 @@ const CommunityWall = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -130,25 +130,25 @@ const CommunityWall = () => {
 
   const handleSubmitPost = async (e) => {
     e.preventDefault();
-    
+
     if (!newPostContent.trim()) {
       setError('Le contenu du post ne peut pas être vide');
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       setError(null);
-      
+
       const token = localStorage.getItem('token');
-      
+
       // Create form data for multipart/form-data
       const formData = new FormData();
       formData.append('content', newPostContent);
       if (selectedImage) {
         formData.append('image', selectedImage);
       }
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/posts`,
         formData,
@@ -159,18 +159,18 @@ const CommunityWall = () => {
           }
         }
       );
-      
+
       if (response.data.success) {
         setSuccess('Post créé avec succès et en attente d\'approbation');
         setNewPostContent('');
         setSelectedImage(null);
         setImagePreview(null);
-        
+
         // Emit socket event for new post
         if (socket) {
           socket.emit('new-post', response.data.data);
         }
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
           setSuccess(null);
@@ -186,10 +186,10 @@ const CommunityWall = () => {
 
   const handleAddComment = async (postId, commentContent) => {
     if (!commentContent.trim()) return;
-    
+
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/${postId}/comments`,
         { content: commentContent },
@@ -199,7 +199,7 @@ const CommunityWall = () => {
           }
         }
       );
-      
+
       if (response.data.success) {
         // Emit socket event for new comment
         if (socket) {
@@ -208,10 +208,10 @@ const CommunityWall = () => {
             comment: response.data.data
           });
         }
-        
+
         // Show success message
         setSuccess('Commentaire ajouté avec succès et en attente d\'approbation');
-        
+
         // Clear success message after 3 seconds
         setTimeout(() => {
           setSuccess(null);
@@ -220,7 +220,7 @@ const CommunityWall = () => {
     } catch (error) {
       console.error('Error adding comment:', error);
       setError('Erreur lors de l\'ajout du commentaire. Veuillez réessayer.');
-      
+
       // Clear error message after 3 seconds
       setTimeout(() => {
         setError(null);
@@ -228,10 +228,47 @@ const CommunityWall = () => {
     }
   };
 
+  const [pendingReactions, setPendingReactions] = useState({});
+
   const handleAddReaction = async (postId, reactionType) => {
     try {
       const token = localStorage.getItem('token');
-      
+
+      // Mark this reaction as pending
+      setPendingReactions(prev => ({
+        ...prev,
+        [`${postId}-${reactionType}`]: true
+      }));
+
+      // Optimistically update UI immediately for better user experience
+      // Find the post and its current reaction counts
+      const targetPost = posts.find(post => post._id === postId);
+      if (targetPost) {
+        // Create a copy of the current reaction counts
+        const updatedReactionCounts = { ...targetPost.reactionCounts };
+
+        // Check if this reaction type already exists
+        const currentCount = updatedReactionCounts[reactionType] || 0;
+        updatedReactionCounts[reactionType] = currentCount + 1;
+
+        // Calculate new total reactions
+        const newTotalReactions = Object.values(updatedReactionCounts).reduce((sum, count) => sum + count, 0);
+
+        // Update state immediately for responsive UI
+        setPosts(prevPosts =>
+          prevPosts.map(post =>
+            post._id === postId
+              ? {
+                  ...post,
+                  reactionCounts: updatedReactionCounts,
+                  totalReactions: newTotalReactions
+                }
+              : post
+          )
+        );
+      }
+
+      // Send request to server in background
       const response = await axios.post(
         `${API_BASE_URL}/api/posts/${postId}/reactions`,
         { type: reactionType },
@@ -241,22 +278,22 @@ const CommunityWall = () => {
           }
         }
       );
-      
+
       if (response.data.success) {
-        // Update post reactions in state
-        setPosts(prevPosts => 
-          prevPosts.map(post => 
-            post._id === postId 
-              ? { 
-                  ...post, 
+        // Update with actual server data
+        setPosts(prevPosts =>
+          prevPosts.map(post =>
+            post._id === postId
+              ? {
+                  ...post,
                   reactionCounts: response.data.data.reactionCounts,
                   totalReactions: response.data.data.totalReactions
-                } 
+                }
               : post
           )
         );
-        
-        // Emit socket event for new reaction
+
+        // Emit socket event for new reaction to update all users in real-time
         if (socket) {
           socket.emit('new-reaction', {
             postId,
@@ -267,12 +304,20 @@ const CommunityWall = () => {
       }
     } catch (error) {
       console.error('Error adding reaction:', error);
+      // Show error briefly without requiring user dismissal
       setError('Erreur lors de l\'ajout de la réaction. Veuillez réessayer.');
-      
+
       // Clear error message after 3 seconds
       setTimeout(() => {
         setError(null);
       }, 3000);
+    } finally {
+      // Clear pending state for this reaction
+      setPendingReactions(prev => {
+        const updated = { ...prev };
+        delete updated[`${postId}-${reactionType}`];
+        return updated;
+      });
     }
   };
 
@@ -282,29 +327,66 @@ const CommunityWall = () => {
 
   const renderReactionButtons = (post) => {
     const reactionTypes = [
-      { type: 'like', icon: <ThumbsUp size={16} />, label: 'J\'aime' },
-      { type: 'love', icon: <Heart size={16} />, label: 'J\'adore' }
+      { type: 'like', icon: <ThumbsUp size={16} />, label: 'J\'aime', activeColor: '#1877F2' },
+      { type: 'love', icon: <Heart size={16} />, label: 'J\'adore', activeColor: '#E41E3F' }
     ];
-    
+
+    // Get the current user's ID from localStorage
+    const token = localStorage.getItem('token');
+    const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
+
     return (
       <div className="reaction-buttons">
-        {reactionTypes.map(reaction => (
-          <Button
-            key={reaction.type}
-            variant="light"
-            size="sm"
-            className="reaction-button"
-            onClick={() => handleAddReaction(post._id, reaction.type)}
-          >
-            {reaction.icon}
-            <span className="ms-1">{reaction.label}</span>
-            {post.reactionCounts && post.reactionCounts[reaction.type] > 0 && (
-              <Badge bg="primary" pill className="ms-1">
-                {post.reactionCounts[reaction.type]}
+        {reactionTypes.map(reaction => {
+          // Check if this reaction has any counts
+          const hasReactions = post.reactionCounts && post.reactionCounts[reaction.type] > 0;
+          // Get the count for this reaction type
+          const reactionCount = hasReactions ? post.reactionCounts[reaction.type] : 0;
+          // Check if this reaction is currently being saved
+          const isPending = pendingReactions[`${post._id}-${reaction.type}`];
+
+          return (
+            <Button
+              key={reaction.type}
+              variant={hasReactions ? "primary" : "light"}
+              size="sm"
+              className={`reaction-button ${hasReactions ? 'active-reaction' : ''}`}
+              onClick={() => handleAddReaction(post._id, reaction.type)}
+              disabled={isPending}
+              style={{
+                borderColor: hasReactions ? reaction.activeColor : '',
+                backgroundColor: hasReactions ? `${reaction.activeColor}20` : '',
+                color: hasReactions ? reaction.activeColor : ''
+              }}
+            >
+              {isPending ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-1"
+                  style={{ width: '14px', height: '14px' }}
+                />
+              ) : (
+                reaction.icon
+              )}
+              <span className="ms-1">{reaction.label}</span>
+              <Badge
+                bg={hasReactions ? "primary" : "secondary"}
+                pill
+                className="ms-1"
+                style={{
+                  backgroundColor: hasReactions ? reaction.activeColor : '#6c757d',
+                  opacity: hasReactions ? 1 : 0.7
+                }}
+              >
+                {reactionCount}
               </Badge>
-            )}
-          </Button>
-        ))}
+            </Button>
+          );
+        })}
       </div>
     );
   };
@@ -315,19 +397,19 @@ const CommunityWall = () => {
       <p className="text-center text-muted mb-4">
         Partagez vos pensées, posez des questions et connectez-vous avec d'autres apprenants
       </p>
-      
+
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
           {success}
         </Alert>
       )}
-      
+
       <Card className="mb-4 shadow-sm">
         <Card.Body>
           <h5 className="mb-3">Créer un nouveau post</h5>
@@ -342,13 +424,13 @@ const CommunityWall = () => {
                 disabled={isSubmitting}
               />
             </Form.Group>
-            
+
             {imagePreview && (
               <div className="image-preview-container mb-3">
                 <img src={imagePreview} alt="Preview" className="image-preview" />
-                <Button 
-                  variant="danger" 
-                  size="sm" 
+                <Button
+                  variant="danger"
+                  size="sm"
                   className="remove-image-btn"
                   onClick={handleRemoveImage}
                 >
@@ -356,7 +438,7 @@ const CommunityWall = () => {
                 </Button>
               </div>
             )}
-            
+
             <div className="d-flex justify-content-between align-items-center">
               <Button
                 variant="outline-secondary"
@@ -373,9 +455,9 @@ const CommunityWall = () => {
                 accept="image/*"
                 style={{ display: 'none' }}
               />
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 variant="primary"
                 disabled={isSubmitting || !newPostContent.trim()}
               >
@@ -406,7 +488,7 @@ const CommunityWall = () => {
           </Form>
         </Card.Body>
       </Card>
-      
+
       <div className="posts-container">
         {posts.length === 0 && !isLoading ? (
           <div className="text-center py-5">
@@ -422,7 +504,7 @@ const CommunityWall = () => {
             />
           ))
         )}
-        
+
         {isLoading && (
           <div className="text-center py-3">
             <Spinner animation="border" role="status">
@@ -430,11 +512,11 @@ const CommunityWall = () => {
             </Spinner>
           </div>
         )}
-        
+
         {hasMore && !isLoading && (
           <div className="text-center mt-3 mb-5">
-            <Button 
-              variant="outline-primary" 
+            <Button
+              variant="outline-primary"
               onClick={handleLoadMore}
             >
               Charger plus de posts
@@ -449,27 +531,27 @@ const CommunityWall = () => {
 const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
   const [commentContent, setCommentContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const handleSubmitComment = async (e) => {
     e.preventDefault();
-    
+
     if (!commentContent.trim()) return;
-    
+
     setIsSubmitting(true);
     await onAddComment(post._id, commentContent);
     setCommentContent('');
     setIsSubmitting(false);
   };
-  
+
   return (
     <Card className="mb-3 shadow-sm post-card">
       <Card.Body>
         <div className="d-flex align-items-center mb-3">
           <div className="post-avatar">
             {post.user.profileImage ? (
-              <img 
-                src={`${API_BASE_URL}/${post.user.profileImage}`} 
-                alt={post.user.fullName} 
+              <img
+                src={`${API_BASE_URL}/${post.user.profileImage}`}
+                alt={post.user.fullName}
                 className="rounded-circle"
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/40";
@@ -484,7 +566,7 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
           <div className="ms-2">
             <h6 className="mb-0">{post.user.fullName}</h6>
             <small className="text-muted">
-              {post.user.role === 'teacher' ? 'Enseignant' : 
+              {post.user.role === 'teacher' ? 'Enseignant' :
                post.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
               <span className="mx-1">•</span>
               <Clock size={12} className="me-1" />
@@ -498,16 +580,16 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
             </small>
           </div>
         </div>
-        
+
         <div className="post-content mb-3">
           {post.content}
         </div>
-        
+
         {post.image && (
           <div className="post-image mb-3">
-            <img 
-              src={`${API_BASE_URL}/${post.image}`} 
-              alt="Post attachment" 
+            <img
+              src={`${API_BASE_URL}/${post.image}`}
+              alt="Post attachment"
               className="img-fluid rounded"
               onError={(e) => {
                 e.target.src = "https://via.placeholder.com/600x400?text=Image+non+disponible";
@@ -515,27 +597,34 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
             />
           </div>
         )}
-        
+
         <div className="post-stats d-flex align-items-center mb-3">
+          <div className="me-3 d-flex align-items-center">
+            <ThumbsUp size={14} className="me-1" style={{ color: '#1877F2' }} />
+            <small className="reaction-count">{post.reactionCounts?.like || 0}</small>
+          </div>
+          <div className="me-3 d-flex align-items-center">
+            <Heart size={14} className="me-1" style={{ color: '#E41E3F' }} />
+            <small className="reaction-count">{post.reactionCounts?.love || 0}</small>
+          </div>
           <div className="me-3">
-            <ThumbsUp size={14} className="me-1" />
-            <small>{post.totalReactions || 0} réactions</small>
+            <small className="text-muted">{post.totalReactions || 0} réactions totales</small>
           </div>
           <div>
             <MessageSquare size={14} className="me-1" />
             <small>{post.approvedCommentsCount || 0} commentaires</small>
           </div>
         </div>
-        
+
         <hr />
-        
+
         {renderReactionButtons(post)}
-        
+
         <hr />
-        
+
         <div className="comments-section">
           <h6 className="mb-3">Commentaires</h6>
-          
+
           {post.comments && post.comments.filter(comment => comment.status === 'approved').length > 0 ? (
             post.comments
               .filter(comment => comment.status === 'approved')
@@ -544,9 +633,9 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
                   <div className="d-flex">
                     <div className="comment-avatar">
                       {comment.user.profileImage ? (
-                        <img 
-                          src={`${API_BASE_URL}/${comment.user.profileImage}`} 
-                          alt={comment.user.fullName} 
+                        <img
+                          src={`${API_BASE_URL}/${comment.user.profileImage}`}
+                          alt={comment.user.fullName}
                           className="rounded-circle"
                           onError={(e) => {
                             e.target.src = "https://via.placeholder.com/30";
@@ -578,7 +667,7 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
           ) : (
             <p className="text-muted">Aucun commentaire pour le moment</p>
           )}
-          
+
           <Form onSubmit={handleSubmitComment} className="mt-3">
             <div className="d-flex">
               <Form.Control
@@ -589,8 +678,8 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
                 disabled={isSubmitting}
                 className="me-2"
               />
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 variant="primary"
                 disabled={isSubmitting || !commentContent.trim()}
               >

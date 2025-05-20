@@ -8,24 +8,28 @@ const connectDB = async () => {
     try {
         await mongoose.connect(`${process.env.MONGODB_URI}`);
         console.log('MongoDB connected successfully');
-        const email = ("admin@welearn.com".toLocaleLowerCase()).trim();
+        // Check for admin account using environment variables or defaults
+        const adminEmail = (process.env.ADMIN_EMAIL || "admin@welearn.com").toLowerCase().trim();
         let webmaster = await UserModel.findOne({ role: 'admin' });
 
         if (!webmaster) {
+            console.log('No admin account found. Creating default admin account...');
 
-
+            // Create default admin with credentials from environment variables
             let new_user = new UserModel({
-                fullName: "Admin",
-                email: email,
-                password: 'Hama@Hama1*',
-                phoneNumber: "+216 55 555 555",
+                fullName: process.env.ADMIN_NAME || "Administrator",
+                email: adminEmail,
+                password: process.env.ADMIN_PASSWORD || 'Admin123!',
+                phoneNumber: process.env.ADMIN_PHONE || "+216 00 000 000",
                 role: 'admin',
-                isVerified: true // Set admin account as verified by default
+                isVerified: true // Admin accounts are always verified by default
             });
+
             await new_user.save();
-            console.log(`webmaster account has been added : ${new_user.email}`);
+            console.log(`Admin account created successfully: ${new_user.email}`);
+            console.log('IMPORTANT: Please change the default admin password after first login');
         } else {
-            console.log(`webmaster account already exists \n webmaster email : ${webmaster.email}`);
+            console.log(`Admin account already exists: ${webmaster.email}`);
         }
 
         // Initialize settings if they don't exist

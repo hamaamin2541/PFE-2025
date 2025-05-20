@@ -32,7 +32,9 @@ export const getDashboardStats = async (req, res) => {
     const totalEnrollments = await Enrollment.countDocuments();
 
     // Statistiques des revenus
-    const enrollments = await Enrollment.find()
+    const enrollments = await Enrollment.find({
+      paymentStatus: 'completed' // Only count completed payments
+    })
       .populate({
         path: 'course',
         select: 'price'
@@ -49,7 +51,12 @@ export const getDashboardStats = async (req, res) => {
     let totalRevenue = 0;
 
     enrollments.forEach(enrollment => {
-      if (enrollment.course && enrollment.course.price) {
+      // First check if the enrollment has an amount field
+      if (enrollment.amount) {
+        totalRevenue += enrollment.amount;
+      }
+      // If not, use the price from the related item
+      else if (enrollment.course && enrollment.course.price) {
         totalRevenue += enrollment.course.price;
       } else if (enrollment.test && enrollment.test.price) {
         totalRevenue += enrollment.test.price;

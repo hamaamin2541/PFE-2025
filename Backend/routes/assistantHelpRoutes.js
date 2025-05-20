@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, assistantOrHigher } from '../middleware/auth.js';
+import { protect, assistantOrHigher } from '../middleware/authMiddleware.js';
 import {
   getAssistantHelpRequests,
   getStudentHelpRequests,

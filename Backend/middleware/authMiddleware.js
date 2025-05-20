@@ -1,35 +1,157 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+/**
+ * Authentication middleware to protect routes
+ * Verifies JWT token and attaches user to request object
+ */
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    // Check for token in Authorization header
+    if (req.headers.authorization?.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
 
+    // If no token found, return unauthorized
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: 'Not authorized - No token provided'
       });
     }
 
     try {
+      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+
+      // Find user by ID and exclude password
+      const user = await User.findById(decoded.id).select('-password');
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Attach user to request object
+      req.user = user;
       next();
     } catch (error) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: 'Authentication failed - Invalid token'
       });
     }
   } catch (error) {
-    res.status(500).json({
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({
       success: false,
       message: 'Server Error'
+    });
+  }
+};
+
+/**
+ * Role-based authorization middleware
+ * Checks if user has one of the specified roles
+ */
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'User role is not authorized to access this route'
+      });
+    }
+    next();
+  };
+};
+
+/**
+ * Admin-only middleware
+ * Restricts access to admin users only
+ */
+export const adminOnly = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'This route is restricted to administrators'
+    });
+  }
+  next();
+};
+
+/**
+ * Assistant or higher role middleware
+ * Allows access to assistant, teacher, and admin roles
+ */
+export const assistantOrHigher = (req, res, next) => {
+  if (!['assistant', 'teacher', 'admin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'This action requires assistant privileges or higher'
+    });
+  }
+  next();
+};
+
+/**
+ * Teacher or admin middleware
+ * Allows access to teacher and admin roles
+ */
+export const teacherOrAdmin = (req, res, next) => {
+  if (!['teacher', 'admin'].includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'This action requires teacher privileges or higher'
+    });
+  }
+  next();
+};
+
+/**
+ * Token verification middleware for query parameters
+ * Used for download routes where token is passed in query string
+ */
+export const verifyTokenInQuery = async (req, res, next) => {
+  try {
+    // Check if token is in query params (for direct downloads)
+    if (!req.query.token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication token is required'
+      });
+    }
+
+    try {
+      const decoded = jwt.verify(req.query.token, process.env.JWT_SECRET);
+
+      // Find the user in the database
+      const user = await User.findById(decoded.id).select('-password');
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token'
+      });
+    }
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
     });
   }
 };

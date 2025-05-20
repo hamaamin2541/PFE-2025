@@ -79,52 +79,69 @@ const generateCertificatePDF = async (certificate, student, content) => {
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      // Set page background color
-      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#f5f5f5');
+      // Set page background color - using a more modern light color
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#FAFAFA');
 
-      // Add a gold border
-      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
-         .lineWidth(5)
-         .stroke('#D4AF37');
+      // Check if template exists (try PNG first, then PDF)
+      let templatePath = join(__dirname, '..', 'uploads', 'templates', 'certificate_template.png');
+      let useTemplate = fs.existsSync(templatePath);
 
-      // Add a second inner border
-      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60)
-         .lineWidth(1)
-         .stroke('#D4AF37');
+      // If PNG doesn't exist, try PDF
+      if (!useTemplate) {
+        templatePath = join(__dirname, '..', 'uploads', 'templates', 'certificate_template.pdf');
+        useTemplate = fs.existsSync(templatePath);
+      }
 
-      // Add decorative corners
-      const cornerSize = 30;
+      if (useTemplate) {
+        // Use the Canva template as background
+        doc.image(templatePath, 0, 0, {
+          width: doc.page.width,
+          height: doc.page.height
+        });
+      } else {
+        // If no template exists, create a stylish border with modern design
+        // Add a sleek border with rounded corners
+        doc.roundedRect(15, 15, doc.page.width - 30, doc.page.height - 30, 10)
+           .lineWidth(3)
+           .stroke('#000000');
 
-      // Top left corner
-      doc.polygon([20, 20], [20 + cornerSize, 20], [20, 20 + cornerSize])
-         .fill('#D4AF37');
+        // Add a second inner border with different color
+        doc.roundedRect(25, 25, doc.page.width - 50, doc.page.height - 50, 8)
+           .lineWidth(1)
+           .stroke('#333333');
 
-      // Top right corner
-      doc.polygon([doc.page.width - 20, 20], [doc.page.width - 20 - cornerSize, 20], [doc.page.width - 20, 20 + cornerSize])
-         .fill('#D4AF37');
+        // Add decorative elements - modern geometric shapes
+        // Top left decorative element
+        doc.circle(50, 50, 15)
+           .fill('#000000');
 
-      // Bottom left corner
-      doc.polygon([20, doc.page.height - 20], [20 + cornerSize, doc.page.height - 20], [20, doc.page.height - 20 - cornerSize])
-         .fill('#D4AF37');
+        // Top right decorative element
+        doc.circle(doc.page.width - 50, 50, 15)
+           .fill('#000000');
 
-      // Bottom right corner
-      doc.polygon([doc.page.width - 20, doc.page.height - 20], [doc.page.width - 20 - cornerSize, doc.page.height - 20], [doc.page.width - 20, doc.page.height - 20 - cornerSize])
-         .fill('#D4AF37');
+        // Bottom left decorative element
+        doc.circle(50, doc.page.height - 50, 15)
+           .fill('#000000');
 
-      // Add a header with elegant styling
+        // Bottom right decorative element
+        doc.circle(doc.page.width - 50, doc.page.height - 50, 15)
+           .fill('#000000');
+      }
+
+      // Add a header with modern styling
       doc.fontSize(40)
          .font('Helvetica-Bold')
-         .fillColor('#333333')
+         .fillColor('#000000')
          .text('CERTIFICAT DE RÉUSSITE', {
            align: 'center',
            y: 80
          });
 
-      // Add decorative line under title
-      doc.moveTo(doc.page.width / 2 - 200, 130)
-         .lineTo(doc.page.width / 2 + 200, 130)
-         .lineWidth(2)
-         .stroke('#D4AF37');
+      // Add decorative line under title - thinner and more elegant
+      doc.moveTo(doc.page.width / 2 - 180, 130)
+         .lineTo(doc.page.width / 2 + 180, 130)
+         .lineWidth(1.5)
+         .stroke('#000000');
 
       // Add certificate text
       doc.fontSize(20)
@@ -135,20 +152,20 @@ const generateCertificatePDF = async (certificate, student, content) => {
            y: 170
          });
 
-      // Add student name
-      doc.fontSize(36)
+      // Add student name with more prominent styling
+      doc.fontSize(38)
          .font('Helvetica-Bold')
-         .fillColor('#1E3A8A')
+         .fillColor('#000000')
          .text(student.fullName, {
            align: 'center',
            y: 210
          });
 
-      // Add decorative line under name
+      // Add decorative line under name - subtle
       doc.moveTo(doc.page.width / 2 - 150, 260)
          .lineTo(doc.page.width / 2 + 150, 260)
-         .lineWidth(1)
-         .stroke('#D4AF37');
+         .lineWidth(0.75)
+         .stroke('#555555');
 
       // Add course completion text
       doc.fontSize(20)
@@ -159,10 +176,10 @@ const generateCertificatePDF = async (certificate, student, content) => {
            y: 280
          });
 
-      // Add course title
-      doc.fontSize(28)
+      // Add course title with more emphasis
+      doc.fontSize(30)
          .font('Helvetica-Bold')
-         .fillColor('#1E3A8A')
+         .fillColor('#000000')
          .text(content.title, {
            align: 'center',
            y: 320
@@ -175,7 +192,7 @@ const generateCertificatePDF = async (certificate, student, content) => {
         day: 'numeric'
       });
 
-      // Add date
+      // Add date with cleaner styling
       doc.fontSize(16)
          .font('Helvetica')
          .fillColor('#333333')
@@ -184,24 +201,24 @@ const generateCertificatePDF = async (certificate, student, content) => {
            y: 370
          });
 
-      // Add official seal
-      doc.circle(150, doc.page.height - 120, 50)
-         .lineWidth(2)
-         .fillAndStroke('#f5f5f5', '#D4AF37');
-
+      // Add a modern official seal
       doc.circle(150, doc.page.height - 120, 40)
+         .lineWidth(2)
+         .fillAndStroke('#FAFAFA', '#000000');
+
+      doc.circle(150, doc.page.height - 120, 35)
          .lineWidth(1)
-         .stroke('#D4AF37');
+         .stroke('#333333');
 
       doc.fontSize(12)
          .font('Helvetica-Bold')
-         .fillColor('#D4AF37')
+         .fillColor('#000000')
          .text('OFFICIEL', 150, doc.page.height - 125, {
            width: 60,
            align: 'center'
          });
 
-      // Add signature line
+      // Add signature line - cleaner and more minimal
       doc.moveTo(doc.page.width - 250, doc.page.height - 100)
          .lineTo(doc.page.width - 100, doc.page.height - 100)
          .lineWidth(1)
@@ -215,13 +232,22 @@ const generateCertificatePDF = async (certificate, student, content) => {
            align: 'center'
          });
 
-      // Add QR code
+      // Add WeLearn logo or platform name
+      doc.fontSize(16)
+         .font('Helvetica-Bold')
+         .fillColor('#000000')
+         .text('WeLearn', 100, doc.page.height - 90, {
+           width: 100,
+           align: 'center'
+         });
+
+      // Add QR code with better positioning
       const qrCodeImage = certificate.qrCodeUrl;
       doc.image(qrCodeImage, doc.page.width / 2 - 50, doc.page.height - 170, {
         fit: [100, 100]
       });
 
-      // Add certificate ID
+      // Add certificate ID with cleaner styling
       doc.fontSize(10)
          .font('Helvetica')
          .fillColor('#333333')
@@ -230,7 +256,7 @@ const generateCertificatePDF = async (certificate, student, content) => {
            y: doc.page.height - 40
          });
 
-      // Add verification URL
+      // Add verification URL with cleaner styling
       doc.fontSize(8)
          .font('Helvetica')
          .fillColor('#333333')
@@ -307,62 +333,135 @@ export const generateCertificate = async (req, res) => {
     // Get content details based on enrollment type
     console.log('Getting content details for type:', enrollment.itemType);
     let content;
-    if (enrollment.itemType === 'course') {
-      console.log('Course ID:', enrollment.course);
-      content = await Course.findById(enrollment.course);
-    } else if (enrollment.itemType === 'test') {
-      console.log('Test ID:', enrollment.test);
-      content = await Test.findById(enrollment.test);
-    } else if (enrollment.itemType === 'formation') {
-      console.log('Formation ID:', enrollment.formation);
-      content = await Formation.findById(enrollment.formation);
-    }
 
-    console.log('Content found:', content ? 'Yes' : 'No');
-    if (content) {
-      console.log('Content title:', content.title);
-    }
+    try {
+      if (enrollment.itemType === 'course') {
+        console.log('Course ID:', enrollment.course);
+        content = await Course.findById(enrollment.course);
 
-    if (!content) {
-      return res.status(404).json({
+        // If course is not found directly, try to populate it from the enrollment
+        if (!content && enrollment._id) {
+          const populatedEnrollment = await Enrollment.findById(enrollment._id).populate('course');
+          if (populatedEnrollment && populatedEnrollment.course) {
+            content = populatedEnrollment.course;
+            // Update the enrollment with the course ID if it was missing
+            enrollment.course = content._id;
+            await enrollment.save();
+          }
+        }
+      } else if (enrollment.itemType === 'test') {
+        console.log('Test ID:', enrollment.test);
+        content = await Test.findById(enrollment.test);
+
+        // If test is not found directly, try to populate it from the enrollment
+        if (!content && enrollment._id) {
+          const populatedEnrollment = await Enrollment.findById(enrollment._id).populate('test');
+          if (populatedEnrollment && populatedEnrollment.test) {
+            content = populatedEnrollment.test;
+            // Update the enrollment with the test ID if it was missing
+            enrollment.test = content._id;
+            await enrollment.save();
+          }
+        }
+      } else if (enrollment.itemType === 'formation') {
+        console.log('Formation ID:', enrollment.formation);
+        content = await Formation.findById(enrollment.formation);
+
+        // If formation is not found directly, try to populate it from the enrollment
+        if (!content && enrollment._id) {
+          const populatedEnrollment = await Enrollment.findById(enrollment._id).populate('formation');
+          if (populatedEnrollment && populatedEnrollment.formation) {
+            content = populatedEnrollment.formation;
+            // Update the enrollment with the formation ID if it was missing
+            enrollment.formation = content._id;
+            await enrollment.save();
+          }
+        }
+      }
+
+      console.log('Content found:', content ? 'Yes' : 'No');
+      if (content) {
+        console.log('Content title:', content.title);
+      }
+
+      if (!content) {
+        return res.status(404).json({
+          success: false,
+          message: `${enrollment.itemType} not found. Please contact support.`
+        });
+      }
+    } catch (contentError) {
+      console.error('Error finding content:', contentError);
+      return res.status(500).json({
         success: false,
-        message: `${enrollment.itemType} not found`
+        message: `Error finding ${enrollment.itemType}. Please try again or contact support.`
       });
     }
 
     // Get student details
     console.log('Getting student details');
     console.log('Student ID:', enrollment.user);
-    const student = await User.findById(enrollment.user);
-    console.log('Student found:', student ? 'Yes' : 'No');
-    if (student) {
-      console.log('Student name:', student.fullName);
-    }
+    let student;
 
-    if (!student) {
-      return res.status(404).json({
+    try {
+      student = await User.findById(enrollment.user);
+
+      // If student is not found directly, try to get the current authenticated user
+      if (!student && req.user) {
+        student = req.user;
+        // Update the enrollment with the user ID if it was missing
+        enrollment.user = student._id;
+        await enrollment.save();
+      }
+
+      console.log('Student found:', student ? 'Yes' : 'No');
+      if (student) {
+        console.log('Student name:', student.fullName);
+      }
+
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: 'Student not found. Please try logging out and back in.'
+        });
+      }
+    } catch (studentError) {
+      console.error('Error finding student:', studentError);
+      return res.status(500).json({
         success: false,
-        message: 'Student not found'
+        message: 'Error finding student information. Please try again or contact support.'
       });
     }
 
     // Generate a unique certificate ID
     console.log('Generating certificate ID');
-    const certificateId = await generateCertificateId();
-    console.log('Certificate ID generated:', certificateId);
+    let certificateId;
+    try {
+      certificateId = await generateCertificateId();
+      console.log('Certificate ID generated:', certificateId);
+    } catch (idError) {
+      console.error('Error generating certificate ID:', idError);
+      return res.status(500).json({
+        success: false,
+        message: 'Error generating certificate ID. Please try again.'
+      });
+    }
 
     // Create verification URL
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify/certificate/${certificateId}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verificationUrl = `${frontendUrl}/verify/certificate/${certificateId}`;
     console.log('Verification URL:', verificationUrl);
 
     // Generate QR code
     console.log('Generating QR code');
+    let qrCodeUrl;
     try {
-      const qrCodeUrl = await generateQRCode(verificationUrl);
+      qrCodeUrl = await generateQRCode(verificationUrl);
       console.log('QR code generated successfully');
 
       // Create certificate record
       console.log('Creating certificate record');
+      let certificate;
       try {
         // Create a certificate object with all required fields
         const certificateData = {
@@ -375,25 +474,53 @@ export const generateCertificate = async (req, res) => {
         };
 
         // Add the content reference based on the content type
-        if (enrollment.itemType === 'course') {
+        if (enrollment.itemType === 'course' && content) {
           certificateData.course = content._id;
-        } else if (enrollment.itemType === 'test') {
+        } else if (enrollment.itemType === 'test' && content) {
           certificateData.test = content._id;
-        } else if (enrollment.itemType === 'formation') {
+        } else if (enrollment.itemType === 'formation' && content) {
           certificateData.formation = content._id;
+        } else {
+          // If we don't have a valid content type or content, use a fallback
+          console.warn('Using fallback content reference');
+          if (enrollment.itemType === 'course') {
+            certificateData.course = enrollment.course || student.enrollments[0];
+          }
         }
 
         console.log('Certificate data:', JSON.stringify(certificateData, null, 2));
 
-        const certificate = await Certificate.create(certificateData);
+        // Check if all required fields are present
+        if (!certificateData.student || !certificateData.enrollment ||
+            (enrollment.itemType === 'course' && !certificateData.course) ||
+            (enrollment.itemType === 'test' && !certificateData.test) ||
+            (enrollment.itemType === 'formation' && !certificateData.formation)) {
+          console.error('Missing required certificate data fields');
+          return res.status(400).json({
+            success: false,
+            message: 'Missing required certificate data. Please try again or contact support.'
+          });
+        }
 
+        certificate = await Certificate.create(certificateData);
         console.log('Certificate record created:', certificate._id);
 
         // Generate PDF certificate
         console.log('Generating PDF certificate');
         try {
+          // Make sure the certificates directory exists
+          const certificatesDir = join(__dirname, '..', 'uploads', 'certificates');
+          if (!fs.existsSync(certificatesDir)) {
+            fs.mkdirSync(certificatesDir, { recursive: true });
+            console.log('Created certificates directory:', certificatesDir);
+          }
+
           const certificatePath = await generateCertificatePDF(certificate, student, content);
           console.log('PDF certificate generated at:', certificatePath);
+
+          if (!certificatePath) {
+            throw new Error('Certificate path is empty or undefined');
+          }
 
           // Update certificate with PDF path
           const relativePath = certificatePath.replace(join(__dirname, '..'), '').replace(/\\/g, '/');

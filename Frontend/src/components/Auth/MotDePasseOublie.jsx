@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaSpinner, FaEnvelope, FaArrowLeft, FaUserGraduate, FaCheckCircle } from 'react-icons/fa';
+import { FaSpinner, FaEnvelope, FaArrowLeft, FaUserGraduate, FaCheckCircle, FaExternalLinkAlt } from 'react-icons/fa';
 import { API_BASE_URL } from '../../config/api';
 import './Auth.css';
 
@@ -9,6 +9,39 @@ function MotDePasseOublie() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [emailPreviewUrl, setEmailPreviewUrl] = useState('');
+  const [checkingPreview, setCheckingPreview] = useState(false);
+
+  // Function to check for email preview URL
+  const checkForEmailPreview = async () => {
+    if (!success) return;
+
+    try {
+      setCheckingPreview(true);
+      const response = await fetch(`${API_BASE_URL}/api/auth/last-email-preview`);
+      const data = await response.json();
+
+      if (data.success && data.previewUrl) {
+        setEmailPreviewUrl(data.previewUrl);
+      }
+    } catch (err) {
+      console.error('Error fetching email preview:', err);
+    } finally {
+      setCheckingPreview(false);
+    }
+  };
+
+  // Check for email preview URL when success state changes
+  useEffect(() => {
+    if (success) {
+      // Wait a moment for the backend to process the email
+      const timer = setTimeout(() => {
+        checkForEmailPreview();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleChange = (e) => {
     setEmail(e.target.value);
@@ -35,6 +68,7 @@ function MotDePasseOublie() {
 
     try {
       console.log(`Sending password reset request for email: ${email}`);
+      console.log(`API URL: ${API_BASE_URL}/api/auth/reset-password-request`);
 
       // This endpoint needs to be implemented in the backend
       const response = await fetch(`${API_BASE_URL}/api/auth/reset-password-request`, {
@@ -47,11 +81,14 @@ function MotDePasseOublie() {
 
       const data = await response.json();
       console.log('Password reset response:', data);
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
+        console.error('Password reset request failed:', data);
         throw new Error(data.message || 'Erreur lors de la demande de réinitialisation');
       }
 
+      console.log('Password reset request successful');
       // Show success message
       setSuccess(true);
     } catch (err) {
@@ -134,6 +171,31 @@ function MotDePasseOublie() {
             <p className="mb-4">
               Vérifiez votre boîte de réception et vos spams.
             </p>
+
+            {/* Email Preview Link (Development Only) */}
+            {emailPreviewUrl && (
+              <div className="email-preview-box mb-4 p-3" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #ddd' }}>
+                <p className="mb-2"><strong>Mode Développement:</strong> Cliquez sur le lien ci-dessous pour voir l'email de réinitialisation:</p>
+                <a
+                  href={emailPreviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="preview-link d-flex align-items-center justify-content-center"
+                  style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}
+                >
+                  <FaExternalLinkAlt className="me-2" />
+                  Voir l'email de réinitialisation
+                </a>
+              </div>
+            )}
+
+            {checkingPreview && (
+              <div className="mb-4">
+                <FaSpinner className="fa-spin me-2" />
+                Recherche de l'aperçu d'email...
+              </div>
+            )}
+
             <Link to="/SeConnecter" className="auth-btn d-inline-block">
               Retour à la connexion
             </Link>

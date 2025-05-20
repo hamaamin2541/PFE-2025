@@ -8,7 +8,7 @@ const ReclamationForm = ({ show, handleClose }) => {
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
-    type: 'general',
+    type: 'other',
     attachments: []
   });
   const [formErrors, setFormErrors] = useState({});
@@ -36,38 +36,38 @@ const ReclamationForm = ({ show, handleClose }) => {
     if (!formData.subject.trim()) errors.subject = 'Le sujet est requis';
     if (!formData.description.trim()) errors.description = 'La description est requise';
     if (!formData.type) errors.type = 'Le type est requis';
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     try {
       setSubmitting(true);
       setError(null);
-      
+
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         setError('Vous devez être connecté pour soumettre une réclamation');
         return;
       }
-      
+
       const formDataToSend = new FormData();
       formDataToSend.append('subject', formData.subject);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('type', formData.type);
-      
+
       if (formData.attachments && formData.attachments.length > 0) {
         for (let i = 0; i < formData.attachments.length; i++) {
           formDataToSend.append('attachments', formData.attachments[i]);
         }
       }
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/complaints`,
         formDataToSend,
@@ -78,16 +78,16 @@ const ReclamationForm = ({ show, handleClose }) => {
           }
         }
       );
-      
+
       if (response.data.success) {
         setSuccess('Votre réclamation a été soumise avec succès. Notre équipe la traitera dans les plus brefs délais.');
         setFormData({
           subject: '',
           description: '',
-          type: 'general',
+          type: 'other',
           attachments: []
         });
-        
+
         // Close the modal after 3 seconds
         setTimeout(() => {
           handleClose();
@@ -109,8 +109,8 @@ const ReclamationForm = ({ show, handleClose }) => {
   };
 
   return (
-    <Modal 
-      show={show} 
+    <Modal
+      show={show}
       onHide={handleClose}
       size="lg"
       centered
@@ -125,13 +125,13 @@ const ReclamationForm = ({ show, handleClose }) => {
             {error}
           </Alert>
         )}
-        
+
         {success && (
           <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
             {success}
           </Alert>
         )}
-        
+
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Sujet</Form.Label>
@@ -147,7 +147,7 @@ const ReclamationForm = ({ show, handleClose }) => {
               {formErrors.subject}
             </Form.Control.Feedback>
           </Form.Group>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Type</Form.Label>
             <Form.Select
@@ -156,18 +156,17 @@ const ReclamationForm = ({ show, handleClose }) => {
               onChange={handleInputChange}
               isInvalid={!!formErrors.type}
             >
-              <option value="general">Général</option>
+              <option value="other">Général</option>
               <option value="technical">Technique</option>
-              <option value="billing">Facturation</option>
+              <option value="payment">Facturation</option>
               <option value="course">Cours</option>
               <option value="teacher">Professeur</option>
-              <option value="other">Autre</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               {formErrors.type}
             </Form.Control.Feedback>
           </Form.Group>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Description</Form.Label>
             <Form.Control
@@ -183,7 +182,7 @@ const ReclamationForm = ({ show, handleClose }) => {
               {formErrors.description}
             </Form.Control.Feedback>
           </Form.Group>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Pièces jointes (facultatif)</Form.Label>
             <Form.Control
@@ -201,8 +200,8 @@ const ReclamationForm = ({ show, handleClose }) => {
         <Button variant="secondary" onClick={handleClose}>
           Annuler
         </Button>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={handleSubmit}
           disabled={submitting}
         >

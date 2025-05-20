@@ -16,10 +16,14 @@ function ResetPassword() {
 
   useEffect(() => {
     // Validate token on component mount
-    // This is a placeholder - in a real implementation, you would verify the token with the backend
+    console.log('Token from URL:', token);
+
     if (!token) {
+      console.log('No token found in URL');
       setTokenValid(false);
       setError('Token de réinitialisation invalide ou expiré');
+    } else {
+      console.log('Token is present, proceeding with reset form');
     }
   }, [token]);
 
@@ -57,6 +61,8 @@ function ResetPassword() {
     }
 
     try {
+      console.log(`Submitting password reset with token: ${token.substring(0, 10)}...`);
+
       const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
@@ -69,14 +75,17 @@ function ResetPassword() {
       });
 
       const data = await response.json();
+      console.log('Password reset response:', data);
 
       if (!response.ok) {
+        console.error('Password reset failed:', data);
         throw new Error(data.message || 'Erreur lors de la réinitialisation du mot de passe');
       }
 
+      console.log('Password reset successful');
       // Show success message
       setSuccess(true);
-      
+
       // Redirect to login page after 3 seconds
       setTimeout(() => {
         navigate('/SeConnecter');
@@ -128,8 +137,8 @@ function ResetPassword() {
           <FaUserGraduate size={40} className="mb-3" style={{ color: 'var(--primary-color)' }} />
           <h2 className="auth-title">Nouveau mot de passe</h2>
           <p className="auth-subtitle">
-            {!success 
-              ? "Créez un nouveau mot de passe pour votre compte" 
+            {!success
+              ? "Créez un nouveau mot de passe pour votre compte"
               : "Votre mot de passe a été réinitialisé avec succès"
             }
           </p>

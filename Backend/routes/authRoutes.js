@@ -7,7 +7,8 @@ import {
   resetPasswordRequest,
   resetPassword,
   verifyAccount,
-  resendVerificationCode
+  resendVerificationCode,
+  sendPasswordToEmail
 } from '../controllers/authController.js';
 
 
@@ -21,5 +22,21 @@ router.post('/reset-password-request', resetPasswordRequest);
 router.post('/reset-password', resetPassword);
 router.post('/verify-account', verifyAccount);
 router.post('/resend-verification', resendVerificationCode);
+router.post('/send-password-to-email', sendPasswordToEmail);
+
+// Get the preview URL for the last sent email (for development only)
+router.get('/last-email-preview', (req, res) => {
+  if (process.env.NODE_ENV !== 'production' && global.lastEmailPreviewUrl) {
+    return res.status(200).json({
+      success: true,
+      previewUrl: global.lastEmailPreviewUrl
+    });
+  } else {
+    return res.status(404).json({
+      success: false,
+      message: 'No email preview URL available'
+    });
+  }
+});
 
 export default router;

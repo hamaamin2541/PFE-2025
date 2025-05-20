@@ -6,6 +6,7 @@ import { Play, BookOpen, Clock, Award, CheckCircle, Filter, Search, SortAsc, Sor
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { useNavigate } from 'react-router-dom';
+import CourseRecommendations from '../../components/Recommendation/CourseRecommendations';
 import './DashboardStudent.css';
 
 
@@ -497,11 +498,18 @@ const MesContenus = () => {
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : filteredEnrollments.length === 0 ? (
-        <div className="dashboard-card text-center py-5">
-          <BookOpen size={48} className="text-muted mb-3" />
-          <h4>Aucun contenu trouvé</h4>
-          <p className="text-muted">Essayez de modifier vos critères de recherche ou inscrivez-vous à de nouveaux contenus</p>
-        </div>
+        <>
+          <div className="dashboard-card text-center py-5 mb-4">
+            <BookOpen size={48} className="text-muted mb-3" />
+            <h4>Aucun contenu trouvé</h4>
+            <p className="text-muted">Essayez de modifier vos critères de recherche ou inscrivez-vous à de nouveaux contenus</p>
+          </div>
+
+          {/* Show recommendations when no content is found */}
+          <div className="mt-5">
+            <CourseRecommendations limit={4} />
+          </div>
+        </>
       ) : (
         <>
           <Row className="g-4">
@@ -560,6 +568,11 @@ const MesContenus = () => {
               </nav>
             </div>
           )}
+
+          {/* Show recommendations at the bottom of the page */}
+          <div className="mt-5 pt-4 border-top">
+            <CourseRecommendations limit={3} />
+          </div>
         </>
       )}
     </div>

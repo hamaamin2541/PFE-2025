@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/upload.js';
 import { getCourses, getCourseById, getPublicCourseById, createCourse, deleteCourse, enrollInCourse, getTeacherCourses, updateCourse, getCoursesByTeacher, getCourseCount, getTeacherAnalytics } from '../controllers/courseController.js';
 

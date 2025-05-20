@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Spinner, Alert, Badge } from 'react-bootstrap';
-import { Award, Download, Share2, ArrowLeft } from 'lucide-react';
+import { Award, Download, Share2, ArrowLeft, ExternalLink } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import '../../styles/CertificateVerification.css';
 
 const MesCertificats = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const MesCertificats = () => {
 
   const handleShareCertificate = (certificateId) => {
     const verificationUrl = `${window.location.origin}/verify/certificate/${certificateId}`;
-    
+
     // Use Web Share API if available
     if (navigator.share) {
       navigator.share({
@@ -107,21 +108,33 @@ const MesCertificats = () => {
       )}
 
       {certificates.length === 0 && !error ? (
-        <Card className="text-center p-5 shadow-sm">
-          <Card.Body>
-            <Award size={48} className="text-muted mb-3" />
-            <h4>Aucun certificat trouvé</h4>
-            <p className="text-muted">
-              Terminez des cours pour obtenir des certificats de réussite.
-            </p>
-            <Button 
-              variant="primary" 
-              onClick={() => navigate('/dashboard-student')}
-            >
-              Explorer les cours
-            </Button>
-          </Card.Body>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="text-center p-5 shadow border-0" style={{ borderRadius: '12px' }}>
+            <Card.Body>
+              <div className="empty-certificate-container mb-4">
+                <div className="verification-icon-circle bg-light d-inline-flex align-items-center justify-content-center rounded-circle p-3 mb-3">
+                  <Award size={64} className="text-muted" />
+                </div>
+              </div>
+              <h3 className="mb-3">Aucun certificat trouvé</h3>
+              <p className="text-muted mb-4">
+                Terminez des cours pour obtenir des certificats de réussite. Les certificats sont délivrés automatiquement lorsque vous complétez un cours.
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/dashboard-student')}
+                className="px-4"
+              >
+                Explorer les cours
+              </Button>
+            </Card.Body>
+          </Card>
+        </motion.div>
       ) : (
         <Row>
           {certificates.map((certificate, index) => {
@@ -151,19 +164,25 @@ const MesCertificats = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="h-100 shadow-sm certificate-card">
-                    <Card.Header className="bg-primary text-white">
+                  <Card className="h-100 shadow certificate-card">
+                    <Card.Header className="text-white py-3" style={{ background: 'linear-gradient(45deg, #000000, #333333)' }}>
                       <div className="d-flex align-items-center">
                         <Award size={20} className="me-2" />
                         <span>Certificat de Réussite</span>
                       </div>
                     </Card.Header>
-                    <Card.Body className="d-flex flex-column">
+                    <Card.Body className="d-flex flex-column p-4">
+                      <div className="certificate-icon text-center mb-3">
+                        <div className="certificate-icon-circle bg-light d-inline-flex align-items-center justify-content-center rounded-circle p-2 mb-2">
+                          <Award size={28} className="text-success" />
+                        </div>
+                      </div>
+
                       <div className="mb-3">
                         <Badge bg="info" className="mb-2">
-                          {certificate.contentType === 'course' ? 'Cours' : 
-                           certificate.contentType === 'formation' ? 'Formation' : 
-                           certificate.contentType === 'test' ? 'Test' : 
+                          {certificate.contentType === 'course' ? 'Cours' :
+                           certificate.contentType === 'formation' ? 'Formation' :
+                           certificate.contentType === 'test' ? 'Test' :
                            certificate.contentType}
                         </Badge>
                         <h5 className="card-title">{contentTitle}</h5>
@@ -171,27 +190,44 @@ const MesCertificats = () => {
                           Délivré le {issueDate}
                         </p>
                       </div>
-                      
+
                       <div className="mt-auto">
                         <div className="d-flex gap-2">
-                          <Button 
-                            variant="primary" 
-                            className="flex-grow-1"
+                          <Button
+                            variant="success"
+                            className="flex-grow-1 certificate-download-button"
                             onClick={() => handleDownloadCertificate(certificate.certificateId)}
+                            style={{
+                              background: 'linear-gradient(45deg, #28a745, #20c997)',
+                              border: 'none',
+                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                              transition: 'all 0.3s ease'
+                            }}
                           >
                             <Download size={16} className="me-2" />
                             Télécharger
                           </Button>
-                          <Button 
+                          <Button
                             variant="outline-secondary"
                             onClick={() => handleShareCertificate(certificate.certificateId)}
                           >
                             <Share2 size={16} />
                           </Button>
                         </div>
+
+                        <Button
+                          variant="link"
+                          className="w-100 mt-2 text-muted"
+                          onClick={() => window.open(`/verify/certificate/${certificate.certificateId}`, '_blank')}
+                          size="sm"
+                        >
+                          <ExternalLink size={12} className="me-1" />
+                          Vérifier l'authenticité
+                        </Button>
+
                         <div className="mt-2 text-center">
                           <small className="text-muted">
-                            ID: {certificate.certificateId}
+                            ID: <code>{certificate.certificateId}</code>
                           </small>
                         </div>
                       </div>
