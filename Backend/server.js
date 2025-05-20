@@ -66,6 +66,7 @@ import assistantRoutes from './routes/assistantRoutes.js';
 import assistantHelpRoutes from './routes/assistantHelpRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 
 // Make sure you have JWT_SECRET in your environment variables
 if (!process.env.JWT_SECRET) {
@@ -147,6 +148,7 @@ app.use('/api/assistants', assistantRoutes);
 app.use('/api/assistant', assistantHelpRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/documents', documentRoutes);
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({

@@ -152,22 +152,67 @@ const CourseView = () => {
   const handleResourceClick = (resource) => {
     // If the resource has a file path, download it
     if (resource.file) {
-      // Create an anchor element for downloading
-      const a = document.createElement('a');
+      // Get the token for authentication
+      const token = localStorage.getItem('token');
 
-      // Extract the filename from the path
-      const filename = resource.file.split('/').pop();
+      // Method 1: Use the new secure document download endpoint
+      if (resource._id && course._id) {
+        // Construct the secure URL with authentication
+        const secureUrl = `${API_BASE_URL}/api/documents/download/course/${course._id}/${resource._id}`;
+        console.log("Downloading resource securely from:", secureUrl);
 
-      // Construct the correct URL
-      const resourceUrl = `${API_BASE_URL}/uploads/courses/resources/${filename}`;
+        // Create a form for authenticated download
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = secureUrl;
+        form.target = '_blank';
 
-      console.log("Downloading resource from:", resourceUrl);
+        // Add token as hidden field
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = 'token';
+        tokenField.value = token;
+        form.appendChild(tokenField);
 
-      a.href = resourceUrl;
-      a.download = resource.name || filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+      } else {
+        // Fallback to direct file download if IDs are missing
+        // Extract the filename from the path
+        const filename = resource.file.split('/').pop();
+
+        // Use the simpler filename-based endpoint
+        const resourceUrl = `${API_BASE_URL}/api/documents/download-file/${filename}`;
+        console.log("Downloading resource from:", resourceUrl);
+
+        // Create a form for authenticated download
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = resourceUrl;
+        form.target = '_blank';
+
+        // Add token as hidden field
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = 'token';
+        tokenField.value = token;
+        form.appendChild(tokenField);
+
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+      }
     }
   };
 

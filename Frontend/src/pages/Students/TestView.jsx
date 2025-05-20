@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert, ProgressBar, Badge, Form, Toast, ToastContainer } from 'react-bootstrap';
-import { ArrowLeft, Clock, Award, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Save, Download } from 'lucide-react';
+import { ArrowLeft, Clock, Award, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Save, Download, FileText } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL, api } from '../../config/api';
 import { useGamification } from '../../context/GamificationContext';
@@ -226,6 +226,73 @@ const TestView = () => {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  const handleResourceClick = (resource) => {
+    // If the resource has a file path, download it
+    if (resource.file) {
+      // Get the token for authentication
+      const token = localStorage.getItem('token');
+
+      // Method 1: Use the new secure document download endpoint
+      if (resource._id && test._id) {
+        // Construct the secure URL with authentication
+        const secureUrl = `${API_BASE_URL}/api/documents/download/test/${test._id}/${resource._id}`;
+        console.log("Downloading resource securely from:", secureUrl);
+
+        // Create a form for authenticated download
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = secureUrl;
+        form.target = '_blank';
+
+        // Add token as hidden field
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = 'token';
+        tokenField.value = token;
+        form.appendChild(tokenField);
+
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+      } else {
+        // Fallback to direct file download if IDs are missing
+        // Extract the filename from the path
+        const filename = resource.file.split('/').pop();
+
+        // Use the simpler filename-based endpoint
+        const resourceUrl = `${API_BASE_URL}/api/documents/download-file/${filename}`;
+        console.log("Downloading resource from:", resourceUrl);
+
+        // Create a form for authenticated download
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = resourceUrl;
+        form.target = '_blank';
+
+        // Add token as hidden field
+        const tokenField = document.createElement('input');
+        tokenField.type = 'hidden';
+        tokenField.name = 'token';
+        tokenField.value = token;
+        form.appendChild(tokenField);
+
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <Container className="py-5 text-center">
@@ -335,6 +402,30 @@ const TestView = () => {
                   Retour au tableau de bord
                 </Button>
               </div>
+
+              {/* Resources section for completed test */}
+              {test.resources && test.resources.length > 0 && (
+                <div className="mt-4">
+                  <h5>Ressources du test</h5>
+                  <p className="text-muted">Vous pouvez télécharger ces ressources pour référence.</p>
+                  <div className="list-group">
+                    {test.resources.map((resource, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline-info"
+                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
+                        onClick={() => handleResourceClick(resource)}
+                      >
+                        <span>{resource.name}</span>
+                        <div>
+                          <Badge bg="info" className="me-2">{resource.type}</Badge>
+                          <Download size={16} />
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -346,6 +437,30 @@ const TestView = () => {
               <Button variant="primary" className="mt-4" onClick={handleBackClick}>
                 Retour au tableau de bord
               </Button>
+
+              {/* Resources section for failed test */}
+              {test.resources && test.resources.length > 0 && (
+                <div className="mt-4">
+                  <h5>Ressources du test</h5>
+                  <p className="text-muted">Vous pouvez télécharger ces ressources pour vous aider à vous préparer.</p>
+                  <div className="list-group">
+                    {test.resources.map((resource, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline-info"
+                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
+                        onClick={() => handleResourceClick(resource)}
+                      >
+                        <span>{resource.name}</span>
+                        <div>
+                          <Badge bg="info" className="me-2">{resource.type}</Badge>
+                          <Download size={16} />
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </Card>
@@ -383,6 +498,30 @@ const TestView = () => {
                   <AlertCircle size={20} className="me-2" />
                   Une fois que vous commencez le test, le chronomètre démarre. Vous ne pourrez pas mettre en pause.
                 </Alert>
+
+                {/* Resources section */}
+                {test.resources && test.resources.length > 0 && (
+                  <div className="mt-4">
+                    <h5>Ressources du test</h5>
+                    <p className="text-muted">Vous pouvez télécharger ces ressources avant de commencer le test.</p>
+                    <div className="list-group">
+                      {test.resources.map((resource, idx) => (
+                        <Button
+                          key={idx}
+                          variant="outline-info"
+                          className="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2"
+                          onClick={() => handleResourceClick(resource)}
+                        >
+                          <span>{resource.name}</span>
+                          <div>
+                            <Badge bg="info" className="me-2">{resource.type}</Badge>
+                            <Download size={16} />
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <Button
                   variant="primary"
