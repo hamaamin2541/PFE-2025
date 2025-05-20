@@ -111,6 +111,7 @@ const NotreContenu = () => {
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
+  const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
 
   // Fetch all courses, tests, and formations from API
   useEffect(() => {
@@ -281,29 +282,104 @@ const NotreContenu = () => {
         </div>
       )}
 
-      {/* Main Categories */}
-      <div className="main-buttons mb-4 d-flex justify-content-center flex-wrap" style={{ zIndex: 1 }}>
-        {Object.keys(categorizedCourses).length > 0 ? (
-          Object.keys(categorizedCourses).map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? 'dark' : 'outline-dark'}
-              className="m-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCategoryClick(category);
-              }}
-            >
-              {category}
-              <Badge bg="light" text="dark" pill className="ms-2">
-                {categorizedCourses[category] ? categorizedCourses[category].length : 0}
-              </Badge>
-            </Button>
-          ))
-        ) : !isLoading ? (
-          <p className="text-center">Aucune catégorie disponible</p>
-        ) : null}
+      {/* Category Selection */}
+      <div className="category-selection mb-4">
+        <Form.Select 
+          size="lg"
+          value={selectedCategory || ''}
+          onChange={(e) => setSelectedCategory(e.target.value || null)}
+          className="w-75 mx-auto"
+        >
+          <option value="">Tous les cours</option>
+          {Object.keys(categorizedCourses).map((category) => (
+            <option key={category} value={category}>
+              {category} ({categorizedCourses[category] ? categorizedCourses[category].length : 0} cours)
+            </option>
+          ))}
+        </Form.Select>
       </div>
+
+      {/* Display Logic for All Courses */}
+      {!isLoading && !searchTerm && !selectedCategory && (
+        <div className="mt-4 animate-slide">
+          <h3 className="mb-4">Découvrez nos cours exclusifs</h3>
+          <Row>
+            {allCourses.slice(-displayCount).map((course) => (
+              <Col key={course._id} md={6} lg={4} className="mb-4">
+                <Card className="course-card h-100 shadow-sm hover-effect">
+                  {/* Existing course card content */}
+                  {course.coverImage && (
+                    <Card.Img
+                      variant="top"
+                      src={`${API_BASE_URL}/${course.coverImage}`}
+                      onError={(e) => {
+                        e.target.src = "https://placehold.co/600x400?text=Course+Image";
+                      }}
+                      style={{ height: '180px', objectFit: 'cover' }}
+                    />
+                  )}
+                  <Card.Body className="d-flex flex-column">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <Badge bg="primary" className="mb-2">{course.category}</Badge>
+                      <Badge bg="secondary">{course.level}</Badge>
+                    </div>
+                    <Card.Title className="h5 mb-2">{course.title}</Card.Title>
+                    <Card.Text className="text-muted small mb-2">
+                      {course.description.length > 100
+                        ? course.description.substring(0, 100) + '...'
+                        : course.description}
+                    </Card.Text>
+
+                    <div className="mt-auto">
+                      <div className="d-flex align-items-center mb-2">
+                        <img
+                          src={course.teacher?.profileImage
+                            ? `${API_BASE_URL}/${course.teacher.profileImage}`
+                            : "https://placehold.co/30x30?text=T"}
+                          alt={course.teacher?.fullName || "Teacher"}
+                          className="rounded-circle me-2"
+                          width="30"
+                          height="30"
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/30x30?text=T";
+                          }}
+                        />
+                        <span className="small">{course.teacher?.fullName || "Professeur"}</span>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleCourseSelect(course)}
+                        >
+                          Voir le cours
+                        </Button>
+                        <span className="text-primary fw-bold">{course.price}€</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+          
+          {/* Load More Button */}
+          {allCourses.length > displayCount && (
+            <div className="text-center mt-4">
+              <Button
+                variant="outline-primary"
+                onClick={() => setDisplayCount(prev => prev + 10)}
+                className="px-4 py-2"
+              >
+                Afficher plus de cours
+                <span className="ms-2 small">
+                  ({Math.min(displayCount, allCourses.length)}/{allCourses.length})
+                </span>
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Loading state */}
       {isLoading && (
@@ -475,106 +551,6 @@ const NotreContenu = () => {
                 Retourner à toutes les catégories
               </Button>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Show all categories when no category is selected */}
-      {!isLoading && !searchTerm && !selectedCategory && (
-        <div className="mt-5">
-          <h3 className="text-center mb-4">Tous nos cours par catégorie</h3>
-
-          {Object.keys(categorizedCourses).length > 0 ? (
-            Object.entries(categorizedCourses).map(([category, coursesList]) => (
-              <div key={category} className="mb-5">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h4>{category}</h4>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    Voir tous
-                  </Button>
-                </div>
-
-                {coursesList && coursesList.length > 0 ? (
-                  <>
-                    <Row>
-                      {coursesList.slice(0, 3).map((course) => (
-                        <Col key={course._id} md={6} lg={4} className="mb-4">
-                          <Card className="course-card h-100 shadow-sm hover-effect">
-                            {course.coverImage && (
-                              <Card.Img
-                                variant="top"
-                                src={`${API_BASE_URL}/${course.coverImage}`}
-                                onError={(e) => {
-                                  e.target.src = "https://placehold.co/600x400?text=Course+Image";
-                                }}
-                                style={{ height: '180px', objectFit: 'cover' }}
-                              />
-                            )}
-                            <Card.Body className="d-flex flex-column">
-                              <Card.Title className="h5 mb-2">{course.title}</Card.Title>
-                              <Card.Text className="text-muted small mb-2">
-                                {course.description.length > 80
-                                  ? course.description.substring(0, 80) + '...'
-                                  : course.description}
-                              </Card.Text>
-
-                              <div className="mt-auto">
-                                <div className="d-flex align-items-center mb-2">
-                                  <img
-                                    src={course.teacher?.profileImage
-                                      ? `${API_BASE_URL}/${course.teacher.profileImage}`
-                                      : "https://placehold.co/30x30?text=T"}
-                                    alt={course.teacher?.fullName || "Teacher"}
-                                    className="rounded-circle me-2"
-                                    width="30"
-                                    height="30"
-                                    onError={(e) => {
-                                      e.target.src = "https://placehold.co/30x30?text=T";
-                                    }}
-                                  />
-                                  <span className="small">{course.teacher?.fullName || "Professeur"}</span>
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center">
-                                  <Button
-                                    variant="success"
-                                    size="sm"
-                                    onClick={() => handleCourseSelect(course)}
-                                  >
-                                    Voir le cours
-                                  </Button>
-                                  <span className="text-primary fw-bold">{course.price}€</span>
-                                </div>
-                              </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
-
-                    {coursesList.length > 3 && (
-                      <div className="text-center mt-2">
-                        <Button
-                          variant="link"
-                          onClick={() => setSelectedCategory(category)}
-                        >
-                          Voir les {coursesList.length - 3} autres cours
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center p-4 bg-light rounded mb-4">
-                    <p className="mb-0">Aucun cours disponible dans cette catégorie pour le moment</p>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-center">Aucune catégorie disponible pour le moment</p>
           )}
         </div>
       )}

@@ -550,6 +550,16 @@ h3::after {
   font-weight: var(--font-weight-semibold);
 }
 
+/* Load More Button */
+.load-more-btn {
+  transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 992px) {
   .hero-title {
