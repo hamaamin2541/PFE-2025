@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import './NosProfesseurs.css';
 import FAQ from '../components/FAQ';
 import TeacherRating from '../components/Rating/TeacherRating';
+import Footer from '../components/Footer/Footer';
+
 
 function NosProfesseurs() {
   const navigate = useNavigate();
@@ -424,6 +426,7 @@ function NosProfesseurs() {
           )}
         </Modal.Body>
       </Modal>
+      < Footer/>
     </>
   );
 }

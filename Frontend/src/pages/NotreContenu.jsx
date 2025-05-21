@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../config/api';
 import './NotreContenu.css';
 import FAQ from '../components/FAQ';
 import { Modal } from 'react-bootstrap';
+import Footer from '../components/Footer/Footer';
 import PurchaseForm from '../components/PurchaseForm';
 
 
@@ -112,6 +113,7 @@ const NotreContenu = () => {
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
   const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
+
 
   // Fetch all courses, tests, and formations from API
   useEffect(() => {
@@ -968,6 +970,7 @@ const NotreContenu = () => {
         </Modal.Footer>
       </Modal>
     </Container>
+    < Footer/>
     </>
   );
 };

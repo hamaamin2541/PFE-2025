@@ -5,6 +5,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 import io from 'socket.io-client';
 import './CommunityWall.css';
+import Footer from '../components/Footer/Footer';
 
 const CommunityWall = () => {
   const [posts, setPosts] = useState([]);
@@ -524,6 +525,7 @@ const CommunityWall = () => {
           </div>
         )}
       </div>
+      < Footer/>
     </Container>
   );
 };

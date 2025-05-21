@@ -16,6 +16,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import SocialCardsCarousel from "./SocialCardsCarousel";
 import FAQ from '../FAQ';
+import Footer from '../Footer/Footer';
 import "./Contact.css";
 
 const Contact = () => {
@@ -317,6 +318,8 @@ const Contact = () => {
           </div>
         </Container>
       </Container>
+
+      <Footer />
     </>
   );
 };
