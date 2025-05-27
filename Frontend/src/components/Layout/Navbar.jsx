@@ -66,7 +66,11 @@ const Navbar = () => {
   };
 
   const handleNavigation = () => {
-    const role = localStorage.getItem('userRole');
+    // Check both possible sources of user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    const role = user.role || userRoleFromStorage;
+
     if (role === 'teacher') {
       navigate('/dashboard-teacher');
     } else if (role === 'student' || role === 'assistant') {

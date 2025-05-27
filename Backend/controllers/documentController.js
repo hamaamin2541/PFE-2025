@@ -15,7 +15,7 @@ const __dirname = dirname(__filename);
 export const downloadDocument = async (req, res) => {
   try {
     const { contentType, contentId, resourceId } = req.params;
-    
+
     // Validate content type
     if (!['course', 'formation', 'test'].includes(contentType)) {
       return res.status(400).json({
@@ -45,9 +45,18 @@ export const downloadDocument = async (req, res) => {
       });
     }
 
-    // Check if the user is enrolled in the content or is the teacher
-    if (req.user.role !== 'admin' && req.user.role !== 'teacher') {
-      // For students, check enrollment
+    // Check if the user is enrolled in the content or is the teacher who created the content
+    // First, check if the user is the teacher who created this content
+    let isContentCreator = false;
+    if (req.user.role === 'teacher' || req.user.role === 'admin') {
+      // Check if the teacher is the creator of the content
+      if (content.teacher && content.teacher.toString() === req.user._id.toString()) {
+        isContentCreator = true;
+      }
+    }
+
+    // If not the content creator, check for enrollment (for all users including teachers)
+    if (!isContentCreator) {
       const enrollment = await Enrollment.findOne({
         user: req.user._id,
         $or: [
@@ -132,7 +141,7 @@ export const downloadDocument = async (req, res) => {
 
     // Stream the file to the response
     const fileStream = fs.createReadStream(fullPath);
-    
+
     fileStream.on('error', (err) => {
       console.error(`Error streaming file: ${err.message}`);
       if (!res.headersSent) {
@@ -157,10 +166,10 @@ export const downloadDocument = async (req, res) => {
 export const downloadDocumentByFilename = async (req, res) => {
   try {
     const { filename } = req.params;
-    
+
     // Sanitize filename to prevent directory traversal attacks
     const sanitizedFilename = path.basename(filename);
-    
+
     // Construct the path to the file
     const resourcesPath = join(__dirname, '..', 'uploads', 'courses', 'resources');
     const fullPath = join(resourcesPath, sanitizedFilename);
@@ -179,7 +188,7 @@ export const downloadDocumentByFilename = async (req, res) => {
     // Determine content type based on file extension
     const ext = path.extname(sanitizedFilename).toLowerCase();
     let contentType = 'application/octet-stream';
-    
+
     switch (ext) {
       case '.pdf':
         contentType = 'application/pdf';
@@ -214,7 +223,7 @@ export const downloadDocumentByFilename = async (req, res) => {
 
     // Stream the file to the response
     const fileStream = fs.createReadStream(fullPath);
-    
+
     fileStream.on('error', (err) => {
       console.error(`Error streaming file: ${err.message}`);
       if (!res.headersSent) {
