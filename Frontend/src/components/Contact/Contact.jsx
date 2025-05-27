@@ -304,20 +304,10 @@ const Contact = () => {
             </Card>
           </div>
 
-          {/* FAQ Section */}
-          <div className="faq-section mt-5">
-            <Card className="faq-card">
-              <Card.Body>
-                <h3 className="section-title">Questions fréquentes</h3>
-                <div className="mt-4">
-                  <FAQ />
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+          
         </Container>
       </Container>
-
+      <FAQ />
       <Footer />
     </>
   );

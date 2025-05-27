@@ -531,7 +531,7 @@ const CommunityWall = () => {
           </div>
         )}
       </div>      </Container>
-      <Footer />
+
     </>
   );
 };
