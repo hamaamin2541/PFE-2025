@@ -112,10 +112,10 @@
 
 /* Auth Card */
 .auth-card {
-  background-color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-md);
   padding: 2.5rem;
   width: 100%;
   max-width: 500px;
@@ -123,6 +123,13 @@
   z-index: 1;
   animation: fadeIn 0.8s var(--transition-ease);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform var(--transition-normal) var(--transition-ease),
+              box-shadow var(--transition-normal) var(--transition-ease);
+}
+
+.auth-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
 }
 
 .auth-card-wide {

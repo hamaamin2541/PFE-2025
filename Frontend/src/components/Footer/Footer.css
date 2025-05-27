@@ -27,12 +27,12 @@
 .social-icon {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
+  justify-content: center;  width: 36px;
   height: 36px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  margin-right: 10px;
+  margin-right: 20px;
+  margin-top: 10px;
   color: #ffffff;
   transition: all 0.3s ease;
 }
@@ -40,7 +40,7 @@
 .social-icon:hover {
   background: #007bff;
   color: white;
-  transform: translateY(-2px);
+  transform: translateX(4px) !important;
 }
 
 .footer-links {

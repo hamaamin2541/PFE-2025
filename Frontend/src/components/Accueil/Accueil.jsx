@@ -426,12 +426,7 @@ function Accueil() {
             </div>
             <div className="row">
               {pendingTestimonials.map(testimonial => (
-                <div className="col-md-4 mb-4" key={testimonial.id}>
-                  <div className="testimonial-card new-testimonial">
-                    <div className="testimonial-content">
-                      <p>{testimonial.text}</p>
-                      <span className="pending-badge">En attente d'approbation</span>
-                    </div>
+                <div className="col-md-4 mb-4" key={testimonial.id}>                <div className="testimonial-card new-testimonial">
                     <div className="testimonial-author">
                       <img
                         src={testimonial.avatar}
@@ -448,6 +443,10 @@ function Accueil() {
                         </div>
                       </div>
                     </div>
+                    <div className="testimonial-content">
+                      <p>{testimonial.text}</p>
+                      <span className="pending-badge">En attente d'approbation</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -459,14 +458,7 @@ function Accueil() {
         <div className="testimonial-carousel">
           <div className="row">
             {testimonialsList.map(testimonial => (
-              <div className="col-md-4 mb-4" key={testimonial.id}>
-                <div className={`testimonial-card ${testimonial.isNew ? 'new-testimonial' : ''}`}>
-                  <div className="testimonial-content">
-                    <p>{testimonial.text}</p>
-                    {testimonial.isNew && (
-                      <span className="new-badge">Nouveau</span>
-                    )}
-                  </div>
+              <div className="col-md-4 mb-4" key={testimonial.id}>                <div className={`testimonial-card ${testimonial.isNew ? 'new-testimonial' : ''}`}>
                   <div className="testimonial-author">
                     <img
                       src={testimonial.avatar}
@@ -482,6 +474,12 @@ function Accueil() {
                         ))}
                       </div>
                     </div>
+                  </div>
+                  <div className="testimonial-content">
+                    <p>{testimonial.text}</p>
+                    {testimonial.isNew && (
+                      <span className="new-badge">Nouveau</span>
+                    )}
                   </div>
                 </div>
               </div>

@@ -224,9 +224,8 @@ const Contact = () => {
                     referrerPolicy="no-referrer-when-downgrade"
                   ></iframe>
                 </Card>
-              </div>
-
-              <div className="info-section">
+              </div>              
+              <div className="info-section h-100">
                 <Card className="info-card">
                   <Card.Body>
                     <h3 className="section-title">Informations de contact</h3>

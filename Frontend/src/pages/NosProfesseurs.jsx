@@ -399,7 +399,7 @@ function NosProfesseurs() {
         )}
       </div>
 
-      <FAQ />
+      
     </div>
       {/* Modal de notation du professeur */}
       <Modal show={showRatingModal} onHide={handleCloseRatingModal} centered>
@@ -426,6 +426,7 @@ function NosProfesseurs() {
           )}
         </Modal.Body>
       </Modal>
+      <FAQ />
       < Footer/>
     </>
   );
