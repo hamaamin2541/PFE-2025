@@ -5,6 +5,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 import io from 'socket.io-client';
 import './CommunityWall.css';
+import Footer from '../components/Footer/Footer';
 
 const CommunityWall = () => {
   const [posts, setPosts] = useState([]);
@@ -387,16 +388,22 @@ const CommunityWall = () => {
             </Button>
           );
         })}
+      
       </div>
+      
     );
   };
 
   return (
-    <Container className="community-wall-container py-4">
-      <h2 className="text-center mb-4">Mur Communautaire</h2>
-      <p className="text-center text-muted mb-4">
-        Partagez vos pensées, posez des questions et connectez-vous avec d'autres apprenants
-      </p>
+    <>
+    <div className="title-container text-center">
+          <h2>Mur Communautaire</h2>
+          <p className="text-muted">
+            Partagez vos pensées, posez des questions et connectez-vous avec d'autres apprenants
+          </p>
+        </div>   
+       <Container className="community-wall-container py-4">
+        
 
       {error && (
         <Alert variant="danger" onClose={() => setError(null)} dismissible>
@@ -523,12 +530,13 @@ const CommunityWall = () => {
             </Button>
           </div>
         )}
-      </div>
-    </Container>
+      </div>      </Container>
+      <Footer />
+    </>
   );
 };
 
-const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
+const PostCard= ({ post, onAddComment, renderReactionButtons }) => {
   const [commentContent, setCommentContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -704,6 +712,7 @@ const PostCard = ({ post, onAddComment, renderReactionButtons }) => {
         </div>
       </Card.Body>
     </Card>
+    
   );
 };
 

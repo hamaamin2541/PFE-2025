@@ -20,6 +20,7 @@ import {
   FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaExclamationTriangle,
   FaInfoCircle
 } from 'react-icons/fa';
+import Footer from '../Footer/Footer';
 
 function Accueil() {
   const navigate = useNavigate();
@@ -425,12 +426,7 @@ function Accueil() {
             </div>
             <div className="row">
               {pendingTestimonials.map(testimonial => (
-                <div className="col-md-4 mb-4" key={testimonial.id}>
-                  <div className="testimonial-card new-testimonial">
-                    <div className="testimonial-content">
-                      <p>{testimonial.text}</p>
-                      <span className="pending-badge">En attente d'approbation</span>
-                    </div>
+                <div className="col-md-4 mb-4" key={testimonial.id}>                <div className="testimonial-card new-testimonial">
                     <div className="testimonial-author">
                       <img
                         src={testimonial.avatar}
@@ -447,6 +443,10 @@ function Accueil() {
                         </div>
                       </div>
                     </div>
+                    <div className="testimonial-content">
+                      <p>{testimonial.text}</p>
+                      <span className="pending-badge">En attente d'approbation</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -458,14 +458,7 @@ function Accueil() {
         <div className="testimonial-carousel">
           <div className="row">
             {testimonialsList.map(testimonial => (
-              <div className="col-md-4 mb-4" key={testimonial.id}>
-                <div className={`testimonial-card ${testimonial.isNew ? 'new-testimonial' : ''}`}>
-                  <div className="testimonial-content">
-                    <p>{testimonial.text}</p>
-                    {testimonial.isNew && (
-                      <span className="new-badge">Nouveau</span>
-                    )}
-                  </div>
+              <div className="col-md-4 mb-4" key={testimonial.id}>                <div className={`testimonial-card ${testimonial.isNew ? 'new-testimonial' : ''}`}>
                   <div className="testimonial-author">
                     <img
                       src={testimonial.avatar}
@@ -481,6 +474,12 @@ function Accueil() {
                         ))}
                       </div>
                     </div>
+                  </div>
+                  <div className="testimonial-content">
+                    <p>{testimonial.text}</p>
+                    {testimonial.isNew && (
+                      <span className="new-badge">Nouveau</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -577,46 +576,7 @@ function Accueil() {
       <FAQ />
 
       {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="row">
-            <div className="col-md-4 mb-4">
-              <h5 className="footer-title">We Learn</h5>
-              <p className="footer-description">
-                Plateforme d'apprentissage en ligne offrant des cours de qualité dans divers domaines. Notre mission est de rendre l'éducation accessible à tous.
-              </p>
-              <div className="footer-social">
-                <a href="#" className="social-icon"><FaFacebookF /></a>
-                <a href="#" className="social-icon"><FaTwitter /></a>
-                <a href="#" className="social-icon"><FaInstagram /></a>
-                <a href="#" className="social-icon"><FaLinkedinIn /></a>
-                <a href="#" className="social-icon"><FaYoutube /></a>
-              </div>
-            </div>
-
-
-
-            <div className="col-md-3 mb-4">
-              <h5 className="footer-title">Contactez-nous</h5>
-              <div className="contact-info">
-                <p><FaMapMarkerAlt className="me-2" /> 123 Rue de l'Éducation, Tunis</p>
-                <p><FaPhone className="me-2" /> +216 27 405 306</p>
-                <p><FaEnvelope className="me-2" /> lamarimedamin1@gmail.com</p>
-                <p><FaClock className="me-2" /> Lun-Ven: 9h-18h</p>
-              </div>
-            </div>
-
-
-          </div>
-
-          <hr className="footer-divider" />
-
-          <div className="footer-bottom">
-            <p className="footer-copyright">© {new Date().getFullYear()} We Learn. Tous droits réservés.</p>
-
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

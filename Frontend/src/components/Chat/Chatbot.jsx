@@ -273,13 +273,19 @@ const Chatbot = () => {
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Posez une question à Nexie..."
               disabled={isLoading}
-            />
-            <button
+            />            <button
               className="send-button"
               onClick={handleSendMessage}
               disabled={isLoading || !userMessage.trim()}
+              title="Envoyer"
             >
-              {isLoading ? '...' : 'Envoyer'}
+              {isLoading ? (
+                <span className="loading-dots">...</span>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              )}
             </button>
           </div>
         </div>

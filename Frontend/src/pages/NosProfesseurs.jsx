@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import './NosProfesseurs.css';
 import FAQ from '../components/FAQ';
 import TeacherRating from '../components/Rating/TeacherRating';
+import Footer from '../components/Footer/Footer';
+
 
 function NosProfesseurs() {
   const navigate = useNavigate();
@@ -397,7 +399,7 @@ function NosProfesseurs() {
         )}
       </div>
 
-      <FAQ />
+      
     </div>
       {/* Modal de notation du professeur */}
       <Modal show={showRatingModal} onHide={handleCloseRatingModal} centered>
@@ -424,6 +426,8 @@ function NosProfesseurs() {
           )}
         </Modal.Body>
       </Modal>
+      <FAQ />
+      < Footer/>
     </>
   );
 }

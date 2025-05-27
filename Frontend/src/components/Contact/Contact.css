@@ -169,6 +169,7 @@
   position: relative;
   z-index: 1;
   overflow: hidden;
+  height: 64%;
 }
 
 .info-card::before {
@@ -196,6 +197,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding: 20px;
 }
 
 .contact-info-item {

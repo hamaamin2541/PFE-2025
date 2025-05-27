@@ -1,6 +1,127 @@
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #7209b7;
+  --accent-color: #3a0ca3;
+  --success-color: #2ecc71;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --info-color: #3498db;
+  --dark-color: #2d3748;
+  --light-color: #f8f9fa;
+  --gray-color: #6c757d;
+  --white: #ffffff;
+  --black: #000000;
+
+  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  --gradient-secondary: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+  --gradient-success: linear-gradient(135deg, var(--success-color), #27ae60);
+  --gradient-warning: linear-gradient(135deg, var(--warning-color), #d35400);
+  --gradient-info: linear-gradient(135deg, var(--info-color), #2574a9);
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 30px rgba(0, 0, 0, 0.2);
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-2xl: 32px;
+  --border-radius-full: 9999px;
+
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+}
+
 .community-wall-container {
   max-width: 800px;
   margin: 0 auto;
+}
+
+.title-container {
+  background: var(--gradient-primary) !important;
+  border-radius: var(--border-radius-2xl);
+  padding: 5rem 2rem;
+  margin: 20px auto 3rem auto;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  color: var(--white);
+  width: 100%;
+  max-width: 1300px;
+}
+.title-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.2;
+  z-index: 0;
+}
+.title-container::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 0;
+}
+
+.title-container h2 {
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-extrabold);
+  margin-bottom: var(--spacing-md);
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s var(--transition-ease);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color:  #0c1120cf !important;
+}
+
+.title-container p {
+  font-size: var(--font-size-xl);
+  color: #b0b0b0da;
+  line-height: 1.6;
+  margin-bottom: var(--spacing-xl);
+  position: relative;
+  z-index: 1; 
+  animation: fadeInUp 0.8s var(--transition-ease) 0.2s both;
+  font-weight: var(--font-weight-medium);
 }
 
 .post-card {
@@ -73,6 +194,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .reaction-buttons {
@@ -88,6 +210,7 @@
   transition: all 0.2s ease-in-out;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .reaction-button:hover {
@@ -160,3 +283,5 @@
     gap: 5px;
   }
 }
+
+

@@ -1,12 +1,13 @@
+import './NotreContenu.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Card, Form, Badge, Spinner } from 'react-bootstrap';
 import { Search } from 'react-bootstrap-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
-import './NotreContenu.css';
 import FAQ from '../components/FAQ';
 import { Modal } from 'react-bootstrap';
+import Footer from '../components/Footer/Footer';
 import PurchaseForm from '../components/PurchaseForm';
 
 
@@ -112,6 +113,7 @@ const NotreContenu = () => {
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
   const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
+
 
   // Fetch all courses, tests, and formations from API
   useEffect(() => {
@@ -247,10 +249,9 @@ const NotreContenu = () => {
 
   return (
     <>
-    <Container className="notre-contenu-container position-relative">
-      <div className="explore-hero py-5 mb-4">
-        <h1 className="hero-title">Développez vos compétences</h1>
-        <p className="hero-subtitle">Apprenez avec les meilleurs instructeurs</p>
+    <div className="explore-hero py-5 mb-4">
+        <center><h1 className="hero-title">Développez vos compétences</h1></center>
+        <center><p className="hero-subtitle">Apprenez avec les meilleurs instructeurs</p></center>
 
         <Form className="search-form mt-4">
           <div className="search-input-container">
@@ -275,6 +276,8 @@ const NotreContenu = () => {
           </Button>
         </Form>
       </div>
+    <Container className="notre-contenu-container position-relative">
+      
 
       {error && (
         <div className="alert alert-danger text-center mb-4">
@@ -753,9 +756,9 @@ const NotreContenu = () => {
       )}
 
 
-      <div className="mt-5">
-        <FAQ />
-      </div>
+      
+      
+      
 
       {/* Course Detail Modal */}
       <Modal
@@ -977,6 +980,8 @@ const NotreContenu = () => {
         </Modal.Footer>
       </Modal>
     </Container>
+    <FAQ />
+    < Footer/>
     </>
   );
 };

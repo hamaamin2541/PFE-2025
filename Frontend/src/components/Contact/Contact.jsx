@@ -16,6 +16,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import SocialCardsCarousel from "./SocialCardsCarousel";
 import FAQ from '../FAQ';
+import Footer from '../Footer/Footer';
 import "./Contact.css";
 
 const Contact = () => {
@@ -223,9 +224,8 @@ const Contact = () => {
                     referrerPolicy="no-referrer-when-downgrade"
                   ></iframe>
                 </Card>
-              </div>
-
-              <div className="info-section">
+              </div>              
+              <div className="info-section h-100">
                 <Card className="info-card">
                   <Card.Body>
                     <h3 className="section-title">Informations de contact</h3>
@@ -317,6 +317,8 @@ const Contact = () => {
           </div>
         </Container>
       </Container>
+
+      <Footer />
     </>
   );
 };
