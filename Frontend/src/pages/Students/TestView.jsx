@@ -217,7 +217,13 @@ const TestView = () => {
   };
 
   const handleBackClick = () => {
-    navigate('/dashboard-student');
+    // Check if user is a teacher or student and navigate accordingly
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'teacher') {
+      navigate('/dashboard-teacher');
+    } else {
+      navigate('/dashboard-student');
+    }
   };
 
   const formatTime = (seconds) => {

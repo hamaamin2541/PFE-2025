@@ -261,7 +261,16 @@ const CourseView = () => {
   };
 
   const handleBackClick = () => {
-    navigate('/dashboard-student');
+    // Check both possible sources of user role
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    const userRole = user.role || userRoleFromStorage;
+
+    if (userRole === 'teacher') {
+      navigate('/dashboard-teacher');
+    } else {
+      navigate('/dashboard-student');
+    }
   };
 
   const handleStudyInviteSuccess = (sessionData) => {

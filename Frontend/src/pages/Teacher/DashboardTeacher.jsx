@@ -24,7 +24,8 @@ import {
   Plus,
   Upload,
   GraduationCap,
-  ClipboardCheck
+  ClipboardCheck,
+  ShoppingBag
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTeacher } from '../../context/TeacherContext';
@@ -39,6 +40,7 @@ import AddTextAdvice from './conseiltest/AddTextAdvice';
 import AddVideoAdvice from './conseiltest/AddVideoAdvice';
 import AddTest from './conseiltest/AddTest';
 import TeacherContent from './TeacherContent';
+import TeacherPurchasedContent from './TeacherPurchasedContent';
 import TeacherSettings from './TeacherSettings';
 
 const DashboardTeacher = () => {
@@ -152,6 +154,8 @@ const DashboardTeacher = () => {
         return <AddVideoAdvice />;
       case 'add-test':
         return <AddTest />;
+      case 'purchased-content':
+        return <TeacherPurchasedContent />;
       default:
         return <TeacherContent />;
     }
@@ -229,6 +233,15 @@ const DashboardTeacher = () => {
                 >
                   <BookOpen size={18} className="me-2" />
                   Mes cours
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'purchased-content'}
+                  onClick={() => setActiveTab('purchased-content')}
+                >
+                  <ShoppingBag size={18} className="me-2" />
+                  Contenus Achetés
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item>
@@ -311,6 +324,7 @@ const DashboardTeacher = () => {
           <div className="dashboard-header p-4">
             <h2>
               {activeTab === 'courses' && `Mes Contenus`}
+              {activeTab === 'purchased-content' && 'Contenus Achetés'}
               {activeTab === 'analytics' && 'Analytics'}
               {activeTab === 'messages' && 'Messages'}
               {activeTab === 'settings' && 'Paramètres'}

@@ -12,19 +12,25 @@ import { isAuthenticated, hasRole } from '../../utils/authUtils';
  */
 const RoleBasedRoute = ({ allowedRoles, children, redirectPath = '/' }) => {
   const location = useLocation();
-  
+
   // First check if user is authenticated
   if (!isAuthenticated()) {
     return <Navigate to="/SeConnecter" state={{ from: location }} replace />;
   }
-  
-  // Then check if user has the required role
-  const hasAllowedRole = allowedRoles.some(role => hasRole(role));
-  
+
+  // Get user role from both possible sources
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRoleFromStorage = localStorage.getItem('userRole');
+  const userRole = user.role || userRoleFromStorage;
+
+  // Check if user has the required role
+  const hasAllowedRole = allowedRoles.includes(userRole);
+
   if (!hasAllowedRole) {
+    console.log('User role:', userRole, 'not in allowed roles:', allowedRoles);
     return <Navigate to={redirectPath} replace />;
   }
-  
+
   return children;
 };
 

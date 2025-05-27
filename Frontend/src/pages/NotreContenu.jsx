@@ -284,7 +284,7 @@ const NotreContenu = () => {
 
       {/* Category Selection */}
       <div className="category-selection mb-4">
-        <Form.Select 
+        <Form.Select
           size="lg"
           value={selectedCategory || ''}
           onChange={(e) => setSelectedCategory(e.target.value || null)}
@@ -362,7 +362,7 @@ const NotreContenu = () => {
               </Col>
             ))}
           </Row>
-          
+
           {/* Load More Button */}
           {allCourses.length > displayCount && (
             <div className="text-center mt-4">
@@ -960,7 +960,16 @@ const NotreContenu = () => {
               setSelectedCourse(null);
               setSelectedFormation(null);
               setSelectedTest(null);
-              navigate('/dashboard-student');
+
+              // Check user role and redirect to appropriate dashboard
+              const user = JSON.parse(localStorage.getItem('user') || '{}');
+              const userRole = user.role || localStorage.getItem('userRole');
+
+              if (userRole === 'teacher') {
+                navigate('/dashboard-teacher');
+              } else {
+                navigate('/dashboard-student');
+              }
             }}
           >
             Voir dans mon tableau de bord

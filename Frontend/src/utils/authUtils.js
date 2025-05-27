@@ -43,8 +43,12 @@ export const getCurrentUser = () => {
  * @returns {Boolean} True si l'utilisateur a le rôle spécifié
  */
 export const hasRole = (role) => {
+  // Check both possible sources of user role
   const user = getCurrentUser();
-  return user && user.role === role;
+  const userRoleFromStorage = localStorage.getItem('userRole');
+
+  // First check user object, then fallback to userRole in localStorage
+  return (user && user.role === role) || userRoleFromStorage === role;
 };
 
 /**
