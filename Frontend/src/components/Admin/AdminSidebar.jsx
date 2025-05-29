@@ -6,10 +6,12 @@ import {
   Mail, Database, Download, Share2
 } from 'lucide-react';
 import { Collapse } from 'react-bootstrap';
+import './AdminSidebar.css';
 
 const AdminSidebar = ({ onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [openMenus, setOpenMenus] = useState({
     content: false,
     reports: false
