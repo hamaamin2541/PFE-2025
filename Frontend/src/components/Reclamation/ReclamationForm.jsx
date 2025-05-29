@@ -197,11 +197,11 @@ const ReclamationForm = ({ show, handleClose }) => {
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+        <Button className='btn-danger' onClick={handleClose}>
           Annuler
         </Button>
         <Button
-          variant="primary"
+          className='btn-success'
           onClick={handleSubmit}
           disabled={submitting}
         >

@@ -784,8 +784,8 @@ body {
 }
 
 .promo-btn {
-  background: white;
-  color: var(--accent-color);
+  background:var(--gradient-accent);
+  color: whitesmoke;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--border-radius-full);
   font-weight: var(--font-weight-semibold);
@@ -1048,7 +1048,7 @@ body {
 .btn-testimonial:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
-  background: var(--secondary-gradient);
+  background: var(--primary-color);
 }
 
 /* Stats Section */

@@ -5,17 +5,18 @@
 }
 
 .reclamation-modal .modal-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #eee;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-  padding: 1.25rem 1.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding: 25px 30px;
+  background: linear-gradient(90deg, #007bff, #0056d2);
+  position: relative;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 .reclamation-modal .modal-title {
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 1.25rem;
+  font-weight: 700;
+  color:rgb(255, 236, 236);
+  letter-spacing: -0.5px;
 }
 
 .reclamation-modal .modal-body {
@@ -78,18 +79,6 @@
   transition: all 0.3s ease;
 }
 
-.reclamation-modal .btn-primary {
-  background-color: #4361ee;
-  border-color: #4361ee;
-}
-
-.reclamation-modal .btn-primary:hover:not(:disabled) {
-  background-color: #3a0ca3;
-  border-color: #3a0ca3;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 .reclamation-modal .btn-secondary {
   background-color: #e2e8f0;
   border-color: #e2e8f0;
@@ -118,6 +107,94 @@
   background-color: #fbe9e7;
   border-color: #f5c6cb;
   color: #e74c3c;
+}
+
+/* Modal animation */
+.reclamation-modal.modal {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.reclamation-modal.modal.fade .modal-dialog {
+  transform: translateY(-30px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reclamation-modal.modal.show .modal-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Backdrop animation */
+.modal-backdrop.show {
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Staggered animation for form elements */
+.reclamation-modal .modal-title,
+.reclamation-modal .form-group,
+.reclamation-modal .modal-footer {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUpFade 0.5s ease forwards;
+}
+
+.reclamation-modal .modal-title {
+  animation-delay: 0.2s;
+}
+
+.reclamation-modal .form-group:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.reclamation-modal .form-group:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.reclamation-modal .form-group:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.reclamation-modal .form-group:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.reclamation-modal .modal-footer {
+  animation-delay: 0.7s;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhance form interactions */
+.reclamation-modal .form-control,
+.reclamation-modal .form-select {
+  transition: all 0.3s ease;
+  transform-origin: top;
+}
+
+.reclamation-modal .form-control:focus,
+.reclamation-modal .form-select:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.1);
+}
+
+/* Button animations */
+.reclamation-modal .btn {
+  transition: all 0.3s ease;
+}
+
+.reclamation-modal .btn:hover {
+  transform: translateY(-2px);
 }
 
 /* Responsive adjustments */

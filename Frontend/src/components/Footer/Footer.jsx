@@ -30,12 +30,11 @@ const Footer = () => {
           <div className="col-md-3 mb-4">
             <h5 className="footer-title">Liens Rapides</h5>
             <ul className="footer-links">
-              <li><Link to="/courses">Tous les cours</Link></li>
-              <li><Link to="/about">À propos</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/faq">FAQ</Link></li>
-              <li><Link to="/privacy">Confidentialité</Link></li>
-              <li><Link to="/terms">Conditions d'utilisation</Link></li>
+              <li><Link to="/Accueil">Accueil</Link></li>
+              <li><Link to="/Contact">Contact</Link></li>
+              <li><Link to="/NotreContenu">Notre Contenu</Link></li>
+              <li><Link to="/NosProfesseurs">Nos Professeurs</Link></li>
+              <li><Link to="/community-wall">Mur Communautaire</Link></li>
             </ul>
           </div>
 

@@ -144,7 +144,7 @@ const TestimonialForm = ({ show, handleClose, onTestimonialSubmit }) => {
               variant="primary"
               type="submit"
               disabled={loading}
-              className="submit-btn"
+              className="btn-success"
             >
               {loading ? 'Envoi en cours...' : 'Envoyer mon témoignage'}
             </Button>
