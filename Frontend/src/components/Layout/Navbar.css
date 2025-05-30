@@ -1,7 +1,7 @@
 /* ====== SLEEK BLACK NAVBAR ====== */
 .navbar-custom {
-  background: var(--primary-color);
-  padding: 0.75rem 1.5rem;
+  background: var(--primary-gradient);
+  padding: 0.75rem 1.5rem !important;
   position: sticky;
   top: 0;
   width: 100%;
@@ -133,6 +133,15 @@
   width: 60%;
 }
 
+.navbar-custom-nav-link.active {
+  color: var(--accent-light);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.navbar-custom-nav-link.active::after {
+  width: 60%;
+}
+
 /* Dropdown */
 .navbar-custom-dropdown-toggle {
   background-color: transparent !important;
@@ -141,28 +150,30 @@
   border: none !important;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px !important;
+  width: auto !important;
   padding: 10px 18px !important;
   border-radius: var(--border-radius-lg) !important;
   transition: all var(--transition-normal) var(--transition-ease) !important;
+  position: relative;
+  white-space: nowrap;
 }
 
-.navbar-custom-dropdown-toggle:hover,
-.navbar-custom-dropdown-toggle:focus,
-.navbar-custom-dropdown-toggle:active {
-  color: var(--accent-light) !important;
-  background-color: rgba(255, 255, 255, 0.05) !important;
+.navbar-custom-nav-item {
+  position: relative;
 }
 
 .dropdown-menu {
   border: none;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.5rem !important;
   animation: dropdownFadeIn var(--transition-normal) var(--transition-ease);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: var(--primary-light);
+  border: 1px solid rgba(76, 0, 0, 0.942);
+  position: absolute !important;
+  left: 0 !important;
+  width: 100% !important;
+  white-space: nowrap;
 }
 
 @keyframes dropdownFadeIn {
@@ -189,7 +200,7 @@
 .dropdown-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--accent-light);
-  transform: translateX(5px);
+  border-radius: 10px;
 }
 
 .dropdown-divider {

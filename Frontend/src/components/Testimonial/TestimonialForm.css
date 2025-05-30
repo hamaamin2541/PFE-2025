@@ -1,35 +1,55 @@
 .testimonial-modal .modal-content {
-  border-radius: 15px;
+  border-radius: 20px;
   border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  max-width: 600px;
+  margin: 30px auto;
 }
 
 .testimonial-modal .modal-header {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 20px 25px;
+  border-bottom: 2px solid #f0f0f0;
+  padding: 25px 30px;
+  background: linear-gradient(90deg, #007bff, #0056d2);
+  position: relative;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+
+  
+
 }
 
 .testimonial-modal .modal-title {
-  font-weight: 600;
-  color: #333;
-  font-size: 1.3rem;
+  font-weight: 700;
+  color:rgb(255, 236, 236);
+  letter-spacing: -0.5px;
 }
 
 .testimonial-modal .modal-body {
-  padding: 25px;
+  padding: 30px;
+  background: transparent;
+
 }
 
 .testimonial-modal .form-label {
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
 }
 
 .testimonial-modal .form-control {
-  border-radius: 8px;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
+  padding: 14px 18px;
   transition: all 0.3s ease;
+  font-size: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 24px;
+  background: #fff;
 }
 
 .testimonial-modal .form-control:focus {
@@ -40,7 +60,8 @@
 .testimonial-modal .star-rating {
   display: flex;
   justify-content: center;
-  margin-top: 10px;
+  margin: 15px 0;
+  gap: 10px;
 }
 
 .testimonial-modal .star-rating input[type="radio"] {
@@ -49,28 +70,43 @@
 
 .testimonial-modal .star-rating .star {
   cursor: pointer;
-  transition: color 200ms;
-  margin: 0 5px;
+  transition: all 0.3s ease;
+  font-size: 1.5rem;
+  color: #CBD5E0;
+}
+
+.testimonial-modal .star-rating .star:hover,
+.testimonial-modal .star-rating .star.active {
+  color: #ECC94B;
+  transform: scale(1.1);
 }
 
 .testimonial-modal .submit-btn {
-  padding: 12px;
-  font-weight: 600;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #4361ee, #3f37c9);
-  border: none;
-  transition: all 0.3s ease;
+    padding: 14px 28px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    border: none;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    width: 100%;
+    margin-top: 20px;
 }
 
 .testimonial-modal .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  background: linear-gradient(135deg, #4338CA, #3730A3);
 }
 
 .testimonial-modal .submit-btn:disabled {
-  background: #a0a0a0;
+  background: linear-gradient(135deg, #9CA3AF, #6B7280);
   transform: none;
   box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .testimonial-modal .alert {
@@ -88,6 +124,75 @@
   from {
     opacity: 0;
     transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+button.btn-close {
+  width: 22px;
+  height: 22px;
+  background-color: transparent; /* Optional background */
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+button.btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Modal animation */
+.testimonial-modal.modal {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.testimonial-modal.modal.fade .modal-dialog {
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.testimonial-modal.modal.show .modal-dialog {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Backdrop animation */
+.modal-backdrop.show {
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Add smooth transition for form elements */
+.testimonial-modal .form-control,
+.testimonial-modal .form-label,
+.testimonial-modal .star-rating {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.testimonial-modal .form-label {
+  animation-delay: 0.1s;
+}
+
+.testimonial-modal .form-control {
+  animation-delay: 0.2s;
+}
+
+.testimonial-modal .star-rating {
+  animation-delay: 0.3s;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;

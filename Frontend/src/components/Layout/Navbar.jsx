@@ -1,5 +1,6 @@
+import './Navbar.css';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
@@ -17,7 +18,6 @@ import {
   ChevronDown,
   Users,
 } from 'lucide-react';
-import './Navbar.css';
 import logo from '../../Assets/logo.png';
 
 const Navbar = () => {
@@ -130,61 +130,60 @@ const Navbar = () => {
         </button>
 
         <div className={`collapse navbar-collapse ${expanded ? 'show' : ''}`} id="navbarNav">
-          <ul className="navbar-nav ms-auto">
-            <li className="navbar-custom-nav-item">
-              <Link
+          <ul className="navbar-nav ms-auto">            <li className="navbar-custom-nav-item">
+              <NavLink
                 className="navbar-custom-nav-link"
                 to="/Accueil"
                 onClick={() => setExpanded(false)}
               >
                 <Home className="navbar-icon" size={18} />
                 {t('Accueil')}
-              </Link>
+              </NavLink>
             </li>
 
             <li className="navbar-custom-nav-item">
-              <Link
+              <NavLink
                 className="navbar-custom-nav-link"
                 to="/Contact"
                 onClick={() => setExpanded(false)}
               >
                 <Mail className="navbar-icon" size={18} />
                 {t('Contact')}
-              </Link>
+              </NavLink>
             </li>
 
             <li className="navbar-custom-nav-item">
-              <Link
+              <NavLink
                 className="navbar-custom-nav-link"
                 to="/NotreContenu"
                 onClick={() => setExpanded(false)}
               >
                 <ListTodo className="navbar-icon" size={18} />
                 {t('NotreContenu')}
-              </Link>
+              </NavLink>
             </li>
 
             <li className="navbar-custom-nav-item">
-              <Link
+              <NavLink
                 className="navbar-custom-nav-link"
                 to="/NosProfesseurs"
                 onClick={() => setExpanded(false)}
               >
                 <Presentation className="navbar-icon" size={18} />
                 {t('NosProfesseurs')}
-              </Link>
+              </NavLink>
             </li>
 
             {isLoggedIn && (
               <li className="navbar-custom-nav-item">
-                <Link
+                <NavLink
                   className="navbar-custom-nav-link"
                   to="/community-wall"
                   onClick={() => setExpanded(false)}
                 >
                   <Users className="navbar-icon" size={18} />
                   Mur Communautaire
-                </Link>
+                </NavLink>
               </li>
             )}
 
@@ -193,7 +192,6 @@ const Navbar = () => {
                 <Dropdown.Toggle variant="outline-light" className="navbar-custom-dropdown-toggle">
                   <UserRound className="navbar-icon" size={18} />
                   {t('MonCompte')}
-                  <ChevronDown size={14} className="ms-1" />
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   {isLoggedIn ? (
@@ -204,19 +202,17 @@ const Navbar = () => {
                           setExpanded(false);
                         }}
                       >
-                        <LayoutDashboard className="navbar-icon" size={16} />
-                        <span>{t('Dashboard')}</span>
+                        
+                        <span className="navbar-icon"><LayoutDashboard size={16} /> {t('Dashboard')}</span>
                       </Dropdown.Item>
-                      <Dropdown.Divider />
                       <Dropdown.Item
                         onClick={() => {
                           handleLogout();
                           setExpanded(false);
                         }}
                         className="text-danger"
-                      >
-                        <LogOut className="navbar-icon" size={16} />
-                        <span>{t('Déconnexion')}</span>
+                      >                        
+                        <span className="navbar-icon"><LogOut  size={16} /> {t('Déconnexion')}</span>
                       </Dropdown.Item>
                     </>
                   ) : (
@@ -227,8 +223,7 @@ const Navbar = () => {
                           setExpanded(false);
                         }}
                       >
-                        <LogIn className="navbar-icon" size={16} />
-                        <span>{t('connexion')}</span>
+                        <span className="navbar-icon"><LogIn  size={16} />{t('connexion')}</span>
                       </Dropdown.Item>
                       <Dropdown.Item
                         onClick={() => {
@@ -236,8 +231,7 @@ const Navbar = () => {
                           setExpanded(false);
                         }}
                       >
-                        <UserPlus className="navbar-icon" size={16} />
-                        <span>{t('inscription')}</span>
+                        <span className="navbar-icon"><UserPlus size={16} />{t('inscription')}</span>
                       </Dropdown.Item>
                     </>
                   )}
@@ -250,24 +244,21 @@ const Navbar = () => {
                 <Dropdown.Toggle variant="outline-light" className="navbar-custom-dropdown-toggle">
                   <Languages className="navbar-icon" size={18} />
                   {i18next.language ? i18next.language.toUpperCase() : 'LANG'}
-                  <ChevronDown size={14} className="ms-1" />
                 </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item
+                <Dropdown.Menu>                  <Dropdown.Item
                     onClick={() => {
                       handleLanguageChange('fr');
                       setExpanded(false);
                     }}
                   >
-                    Français
-                  </Dropdown.Item>
-                  <Dropdown.Item
+                    <span className="navbar-icon">🇫🇷 Français </span> 
+                  </Dropdown.Item>                  <Dropdown.Item
                     onClick={() => {
                       handleLanguageChange('ar');
                       setExpanded(false);
                     }}
                   >
-                    العربية
+                    <span className="navbar-icon">🇹🇳 العربية</span>
                   </Dropdown.Item>
                   <Dropdown.Item
                     onClick={() => {
@@ -275,7 +266,7 @@ const Navbar = () => {
                       setExpanded(false);
                     }}
                   >
-                    English
+                    <span className="navbar-icon">🇬🇧 English</span>
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
