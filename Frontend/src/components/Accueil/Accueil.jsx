@@ -533,7 +533,15 @@ function Accueil() {
             S'inscrire maintenant
           </button>
         ) : (
-          <button className="btn-primary" onClick={() => navigate('/dashboard-student')}>
+          <button className="btn-primary" onClick={() => {
+            // Check user role and redirect to appropriate dashboard
+            const userRole = localStorage.getItem('userRole');
+            if (userRole === 'teacher') {
+              navigate('/dashboard-teacher');
+            } else {
+              navigate('/dashboard-student');
+            }
+          }}>
             Accéder à mon espace
           </button>
         )}

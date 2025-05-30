@@ -261,11 +261,8 @@ const CourseView = () => {
   };
 
   const handleBackClick = () => {
-    // Check both possible sources of user role
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userRoleFromStorage = localStorage.getItem('userRole');
-    const userRole = user.role || userRoleFromStorage;
-
+    // Check user role and redirect to appropriate dashboard
+    const userRole = localStorage.getItem('userRole');
     if (userRole === 'teacher') {
       navigate('/dashboard-teacher');
     } else {
