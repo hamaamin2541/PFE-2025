@@ -136,14 +136,15 @@ const AdminLayout = () => {
         {/* Top Navigation Bar */}
         <Navbar bg="white" expand="lg" className="admin-navbar border-bottom shadow-sm">
           <Container fluid>
-            {/* Sidebar Toggle Button */}
+            {/* Sidebar Toggle Button */}            
             <Button
               variant="light"
               className="sidebar-toggle border-0 me-3 d-flex align-items-center justify-content-center"
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
+              style={{ color: '#333' }}
             >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <X size={20} className="text-dark" /> : <Menu size={20} className="text-dark" />}
             </Button>
 
             {/* Brand Logo and Title */}
@@ -154,15 +155,13 @@ const AdminLayout = () => {
 
             {/* Right Navigation Items */}
             <Nav className="ms-auto d-flex align-items-center">
-              {/* Notifications Dropdown */}
-              <Dropdown align="end" className="me-3">
-                <Dropdown.Toggle variant="light" id="dropdown-notifications" className="notification-toggle border-0 position-relative">
-                  <Bell size={20} />
-                  {totalNotifications > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
-                      {totalNotifications > 99 ? '99+' : totalNotifications}
+              {/* Notifications Dropdown */}              <Dropdown align="end" className="me-3">                  <Dropdown.Toggle variant="light" id="dropdown-notifications" className="notification-toggle border-0 position-relative d-flex align-items-center justify-content-center gap-2">                  <Bell size={20} />
+                  <span className={`d-inline-flex align-items-center justify-content-center rounded-circle ${totalNotifications > 0 ? 'bg-danger' : 'bg-secondary'}`} 
+                        style={{ width: '22px', height: '22px', fontSize: '12px' }}>
+                    <span className="text-white">
+                      {totalNotifications > 99 ? '99+' : totalNotifications || '0'}
                     </span>
-                  )}
+                  </span>
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu className="dropdown-menu-end shadow notification-menu">
@@ -216,27 +215,29 @@ const AdminLayout = () => {
                         <p>Aucune notification</p>
                       </div>
                     )}
+                  </div>                  <Dropdown.Divider />
+                  <div className="d-flex justify-content-center px-2">
+                    <Dropdown.Item className="notification-footer text-center" style={{ width: '80%' }}>
+                      Voir toutes les notifications
+                    </Dropdown.Item>
                   </div>
-
-                  <Dropdown.Divider />
-                  <Dropdown.Item className="notification-footer">
-                    Voir toutes les notifications
-                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
 
-              {/* User Profile Dropdown */}
-              <Dropdown align="end">
-                <Dropdown.Toggle variant="light" id="dropdown-user" className="user-toggle border-0 d-flex align-items-center">
-                  <div className="user-avatar">
+              {/* User Profile Dropdown */}              <Dropdown align="end">
+                <Dropdown.Toggle variant="light" id="dropdown-user" className="notification-toggle border-0 position-relative d-flex align-items-center justify-content-center gap-2">
+                  <div className="user-avatar d-flex align-items-center justify-content-center" 
+                       style={{ width: '28px', height: '28px' }}>
                     {user?.profileImage ? (
                       <img
                         src={`${API_BASE_URL}/${user.profileImage}`}
                         alt={user.fullName}
                         className="rounded-circle"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <div className="avatar-placeholder">
+                      <div className="avatar-placeholder rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                           style={{ width: '100%', height: '100%', fontSize: '14px' }}>
                         {user?.fullName?.charAt(0) || 'A'}
                       </div>
                     )}

@@ -1,0 +1,356 @@
+/* Card Styling */
+.user-management-card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-normal) ease;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+  width: 100%;
+}
+
+.user-management-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.user-management-card .card-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-management-card .card-title {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-filter-section .input-group {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.search-input {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+/* Table Styling */
+.users-table {
+  margin-top: 1rem;
+}
+
+.users-table th {
+  background-color: rgba(67, 97, 238, 0.05);
+  color: var(--dark-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border-top: none;
+}
+
+.users-table td {
+  padding: 1rem;
+  vertical-align: middle;
+  color: var(--dark-color);
+  font-size: 0.875rem;
+}
+
+.users-table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.users-table tbody tr:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+  transform: scale(1.005);
+}
+
+/* Badge Styling */
+.role-badge {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  border-radius: 20px;
+  text-transform: capitalize;
+  width: 100%;
+}
+.role-badge.assistant {
+  background-color: rgba(255, 193, 7, 0.1)!important;
+  color: var(--warning-color);
+}
+.role-badge.admin {
+  background-color: rgba(231, 76, 60, 0.1)!important;
+  color: var(--danger-color) ;
+}
+
+.role-badge.teacher {
+  background-color: rgba(67, 97, 238, 0.1)!important;
+  color: var(--primary-color);
+}
+
+.role-badge.student {
+  background: rgba(46, 204, 113, 0.1) !important;
+  color: var(--success-color) !important;
+}
+
+/* Action Buttons */
+.action-btn {
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin: 0 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Modal Styling */
+.user-modal {
+  border-radius: 16px !important;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.user-modal .modal-header {
+  border-bottom: 2px solid #f0f0f0;
+  padding: 25px 30px;
+  background: linear-gradient(90deg, #007bff, #0056d2);
+  position: relative;
+}
+
+.user-modal .modal-title {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1.5rem !important;
+}
+
+.user-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.user-modal .modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced Modal Animations */
+.modal.fade .modal-dialog {
+  transform: scale(0.8);
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+  transform-origin: center;
+  animation: modalPop 0.3s ease-out forwards;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes modalPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modal Close Animation */
+.modal.fade.hide .modal-dialog {
+  transform: scale(0.8);
+  opacity: 0;
+}
+
+/* Modal Content Animation */
+.modal-title,
+.modal-body,
+.modal-footer {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: modalContentFade 0.3s ease-out 0.2s forwards;
+}
+
+.modal-body {
+  animation-delay: 0.3s;
+}
+
+.modal-footer {
+  animation-delay: 0.4s;
+}
+
+@keyframes modalContentFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Close Button Animation */
+.modal .close {
+  transition: all 0.2s ease-in-out;
+}
+
+.modal .close:hover {
+  transform: rotate(90deg);
+}
+
+/* Prevent Content Shift */
+.modal {
+  overflow-y: auto !important;
+  padding-right: 0 !important;
+}
+
+.modal-open {
+  overflow: auto !important;
+  padding-right: 0 !important;
+}
+
+/* Form Styling */
+.form-group label {
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+}
+
+/* Pagination Styling */
+.pagination {
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.pagination .page-link {
+  border: none;
+  padding: 0.75rem 1rem;
+  margin: 0 0.25rem;
+  border-radius: 0.5rem;
+  color: var(--dark-color);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Alert Styling */
+.alert {
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.alert-success {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: var(--success-color);
+}
+
+.alert-danger {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--danger-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .search-filter-section .col-md-6 + .col-md-6 {
+    margin-top: 1rem;
+  }
+
+  .user-management-card .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .action-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .users-table {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .users-table th,
+  .users-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .role-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}

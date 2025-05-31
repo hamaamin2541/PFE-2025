@@ -371,11 +371,11 @@ const AssistantManagement = () => {
           </Form.Text>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPromoteModal(false)}>
+          <Button className='btn-danger' onClick={() => setShowPromoteModal(false)}>
             Annuler
           </Button>
           <Button 
-            variant="primary" 
+            className='btn-success'
             onClick={() => handlePromoteStudent(selectedUser?._id)}
             disabled={loading || !selectedUser}
           >
@@ -400,11 +400,11 @@ const AssistantManagement = () => {
           <p>Êtes-vous sûr de vouloir rétrograder <strong>{selectedUser?.fullName}</strong> au rôle d'étudiant ?</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDemoteModal(false)}>
+          <Button className='btn-danger' onClick={() => setShowDemoteModal(false)}>
             Annuler
           </Button>
           <Button 
-            variant="danger" 
+            className='btn-success' 
             onClick={() => handleDemoteAssistant(selectedUser?._id)}
             disabled={loading}
           >
@@ -503,7 +503,7 @@ const AssistantManagement = () => {
           </Button>
           {eligibilityDetails && !eligibilityDetails.eligibility.eligible && (
             <Button 
-              variant="primary" 
+              className='btn-success' 
               onClick={() => {
                 setShowEligibilityModal(false);
                 setSelectedUser(eligibilityDetails.user);

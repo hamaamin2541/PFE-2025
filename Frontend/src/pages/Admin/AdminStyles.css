@@ -173,8 +173,6 @@ a:hover {
 }
 
 .sidebar-toggle {
-  width: 40px;
-  height: 40px;
   border-radius: var(--border-radius-lg);
   display: flex;
   align-items: center;
@@ -401,25 +399,57 @@ a:hover {
 
 /* Notification Styles */
 .notification-toggle {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  height: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #4361ee;
+  border: 1px solid rgba(67, 97, 238, 0.1);
+  box-shadow: 0 2px 5px rgba(67, 97, 238, 0.1);
 }
 
 .notification-toggle:hover, .notification-toggle:focus {
-  background-color: rgba(67, 97, 238, 0.1);
+  background-color: rgba(67, 97, 238, 0.15);
   color: #4361ee;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
 }
 
 .notification-toggle:focus {
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
   outline: none;
+}
+
+.notification-toggle svg {
+  transition: all 0.3s ease;
+  color: #4361ee;
+  width: 24px;
+  height: 24px;
+  stroke-width: 2px;
+}
+
+.notification-toggle:hover svg {
+  transform: scale(1.1) rotate(12deg);
+}
+
+@keyframes bellShake {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(5deg); }
+  30% { transform: rotate(-5deg); }
+  45% { transform: rotate(4deg); }
+  60% { transform: rotate(-4deg); }
+  75% { transform: rotate(2deg); }
+  85% { transform: rotate(-2deg); }
+  92% { transform: rotate(1deg); }
+  100% { transform: rotate(0); }
+}
+
+.notification-toggle:has(+ .dropdown-menu.show) svg {
+  animation: bellShake 0.8s ease-out;
 }
 
 .notification-badge {
@@ -570,18 +600,20 @@ a:hover {
 }
 
 .notification-footer {
-  padding: 12px 20px;
+
   text-align: center;
   font-size: 13px;
-  color: #4361ee;
+  color: #4361ee !important;
   font-weight: 600;
   background-color: #f8f9fa;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
+  border-radius: 5px;
+  
 }
 
 .notification-footer:hover {
-  background-color: rgba(67, 97, 238, 0.05);
+  background-color: rgba(67, 97, 238, 0.05) !important;
 }
 
 /* Sidebar Styles */
@@ -1057,6 +1089,39 @@ a:hover {
   font-weight: 700;
   color: #212529;
   margin-bottom: 0;
+}
+
+/* Content Management Header Styles */
+.content-header {
+  padding: 2rem 2rem 0;
+  background-color: var(--white);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.5rem;
+}
+
+.content-title {
+  position: relative;
+  display: inline-block;
+}
+
+.content-title h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #212529;
+  margin-bottom: 0.75rem;
+  position: relative;
+  display: inline-block;
+}
+
+.content-title-bar {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40%;
+  height: 3px;
+  background: linear-gradient(90deg, #4361ee, transparent);
+  border-radius: 3px;
 }
 
 /* Responsive Styles */

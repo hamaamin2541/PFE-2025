@@ -331,7 +331,6 @@ const ReportsManagement = () => {
   return (
     <Container fluid className="py-4">
       <h4 className="mb-4">Rapports analytiques</h4>
-
       {successMessage && (
         <Alert variant="success" onClose={() => setSuccessMessage('')} dismissible>
           {successMessage}

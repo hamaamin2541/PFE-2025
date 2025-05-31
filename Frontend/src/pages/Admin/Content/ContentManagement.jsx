@@ -4,6 +4,7 @@ import { Search, Eye, Edit, Trash2, ArrowLeft, Check, X } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../../../config/api';
+import './ContentManagement.css';
 
 const ContentManagement = () => {
   const location = useLocation();
@@ -358,193 +359,196 @@ const ContentManagement = () => {
   };
 
   return (
-    <Container fluid className="py-4">
-      {success && (
-        <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
-          {success}
-        </Alert>
-      )}
+    <>
+      <div className="content-header">
+        <div className="content-title">
+          <h2>Gestion du contenu</h2>
+        </div>
+      </div>      <Container fluid>
+        {success && (
+          <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+            {success}
+          </Alert>
+        )}
 
-      {error && (
-        <Alert variant="danger" onClose={() => setError(null)} dismissible>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert variant="danger" onClose={() => setError(null)} dismissible>
+            {error}
+          </Alert>
+        )}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="mb-0">Gestion du contenu</h4>
-      </div>
+        <Card className="shadow-sm mb-4">
+          <Card.Header>
+            <Nav variant="tabs" className="card-header-tabs">
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'courses'}
+                  onClick={() => {
+                    setActiveTab('courses');
+                    navigate('/admin/courses');
+                  }}
+                >
+                  Cours
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'tests'}
+                  onClick={() => {
+                    setActiveTab('tests');
+                    navigate('/admin/tests');
+                  }}
+                >
+                  Tests
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'formations'}
+                  onClick={() => {
+                    setActiveTab('formations');
+                    navigate('/admin/formations');
+                  }}
+                >
+                  Formations
+                </Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </Card.Header>
+          <Card.Body>
+            <Form onSubmit={handleSearch} className="mb-4">
+              <Row>
+                <Col md={8}>
+                  <Form.Group className="mb-0">
+                    <div className="input-group">
+                      <Form.Control
+                        type="text"
+                        placeholder={`Rechercher un ${getSingularContentTypeName()}...`}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      <Button variant="primary" type="submit">
+                        <Search size={16} />
+                      </Button>
+                    </div>
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Form>
 
-      <Card className="shadow-sm mb-4">
-        <Card.Header>
-          <Nav variant="tabs" className="card-header-tabs">
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'courses'}
-                onClick={() => {
-                  setActiveTab('courses');
-                  navigate('/admin/courses');
-                }}
-              >
-                Cours
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'tests'}
-                onClick={() => {
-                  setActiveTab('tests');
-                  navigate('/admin/tests');
-                }}
-              >
-                Tests
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'formations'}
-                onClick={() => {
-                  setActiveTab('formations');
-                  navigate('/admin/formations');
-                }}
-              >
-                Formations
-              </Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </Card.Header>
-        <Card.Body>
-          <Form onSubmit={handleSearch} className="mb-4">
-            <Row>
-              <Col md={8}>
-                <Form.Group className="mb-0">
-                  <div className="input-group">
-                    <Form.Control
-                      type="text"
-                      placeholder={`Rechercher un ${getSingularContentTypeName()}...`}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    <Button variant="primary" type="submit">
-                      <Search size={16} />
-                    </Button>
+            {loading ? (
+              <div className="text-center py-5">
+                <Spinner animation="border" role="status">
+                  <span className="visually-hidden">Chargement...</span>
+                </Spinner>
+              </div>
+            ) : (
+              renderContentTable()
+            )}
+
+            {renderPagination()}
+          </Card.Body>
+        </Card>
+
+        {/* Delete Confirmation Modal */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmer la suppression</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Êtes-vous sûr de vouloir supprimer {itemToDelete?.title} ? Cette action est irréversible.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button className='btn-primary' onClick={() => setShowDeleteModal(false)}>
+              Annuler
+            </Button>
+            <Button className='btn-danger' onClick={handleDeleteConfirm}>
+              Supprimer
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Detail Modal */}
+        <Modal
+          show={showDetailModal}
+          onHide={() => setShowDetailModal(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>{selectedItem?.title}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedItem && (
+              <div>
+                <h5 className="mt-4">Détails</h5>
+                <p><strong>Description:</strong> {selectedItem.description}</p>
+                <p><strong>Catégorie:</strong> {selectedItem.category}</p>
+                <p><strong>Prix:</strong> {selectedItem.price} €</p>
+                <p><strong>Enseignant:</strong> {selectedItem.teacher?.fullName || 'N/A'}</p>
+                <p><strong>Date de création:</strong> {new Date(selectedItem.createdAt).toLocaleDateString()}</p>
+
+                {activeTab === 'courses' && selectedItem.sections && (
+                  <div>
+                    <h5 className="mt-4">Sections</h5>
+                    {selectedItem.sections.map((section, index) => (
+                      <div key={index} className="mb-3">
+                        <h6>{section.title}</h6>
+                        <p>{section.description}</p>
+                      </div>
+                    ))}
                   </div>
-                </Form.Group>
-              </Col>
-            </Row>
-          </Form>
+                )}
 
-          {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Chargement...</span>
-              </Spinner>
-            </div>
-          ) : (
-            renderContentTable()
-          )}
+                {activeTab === 'tests' && selectedItem.questions && (
+                  <div>
+                    <h5 className="mt-4">Questions</h5>
+                    {selectedItem.questions.map((question, index) => (
+                      <div key={index} className="mb-3">
+                        <h6>Question {index + 1}: {question.text}</h6>
+                        <ul>
+                          {question.answers.map((answer, ansIndex) => (
+                            <li key={ansIndex}>
+                              {answer.text} {ansIndex === question.correctAnswer && <Badge bg="success">Correcte</Badge>}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-          {renderPagination()}
-        </Card.Body>
-      </Card>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmer la suppression</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Êtes-vous sûr de vouloir supprimer {itemToDelete?.title} ? Cette action est irréversible.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Annuler
-          </Button>
-          <Button variant="danger" onClick={handleDeleteConfirm}>
-            Supprimer
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Detail Modal */}
-      <Modal
-        show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>{selectedItem?.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedItem && (
-            <div>
-              <p><strong>Description:</strong> {selectedItem.description}</p>
-              <p><strong>Catégorie:</strong> {selectedItem.category}</p>
-              <p><strong>Prix:</strong> {selectedItem.price} €</p>
-              <p><strong>Enseignant:</strong> {selectedItem.teacher?.fullName || 'N/A'}</p>
-              <p><strong>Date de création:</strong> {new Date(selectedItem.createdAt).toLocaleDateString()}</p>
-
-              {activeTab === 'courses' && selectedItem.sections && (
-                <div>
-                  <h5 className="mt-4">Sections</h5>
-                  {selectedItem.sections.map((section, index) => (
-                    <div key={index} className="mb-3">
-                      <h6>{section.title}</h6>
-                      <p>{section.description}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'tests' && selectedItem.questions && (
-                <div>
-                  <h5 className="mt-4">Questions</h5>
-                  {selectedItem.questions.map((question, index) => (
-                    <div key={index} className="mb-3">
-                      <h6>Question {index + 1}: {question.text}</h6>
-                      <ul>
-                        {question.answers.map((answer, ansIndex) => (
-                          <li key={ansIndex}>
-                            {answer.text} {ansIndex === question.correctAnswer && <Badge bg="success">Correcte</Badge>}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'formations' && selectedItem.modules && (
-                <div>
-                  <h5 className="mt-4">Modules</h5>
-                  {selectedItem.modules.map((module, index) => (
-                    <div key={index} className="mb-3">
-                      <h6>{module.title}</h6>
-                      <p>{module.description}</p>
-                      <p><strong>Durée:</strong> {module.duration}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-            Fermer
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              setShowDetailModal(false);
-              handleDeleteClick(selectedItem);
-            }}
-          >
-            Supprimer
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+                {activeTab === 'formations' && selectedItem.modules && (
+                  <div>
+                    <h5 className="mt-4">Modules</h5>
+                    {selectedItem.modules.map((module, index) => (
+                      <div key={index} className="mb-3">
+                        <h6>{module.title}</h6>
+                        <p>{module.description}</p>
+                        <p><strong>Durée:</strong> {module.duration}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button className='btn-primary' onClick={() => setShowDetailModal(false)}>
+              Fermer
+            </Button>
+            <Button
+              className='btn-danger'
+              onClick={() => {
+                setShowDetailModal(false);
+                handleDeleteClick(selectedItem);
+              }}
+            >
+              Supprimer
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </>
   );
 };
 

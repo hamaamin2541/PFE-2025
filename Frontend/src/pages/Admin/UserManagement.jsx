@@ -1,9 +1,11 @@
+import './UserManagement.css';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Button, Form, InputGroup, Modal, Badge, Pagination, Spinner, Alert } from 'react-bootstrap';
 import { Search, Edit, Trash2, Eye, UserPlus, Filter } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { Link } from 'react-router-dom';
+
 
 const UserManagement = ({ newUser = false }) => {
   const [users, setUsers] = useState([]);
@@ -213,9 +215,9 @@ const UserManagement = ({ newUser = false }) => {
 
   return (
     <Container fluid className="py-4">
-      <Card className="shadow mb-4">
-        <Card.Header className="py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 className="m-0 font-weight-bold text-primary">Gestion des utilisateurs</h6>
+      <Card className="user-management-card shadow mb-4">
+        <Card.Header className="py-3">
+          <h6 className="card-title">Gestion des utilisateurs</h6>
           <Button
             variant="primary"
             size="sm"
@@ -249,11 +251,12 @@ const UserManagement = ({ newUser = false }) => {
             </Alert>
           )}
 
-          <Row className="mb-3">
+          <Row className="search-filter-section">
             <Col md={6}>
               <Form onSubmit={handleSearch}>
                 <InputGroup>
                   <Form.Control
+                    className="search-input"
                     placeholder="Rechercher par nom ou email"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -270,6 +273,7 @@ const UserManagement = ({ newUser = false }) => {
                   <Filter size={16} />
                 </InputGroup.Text>
                 <Form.Select
+                  className="search-input"
                   value={roleFilter}
                   onChange={handleRoleFilterChange}
                 >
@@ -290,7 +294,7 @@ const UserManagement = ({ newUser = false }) => {
             </div>
           ) : (
             <>
-              <Table responsive hover>
+              <Table responsive hover className="users-table">
                 <thead>
                   <tr>
                     <th>Nom</th>
@@ -307,38 +311,32 @@ const UserManagement = ({ newUser = false }) => {
                         <td>{user.fullName}</td>
                         <td>{user.email}</td>
                         <td>
-                          <Badge bg={
-                            user.role === 'admin' ? 'danger' :
-                            user.role === 'teacher' ? 'primary' :
-                            'success'
-                          }>
-                            {user.role}
-                          </Badge>
+                          <span className={`role-badge ${user.role}`}>
+                            <span>{user.role}</span>
+                          </span>
                         </td>
                         <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                         <td>
                           <Button
                             variant="info"
-                            size="sm"
-                            className="me-1"
+                            className="action-btn"
                             onClick={() => handleShowUserModal(user)}
                           >
-                            <Eye size={16} />
+                            <Eye />
                           </Button>
                           <Button
                             variant="warning"
-                            size="sm"
-                            className="me-1"
+                            className="action-btn"
                             onClick={() => handleShowUserModal(user, true)}
                           >
-                            <Edit size={16} />
+                            <Edit />
                           </Button>
                           <Button
                             variant="danger"
-                            size="sm"
+                            className="action-btn"
                             onClick={() => handleShowDeleteModal(user)}
                           >
-                            <Trash2 size={16} />
+                            <Trash2 />
                           </Button>
                         </td>
                       </tr>
@@ -367,7 +365,7 @@ const UserManagement = ({ newUser = false }) => {
         </Card.Body>
       </Card>
 
-      {/* Modal de suppression */}
+      {/* Delete Modal */}
       <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmer la suppression</Modal.Title>
@@ -390,8 +388,16 @@ const UserManagement = ({ newUser = false }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal d'affichage/édition d'utilisateur */}
-      <Modal show={showUserModal} onHide={handleCloseUserModal} size="lg">
+      {/* User Modal */}
+      <Modal 
+        show={showUserModal} 
+        onHide={handleCloseUserModal} 
+        size="lg" 
+        className="user-modal"
+        animation={true}
+        backdrop="static"
+        keyboard={false}
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             {editMode
@@ -482,67 +488,61 @@ const UserManagement = ({ newUser = false }) => {
                 </Form.Group>
 
                 <div className="d-flex justify-content-end">
-                  <Button variant="secondary" onClick={handleCloseUserModal} className="me-2">
+                  <Button className='btn-danger me-2' onClick={handleCloseUserModal}>
                     Annuler
                   </Button>
-                  <Button variant="primary" type="submit">
+                  <Button className='btn-success' type="submit">
                     Enregistrer
                   </Button>
                 </div>
               </Form>
             ) : (
-              <div>
+              <div className="user-details">
                 <Row>
-                  <Col md={4}>
-                    <div className="text-center mb-3">
+                  <Col md={4} className="text-center">
+                    <div className="user-avatar-container mb-3">
                       {selectedUser.profileImage ? (
                         <img
                           src={`${API_BASE_URL}/${selectedUser.profileImage}`}
                           alt={selectedUser.fullName}
-                          className="img-fluid rounded-circle"
-                          style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                          className="img-fluid rounded-circle user-avatar"
                         />
                       ) : (
-                        <div
-                          className="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto"
-                          style={{ width: '150px', height: '150px' }}
-                        >
-                          <span className="text-white" style={{ fontSize: '3rem' }}>
-                            {selectedUser.fullName.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="avatar-placeholder">
+                          <span>{selectedUser.fullName.charAt(0).toUpperCase()}</span>
                         </div>
                       )}
-                      <Badge
-                        bg={
-                          selectedUser.role === 'admin' ? 'danger' :
-                          selectedUser.role === 'teacher' ? 'primary' :
-                          'success'
-                        }
-                        className="mt-2"
-                      >
+                      <Badge className={`role-badge ${selectedUser.role} mt-2`}>
                         {selectedUser.role}
                       </Badge>
                     </div>
                   </Col>
                   <Col md={8}>
-                    <h4>{selectedUser.fullName}</h4>
-                    <p className="text-muted">{selectedUser.email}</p>
+                    <h4 className="user-name mb-2">{selectedUser.fullName}</h4>
+                    <p className="user-email text-muted mb-3">{selectedUser.email}</p>
 
                     {selectedUser.phone && (
-                      <p><strong>Téléphone:</strong> {selectedUser.phone}</p>
+                      <div className="user-info-item">
+                        <strong>Téléphone:</strong> {selectedUser.phone}
+                      </div>
                     )}
 
                     {selectedUser.specialty && (
-                      <p><strong>Spécialité:</strong> {selectedUser.specialty}</p>
+                      <div className="user-info-item">
+                        <strong>Spécialité:</strong> {selectedUser.specialty}
+                      </div>
                     )}
 
-                    <p><strong>Date d'inscription:</strong> {new Date(selectedUser.createdAt).toLocaleDateString()}</p>
+                    <div className="user-info-item">
+                      <strong>Date d'inscription:</strong>{' '}
+                      {new Date(selectedUser.createdAt).toLocaleDateString()}
+                    </div>
 
                     {selectedUser.bio && (
-                      <>
-                        <h5 className="mt-3">Biographie</h5>
-                        <p>{selectedUser.bio}</p>
-                      </>
+                      <div className="user-bio mt-4">
+                        <h5 className="bio-title">Biographie</h5>
+                        <p className="bio-text">{selectedUser.bio}</p>
+                      </div>
                     )}
                   </Col>
                 </Row>

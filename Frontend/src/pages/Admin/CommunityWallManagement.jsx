@@ -406,274 +406,277 @@ const CommunityWallManagement = () => {
   };
 
   return (
-    <Container fluid className="py-4">
-      <h4 className="mb-4">Gestion du Mur Communautaire</h4>
+    <Container fluid className="p-0">
+      <div className="p-4">
+        <h4 className="mb-4">Gestion du Mur Communautaire</h4>
+        {error && (
+          <Alert variant="danger" onClose={() => setError(null)} dismissible>
+            {error}
+          </Alert>
+        )}
 
-      {error && (
-        <Alert variant="danger" onClose={() => setError(null)} dismissible>
-          {error}
-        </Alert>
-      )}
+        {success && (
+          <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+            {success}
+          </Alert>
+        )}
 
-      {success && (
-        <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
-          {success}
-        </Alert>
-      )}
-
-      <Card className="shadow-sm mb-4">
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="mb-0">Modération du contenu</h5>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={fetchPosts}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Spinner
-                  as="span"
-                  animation="border"
+        <Card className="shadow-sm">
+          <Card.Body className="card-container">
+            <div className="mb-4  ">
+              <h5 className="mb-3">Modération du contenu</h5>
+              <div className="d-flex justify-content-end">
+                <Button
+                  variant="outline-primary"
                   size="sm"
-                  role="status"
-                  aria-hidden="true"
-                />
-              ) : (
-                'Rafraîchir'
-              )}
-            </Button>
-          </div>
-
-          <Tabs
-            activeKey={activeTab}
-            onSelect={(k) => setActiveTab(k)}
-            className="mb-3"
-          >
-            <Tab
-              eventKey="pending"
-              title={
-                <span>
-                  Posts en attente
-                  {pendingPosts.length > 0 && (
-                    <Badge bg="danger" pill className="ms-2">
-                      {pendingPosts.length}
-                    </Badge>
-                  )}
-                </span>
-              }
-            >
-              {renderPostsTable(pendingPosts, true)}
-            </Tab>
-            <Tab
-              eventKey="comments"
-              title={
-                <span>
-                  Commentaires en attente
-                  {pendingComments.length > 0 && (
-                    <Badge bg="danger" pill className="ms-2">
-                      {pendingComments.length}
-                    </Badge>
-                  )}
-                </span>
-              }
-            >
-              {renderCommentsTable(pendingComments)}
-            </Tab>
-            <Tab eventKey="approved" title="Posts approuvés">
-              {renderPostsTable(approvedPosts, false)}
-            </Tab>
-          </Tabs>
-        </Card.Body>
-      </Card>
-
-      {/* Post Detail Modal */}
-      <Modal
-        show={showPostModal}
-        onHide={() => setShowPostModal(false)}
-        size="lg"
-        centered
-      >
-        {selectedPost && (
-          <>
-            <Modal.Header closeButton>
-              <Modal.Title>Détail du Post</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <div className="d-flex align-items-center mb-3">
-                <div className="avatar-md me-3">
-                  {selectedPost.user.profileImage ? (
-                    <img
-                      src={`${API_BASE_URL}/${selectedPost.user.profileImage}`}
-                      alt={selectedPost.user.fullName}
-                      className="rounded-circle"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/50";
-                      }}
+                  onClick={fetchPosts}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
                     />
                   ) : (
-                    <div className="avatar-placeholder-md rounded-circle">
-                      {selectedPost.user.fullName.charAt(0)}
-                    </div>
+                    'Rafraîchir'
                   )}
-                </div>
-                <div>
-                  <h5 className="mb-0">{selectedPost.user.fullName}</h5>
-                  <div className="text-muted">
-                    {selectedPost.user.role === 'teacher' ? 'Enseignant' :
-                     selectedPost.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
-                    <span className="mx-1">•</span>
-                    <Clock size={14} className="me-1" />
-                    {new Date(selectedPost.createdAt).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                </Button>
+              </div>
+            </div>
+
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(k) => setActiveTab(k)}
+              className="mb-3"
+            >
+              <Tab
+                eventKey="pending"
+                title={
+                  <span>
+                    Posts en attente
+                    {pendingPosts.length > 0 && (
+                      <Badge bg="danger" pill className="ms-2">
+                        {pendingPosts.length}
+                      </Badge>
+                    )}
+                  </span>
+                }
+              >
+                {renderPostsTable(pendingPosts, true)}
+              </Tab>
+              <Tab
+                eventKey="comments"
+                title={
+                  <span>
+                    Commentaires en attente
+                    {pendingComments.length > 0 && (
+                      <Badge bg="danger" pill className="ms-2">
+                        {pendingComments.length}
+                      </Badge>
+                    )}
+                  </span>
+                }
+              >
+                {renderCommentsTable(pendingComments)}
+              </Tab>
+              <Tab eventKey="approved" title="Posts approuvés">
+                {renderPostsTable(approvedPosts, false)}
+              </Tab>
+            </Tabs>
+          </Card.Body>
+        </Card>
+
+        {/* Post Detail Modal */}
+        <Modal
+          show={showPostModal}
+          onHide={() => setShowPostModal(false)}
+          size="lg"
+          centered
+        >
+          {selectedPost && (
+            <>
+              <Modal.Header closeButton>
+                <Modal.Title>Détail du Post</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <div className="d-flex align-items-center mb-3">
+                  <div className="avatar-md me-3">
+                    {selectedPost.user.profileImage ? (
+                      <img
+                        src={`${API_BASE_URL}/${selectedPost.user.profileImage}`}
+                        alt={selectedPost.user.fullName}
+                        className="rounded-circle"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/50";
+                        }}
+                      />
+                    ) : (
+                      <div className="avatar-placeholder-md rounded-circle">
+                        {selectedPost.user.fullName.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-
-              <div className="post-content-full mb-4">
-                {selectedPost.content}
-              </div>
-
-              {selectedPost.image && (
-                <div className="post-image-full mb-4">
-                  <img
-                    src={`${API_BASE_URL}/${selectedPost.image}`}
-                    alt="Post attachment"
-                    className="img-fluid rounded"
-                    onError={(e) => {
-                      e.target.src = "https://via.placeholder.com/600x400?text=Image+non+disponible";
-                    }}
-                  />
-                </div>
-              )}
-
-              <div className="post-stats d-flex align-items-center mb-3 p-3 bg-light rounded">
-                <div className="me-3 d-flex align-items-center">
-                  <ThumbsUp size={16} className="me-1" style={{ color: '#1877F2' }} />
-                  <span className="fw-bold fs-5">{selectedPost.reactionCounts?.like || 0}</span>
-                </div>
-                <div className="me-3 d-flex align-items-center">
-                  <Heart size={16} className="me-1" style={{ color: '#E41E3F' }} />
-                  <span className="fw-bold fs-5">{selectedPost.reactionCounts?.love || 0}</span>
-                </div>
-                <div className="me-3">
-                  <span className="text-muted">Total: {selectedPost.totalReactions || 0} réactions</span>
-                </div>
-                <div>
-                  <MessageSquare size={16} className="me-1" />
-                  <span>{selectedPost.comments ? selectedPost.comments.length : 0} commentaires</span>
-                </div>
-              </div>
-
-              <hr />
-
-              <h6 className="mb-3">Commentaires</h6>
-
-              {selectedPost.comments && selectedPost.comments.length > 0 ? (
-                selectedPost.comments.map(comment => (
-                  <div key={comment._id} className="comment-item mb-3">
-                    <div className="d-flex">
-                      <div className="avatar-sm me-2">
-                        {comment.user.profileImage ? (
-                          <img
-                            src={`${API_BASE_URL}/${comment.user.profileImage}`}
-                            alt={comment.user.fullName}
-                            className="rounded-circle"
-                            onError={(e) => {
-                              e.target.src = "https://via.placeholder.com/30";
-                            }}
-                          />
-                        ) : (
-                          <div className="avatar-placeholder-sm rounded-circle">
-                            {comment.user.fullName.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="ms-2 flex-grow-1">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <h6 className="mb-0">{comment.user.fullName}</h6>
-                            <small className="text-muted">
-                              {new Date(comment.createdAt).toLocaleDateString('fr-FR', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </small>
-                          </div>
-                          <Badge bg={
-                            comment.status === 'approved' ? 'success' :
-                            comment.status === 'rejected' ? 'danger' : 'warning'
-                          }>
-                            {comment.status === 'approved' ? 'Approuvé' :
-                             comment.status === 'rejected' ? 'Rejeté' : 'En attente'}
-                          </Badge>
-                        </div>
-                        <div className="comment-bubble mt-1">
-                          {comment.content}
-                        </div>
-
-                        {comment.status === 'pending' && (
-                          <div className="mt-2">
-                            <Button
-                              variant="outline-success"
-                              size="sm"
-                              className="me-2"
-                              onClick={() => handleUpdateCommentStatus(selectedPost._id, comment._id, 'approved')}
-                            >
-                              <CheckCircle size={14} className="me-1" />
-                              Approuver
-                            </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={() => handleUpdateCommentStatus(selectedPost._id, comment._id, 'rejected')}
-                            >
-                              <XCircle size={14} className="me-1" />
-                              Rejeter
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                  <div>
+                    <h5 className="mb-0">{selectedPost.user.fullName}</h5>
+                    <div className="text-muted">
+                      {selectedPost.user.role === 'teacher' ? 'Enseignant' :
+                       selectedPost.user.role === 'assistant' ? 'Assistant' : 'Étudiant'}
+                      <span className="mx-1">•</span>
+                      <Clock size={14} className="me-1" />
+                      {new Date(selectedPost.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-muted">Aucun commentaire pour ce post</p>
-              )}
-            </Modal.Body>
-            <Modal.Footer>
-              {selectedPost.status === 'pending' && (
-                <>
-                  <Button
-                    variant="success"
-                    onClick={() => handleUpdatePostStatus(selectedPost._id, 'approved')}
-                  >
-                    <CheckCircle size={16} className="me-1" />
-                    Approuver
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleUpdatePostStatus(selectedPost._id, 'rejected')}
-                  >
-                    <XCircle size={16} className="me-1" />
-                    Rejeter
-                  </Button>
-                </>
-              )}
-              <Button variant="secondary" onClick={() => setShowPostModal(false)}>
-                Fermer
-              </Button>
-            </Modal.Footer>
-          </>
-        )}
-      </Modal>
+                </div>
+
+                <div className="post-content-full mb-4">
+                  {selectedPost.content}
+                </div>
+
+                {selectedPost.image && (
+                  <div className="post-image-full mb-4">
+                    <img
+                      src={`${API_BASE_URL}/${selectedPost.image}`}
+                      alt="Post attachment"
+                      className="img-fluid rounded"
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/600x400?text=Image+non+disponible";
+                      }}
+                    />
+                  </div>
+                )}
+
+                <div className="post-stats d-flex align-items-center mb-3 p-3 bg-light rounded">
+                  <div className="me-3 d-flex align-items-center">
+                    <ThumbsUp size={16} className="me-1" style={{ color: '#1877F2' }} />
+                    <span className="fw-bold fs-5">{selectedPost.reactionCounts?.like || 0}</span>
+                  </div>
+                  <div className="me-3 d-flex align-items-center">
+                    <Heart size={16} className="me-1" style={{ color: '#E41E3F' }} />
+                    <span className="fw-bold fs-5">{selectedPost.reactionCounts?.love || 0}</span>
+                  </div>
+                  <div className="me-3">
+                    <span className="text-muted">Total: {selectedPost.totalReactions || 0} réactions</span>
+                  </div>
+                  <div>
+                    <MessageSquare size={16} className="me-1" />
+                    <span>{selectedPost.comments ? selectedPost.comments.length : 0} commentaires</span>
+                  </div>
+                </div>
+
+                <hr />
+
+                <h6 className="mb-3">Commentaires</h6>
+
+                {selectedPost.comments && selectedPost.comments.length > 0 ? (
+                  selectedPost.comments.map(comment => (
+                    <div key={comment._id} className="comment-item mb-3">
+                      <div className="d-flex">
+                        <div className="avatar-sm me-2">
+                          {comment.user.profileImage ? (
+                            <img
+                              src={`${API_BASE_URL}/${comment.user.profileImage}`}
+                              alt={comment.user.fullName}
+                              className="rounded-circle"
+                              onError={(e) => {
+                                e.target.src = "https://via.placeholder.com/30";
+                              }}
+                            />
+                          ) : (
+                            <div className="avatar-placeholder-sm rounded-circle">
+                              {comment.user.fullName.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="ms-2 flex-grow-1">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <h6 className="mb-0">{comment.user.fullName}</h6>
+                              <small className="text-muted">
+                                {new Date(comment.createdAt).toLocaleDateString('fr-FR', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </small>
+                            </div>
+                            <Badge bg={
+                              comment.status === 'approved' ? 'success' :
+                              comment.status === 'rejected' ? 'danger' : 'warning'
+                            }>
+                              {comment.status === 'approved' ? 'Approuvé' :
+                               comment.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                            </Badge>
+                          </div>
+                          <div className="comment-bubble mt-1">
+                            {comment.content}
+                          </div>
+
+                          {comment.status === 'pending' && (
+                            <div className="mt-2">
+                              <Button
+                                variant="outline-success"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleUpdateCommentStatus(selectedPost._id, comment._id, 'approved')}
+                              >
+                                <CheckCircle size={14} className="me-1" />
+                                Approuver
+                              </Button>
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleUpdateCommentStatus(selectedPost._id, comment._id, 'rejected')}
+                              >
+                                <XCircle size={14} className="me-1" />
+                                Rejeter
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted">Aucun commentaire pour ce post</p>
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                {selectedPost.status === 'pending' && (
+                  <>
+                    <Button
+                      variant="success"
+                      onClick={() => handleUpdatePostStatus(selectedPost._id, 'approved')}
+                    >
+                      <CheckCircle size={16} className="me-1" />
+                      Approuver
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => handleUpdatePostStatus(selectedPost._id, 'rejected')}
+                    >
+                      <XCircle size={16} className="me-1" />
+                      Rejeter
+                    </Button>
+                  </>
+                )}
+                <Button variant="secondary" onClick={() => setShowPostModal(false)}>
+                  Fermer
+                </Button>
+              </Modal.Footer>
+            </>
+          )}
+        </Modal>
+      </div>
     </Container>
   );
 };
