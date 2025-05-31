@@ -406,7 +406,7 @@ const CommunityWallManagement = () => {
   };
 
   return (
-    <Container fluid className="p-0">
+    <Container fluid className="container-fuild p-0">
       <div className="p-4">
         <h4 className="mb-4">Gestion du Mur Communautaire</h4>
         {error && (
@@ -421,8 +421,8 @@ const CommunityWallManagement = () => {
           </Alert>
         )}
 
-        <Card className="shadow-sm">
-          <Card.Body className="card-container">
+        <Card className="container-fluid shadow-sm">
+          <Card.Body className="">
             <div className="mb-4  ">
               <h5 className="mb-3">Modération du contenu</h5>
               <div className="d-flex justify-content-end">

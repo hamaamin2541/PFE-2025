@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
 import { Pie, Bar, Line } from 'react-chartjs-2';
+
+
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import './ReportsStyles.css';
@@ -329,583 +331,613 @@ const ReportsManagement = () => {
   }
 
   return (
-    <Container fluid className="py-4">
-      <h4 className="mb-4">Rapports analytiques</h4>
-      {successMessage && (
-        <Alert variant="success" onClose={() => setSuccessMessage('')} dismissible>
-          {successMessage}
-        </Alert>
-      )}
+    <Container fluid className="reports-container">
+      <div className="reports-header">
+        <h4>Rapports analytiques</h4>
+        {successMessage && (
+          <Alert variant="success" onClose={() => setSuccessMessage('')} dismissible>
+            {successMessage}
+          </Alert>
+        )}
 
-      {error && (
-        <Alert variant="danger" onClose={() => setError(null)} dismissible>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert variant="danger" onClose={() => setError(null)} dismissible>
+            {error}
+          </Alert>
+        )}
+      </div>
 
-      <Card className="shadow-sm mb-4">
-        <Card.Body>
-          <Row className="align-items-center">
-            <Col md={6}>
-              <div className="d-flex align-items-center">
-                <div className="period-label me-3">Période</div>
-                <select
-                  className="form-select period-select"
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                >
-                  <option value="last7days">7 derniers jours</option>
-                  <option value="last30days">30 derniers jours</option>
-                  <option value="last90days">90 derniers jours</option>
-                  <option value="thisMonth">Ce mois-ci</option>
-                  <option value="lastMonth">Mois dernier</option>
-                  <option value="thisYear">Cette année</option>
-                  <option value="lastYear">Année dernière</option>
-                  <option value="custom">Période personnalisée</option>
-                </select>
-                <Button
-                  variant="outline-secondary"
-                  className="refresh-button ms-3"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  {refreshing ? (
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <RefreshCw size={16} />
-                  )}
-                </Button>
-              </div>
+      <div className="reports-content">
+        <Tab.Container defaultActiveKey="users">
+          <Row>
+            <Col md={12} className="mb-4">
+              <Nav variant="tabs">
+                <Nav.Item>
+                  <Nav.Link eventKey="users" className="d-flex align-items-center">
+                    <Users size={16} className="me-2" />
+                    <span>Utilisateurs</span>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="content" className="d-flex align-items-center">
+                    <BookOpen size={16} className="me-2" />
+                    <span>Contenu</span>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="sales" className="d-flex align-items-center">
+                    <DollarSign size={16} className="me-2" />
+                    <span>Ventes</span>
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
             </Col>
 
-            {dateRange === 'custom' && (
-              <Col md={6}>
-                <Row>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Début</Form.Label>
-                      <Form.Control
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => setCustomStartDate(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Fin</Form.Label>
-                      <Form.Control
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => setCustomEndDate(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Col>
-            )}
+            <Col md={12}>
+              <Tab.Content>
+                {/* Period Selector - Now inside tab content */}
+                <Card className="period-selector-card shadow-sm mb-4">
+                  <Card.Body>
+                    <Row className="align-items-center">
+                      <Col md={6}>
+                        <div className="d-flex align-items-center">
+                          <div className="period-label me-3">Période</div>
+                          <select
+                            className="form-select period-select"
+                            value={dateRange}
+                            onChange={(e) => setDateRange(e.target.value)}
+                          >
+                            <option value="last7days">7 derniers jours</option>
+                            <option value="last30days">30 derniers jours</option>
+                            <option value="last90days">90 derniers jours</option>
+                            <option value="thisMonth">Ce mois-ci</option>
+                            <option value="lastMonth">Mois dernier</option>
+                            <option value="thisYear">Cette année</option>
+                            <option value="lastYear">Année dernière</option>
+                            <option value="custom">Période personnalisée</option>
+                          </select>
+                          <Button
+                            variant="outline-secondary"
+                            className="refresh-button ms-3"
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                          >
+                            {refreshing ? (
+                              <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <RefreshCw size={16} />
+                            )}
+                          </Button>
+                        </div>
+                      </Col>
+
+                      {dateRange === 'custom' && (
+                        <Col md={6}>
+                          <Row>
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>Début</Form.Label>
+                                <Form.Control
+                                  type="date"
+                                  value={customStartDate}
+                                  onChange={(e) => setCustomStartDate(e.target.value)}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col>
+                              <Form.Group>
+                                <Form.Label>Fin</Form.Label>
+                                <Form.Control
+                                  type="date"
+                                  value={customEndDate}
+                                  onChange={(e) => setCustomEndDate(e.target.value)}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
+                        </Col>
+                      )}
+                    </Row>
+                  </Card.Body>
+                </Card>
+
+                {/* Users Report */}
+                <Tab.Pane eventKey="users">
+                  <div className="section-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h3>Statistiques des utilisateurs</h3>
+                      <Button
+                        variant="outline-primary"
+                        className="export-btn export-button-lg"
+                        onClick={() => handleShowExportModal('utilisateurs')}
+                      >
+                        <Download size={16} className="me-2" />
+                        <span>Exporter</span>
+                      </Button>
+                    </div>
+                    <div className="section-divider"></div>
+                  </div>
+
+                  <Row className="stats-summary">
+                    <Col md={6} lg={3} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon users-icon">
+                              <Users size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Total utilisateurs</div>
+                              <div className="stat-card-value">
+                                {reportData.users.totalUsers}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={3} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon new-users-icon">
+                              <UserPlus size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Nouveaux</div>
+                              <div className="stat-card-value">
+                                {reportData.users.newUsers}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={3} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon students-icon">
+                              <GraduationCap size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Étudiants</div>
+                              <div className="stat-card-value">
+                                {reportData.users.usersByRole.find(r => r.role === 'student')?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={3} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon teachers-icon">
+                              <BookOpen size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Enseignants</div>
+                              <div className="stat-card-value">
+                                {reportData.users.usersByRole.find(r => r.role === 'teacher')?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={5} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Répartition par rôle</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Pie
+                              data={userRoleData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                      boxWidth: 12,
+                                      padding: 15,
+                                      font: {
+                                        size: 12
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={7} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Évolution des utilisateurs</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Bar
+                              data={usersByMonthData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      precision: 0
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Content Report */}
+                <Tab.Pane eventKey="content">
+                  <div className="section-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h3>Statistiques du contenu</h3>
+                      <Button
+                        variant="outline-primary"
+                        className="export-button-lg"
+                        onClick={() => handleShowExportModal('contenu')}
+                      >
+                        <Download size={16} className="me-2" />
+                        <span>Exporter</span>
+                      </Button>
+                    </div>
+                    <div className="section-divider"></div>
+                  </div>
+
+                  <Row className="stats-summary">
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon courses-icon">
+                              <BookOpen size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Cours</div>
+                              <div className="stat-card-value">
+                                {reportData.content.contentByType.find(t => t.type === 'courses')?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon tests-icon">
+                              <PieChart size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Tests</div>
+                              <div className="stat-card-value">
+                                {reportData.content.contentByType.find(t => t.type === 'tests')?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon formations-icon">
+                              <BarChart2 size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Formations</div>
+                              <div className="stat-card-value">
+                                {reportData.content.contentByType.find(t => t.type === 'formations')?.count || 0}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={5} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Répartition par type</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Pie
+                              data={contentTypeData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                      boxWidth: 12,
+                                      padding: 15,
+                                      font: {
+                                        size: 12
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={7} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Évolution du contenu</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Bar
+                              data={contentByMonthData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      precision: 0
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+
+                {/* Sales Report */}
+                <Tab.Pane eventKey="sales">
+                  <div className="section-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h3>Statistiques des ventes</h3>
+                      <Button
+                        variant="outline-primary"
+                        className="export-button-lg"
+                        onClick={() => handleShowExportModal('ventes')}
+                      >
+                        <Download size={16} className="me-2" />
+                        <span>Exporter</span>
+                      </Button>
+                    </div>
+                    <div className="section-divider"></div>
+                  </div>
+
+                  <Row className="stats-summary">
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon revenue-icon">
+                              <DollarSign size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Revenu total</div>
+                              <div className="stat-card-value">
+                                {reportData.sales.totalRevenue}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon sales-icon">
+                              <ShoppingCart size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Total des ventes</div>
+                              <div className="stat-card-value">
+                                {reportData.sales.totalSales}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={6} lg={4} className="mb-4">
+                      <Card className="stat-card">
+                        <Card.Body>
+                          <div className="stat-card-content">
+                            <div className="stat-card-icon commissions-icon">
+                              <CreditCard size={24} />
+                            </div>
+                            <div>
+                              <div className="stat-card-label">Commissions</div>
+                              <div className="stat-card-value">
+                                {reportData.sales.totalRevenue - reportData.sales.totalSales}
+                              </div>
+                            </div>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col md={5} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Évolution des ventes</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Line
+                              data={salesByMonthData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      precision: 0
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+
+                    <Col md={7} className="mb-4">
+                      <Card className="h-100">
+                        <Card.Header>
+                          <h5 className="card-title mb-0">Revenus par mois</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="chart-container" style={{ height: '300px' }}>
+                            <Line
+                              data={revenueByMonthData}
+                              options={{
+                                maintainAspectRatio: false,
+                                responsive: true,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      precision: 0
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Tab.Pane>
+              </Tab.Content>
+            </Col>
           </Row>
-        </Card.Body>
-      </Card>
-
-      <Tab.Container defaultActiveKey="users">
-        <Row>
-          <Col md={12} className="mb-4">
-            <Nav variant="tabs">
-              <Nav.Item>
-                <Nav.Link eventKey="users" className="d-flex align-items-center">
-                  <Users size={16} className="me-2" />
-                  <span>Utilisateurs</span>
-                </Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="content" className="d-flex align-items-center">
-                  <BookOpen size={16} className="me-2" />
-                  <span>Contenu</span>
-                </Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="sales" className="d-flex align-items-center">
-                  <DollarSign size={16} className="me-2" />
-                  <span>Ventes</span>
-                </Nav.Link>
-              </Nav.Item>
-            </Nav>
-          </Col>
-
-          <Col md={12}>
-            <Tab.Content>
-              {/* Users Report */}
-              <Tab.Pane eventKey="users">
-                <div className="section-header">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h3>Statistiques des utilisateurs</h3>
-                    <Button
-                      variant="outline-primary"
-                      className="export-button-lg"
-                      onClick={() => handleShowExportModal('utilisateurs')}
-                    >
-                      <Download size={16} className="me-2" />
-                      <span>Exporter</span>
-                    </Button>
-                  </div>
-                  <div className="section-divider"></div>
-                </div>
-
-                <Row className="stats-summary">
-                  <Col md={6} lg={3} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon users-icon">
-                            <Users size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Total utilisateurs</div>
-                            <div className="stat-card-value">
-                              {reportData.users.totalUsers}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={3} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon new-users-icon">
-                            <UserPlus size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Nouveaux</div>
-                            <div className="stat-card-value">
-                              {reportData.users.newUsers}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={3} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon students-icon">
-                            <GraduationCap size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Étudiants</div>
-                            <div className="stat-card-value">
-                              {reportData.users.usersByRole.find(r => r.role === 'student')?.count || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={3} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon teachers-icon">
-                            <BookOpen size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Enseignants</div>
-                            <div className="stat-card-value">
-                              {reportData.users.usersByRole.find(r => r.role === 'teacher')?.count || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={5} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Répartition par rôle</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Pie
-                            data={userRoleData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  position: 'bottom',
-                                  labels: {
-                                    boxWidth: 12,
-                                    padding: 15,
-                                    font: {
-                                      size: 12
-                                    }
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={7} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Évolution des utilisateurs</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Bar
-                            data={usersByMonthData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  display: false
-                                },
-                                tooltip: {
-                                  mode: 'index',
-                                  intersect: false,
-                                }
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  ticks: {
-                                    precision: 0
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Tab.Pane>
-
-              {/* Content Report */}
-              <Tab.Pane eventKey="content">
-                <div className="section-header">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h3>Statistiques du contenu</h3>
-                    <Button
-                      variant="outline-primary"
-                      className="export-button-lg"
-                      onClick={() => handleShowExportModal('contenu')}
-                    >
-                      <Download size={16} className="me-2" />
-                      <span>Exporter</span>
-                    </Button>
-                  </div>
-                  <div className="section-divider"></div>
-                </div>
-
-                <Row className="stats-summary">
-                  <Col md={6} lg={4} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon courses-icon">
-                            <BookOpen size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Cours</div>
-                            <div className="stat-card-value">
-                              {reportData.content.contentByType.find(t => t.type === 'courses')?.count || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={4} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon tests-icon">
-                            <PieChart size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Tests</div>
-                            <div className="stat-card-value">
-                              {reportData.content.contentByType.find(t => t.type === 'tests')?.count || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={4} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon formations-icon">
-                            <BarChart2 size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Formations</div>
-                            <div className="stat-card-value">
-                              {reportData.content.contentByType.find(t => t.type === 'formations')?.count || 0}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={5} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Répartition par type</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Pie
-                            data={contentTypeData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  position: 'bottom',
-                                  labels: {
-                                    boxWidth: 12,
-                                    padding: 15,
-                                    font: {
-                                      size: 12
-                                    }
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={7} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Évolution du contenu</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Bar
-                            data={contentByMonthData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  display: false
-                                },
-                                tooltip: {
-                                  mode: 'index',
-                                  intersect: false,
-                                }
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  ticks: {
-                                    precision: 0
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Tab.Pane>
-
-              {/* Sales Report */}
-              <Tab.Pane eventKey="sales">
-                <div className="section-header">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h3>Statistiques des ventes</h3>
-                    <Button
-                      variant="outline-primary"
-                      className="export-button-lg"
-                      onClick={() => handleShowExportModal('ventes')}
-                    >
-                      <Download size={16} className="me-2" />
-                      <span>Exporter</span>
-                    </Button>
-                  </div>
-                  <div className="section-divider"></div>
-                </div>
-
-                <Row className="stats-summary">
-                  <Col md={6} lg={6} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon sales-icon">
-                            <ShoppingCart size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Total des ventes</div>
-                            <div className="stat-card-value">
-                              {reportData.sales.totalSales}
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={6} lg={6} className="mb-4">
-                    <Card className="stat-card">
-                      <Card.Body>
-                        <div className="stat-card-content">
-                          <div className="stat-card-icon revenue-icon">
-                            <CreditCard size={24} />
-                          </div>
-                          <div>
-                            <div className="stat-card-label">Revenus totaux</div>
-                            <div className="stat-card-value">
-                              {reportData.sales.totalRevenue.toFixed(2)} €
-                            </div>
-                          </div>
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col md={5} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Ventes par mois</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Bar
-                            data={salesByMonthData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  display: false
-                                }
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  ticks: {
-                                    precision: 0
-                                  }
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col md={7} className="mb-4">
-                    <Card className="h-100">
-                      <Card.Header>
-                        <h5 className="card-title mb-0">Évolution des revenus</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <div className="chart-container" style={{ height: '300px' }}>
-                          <Line
-                            data={revenueByMonthData}
-                            options={{
-                              maintainAspectRatio: false,
-                              responsive: true,
-                              plugins: {
-                                legend: {
-                                  display: false
-                                },
-                                tooltip: {
-                                  mode: 'index',
-                                  intersect: false,
-                                }
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Tab.Pane>
-            </Tab.Content>
-          </Col>
-        </Row>
-      </Tab.Container>
+        </Tab.Container>
+      </div>
 
       {/* Export Modal */}
-      <Modal show={showExportModal} onHide={handleCloseExportModal} centered>
+      <Modal
+        show={showExportModal}
+        onHide={handleCloseExportModal}
+        centered
+        size="lg"
+        className="export-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Exporter le rapport</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Choisissez le format d'exportation pour le rapport {exportingReportType === 'utilisateurs' ? 'des utilisateurs' :
-                                                                exportingReportType === 'contenu' ? 'du contenu' :
-                                                                exportingReportType === 'ventes' ? 'des ventes' :
-                                                                exportingReportType === 'reclamations' ? 'des réclamations' : ''}</p>
-          <Form.Group className="mb-3">
-            <Form.Label>Format</Form.Label>
-            <Form.Select
-              value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value)}
-            >
-              <option value="pdf">PDF</option>
-              <option value="xlsx">Excel (XLSX)</option>
-              <option value="csv">CSV</option>
-              <option value="json">JSON</option>
-            </Form.Select>
-          </Form.Group>
+          <div className="export-modal-content">
+            <h5 className="mb-4">Sélectionnez le format d'exportation</h5>
+            <div className="d-flex flex-column gap-3">
+              <Button
+                variant="primary"
+                onClick={() => handleExport(exportingReportType, 'pdf')}
+                className="d-flex align-items-center justify-content-center"
+              >
+                <Download size={16} className="me-2" />
+                PDF
+              </Button>
+              <Button
+                variant="success"
+                onClick={() => handleExport(exportingReportType, 'excel')}
+                className="d-flex align-items-center justify-content-center"
+              >
+                <Download size={16} className="me-2" />
+                Excel
+              </Button>
+            </div>
+          </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseExportModal}>
-            Annuler
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => handleExport(exportingReportType, exportFormat)}
-          >
-            Exporter
-          </Button>
-        </Modal.Footer>
       </Modal>
     </Container>
   );

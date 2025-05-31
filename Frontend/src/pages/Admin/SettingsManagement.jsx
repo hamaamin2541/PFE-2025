@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Tab, Nav } fro
 import { Save, RefreshCw, Server, Shield, Bell, Mail, Globe, User, Blocks } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
+import './SettingsManagement.css'; // Import custom styles    
 
 const SettingsManagement = () => {
   const [loading, setLoading] = useState(true);
@@ -155,12 +156,11 @@ const SettingsManagement = () => {
       </Container>
     );
   }
-
   return (
-    <Container fluid className="py-4">
-      <h4 className="mb-4">Paramètres du système</h4>
-
-      {successMessage && (
+    <Container fluid className="settings-container">
+      <div className="settings-header">
+        <h4>Paramètres du système</h4>
+        {successMessage && (
         <Alert variant="success" onClose={() => setSuccessMessage('')} dismissible>
           {successMessage}
         </Alert>
@@ -171,14 +171,17 @@ const SettingsManagement = () => {
           {error}
         </Alert>
       )}
+      </div>
 
+      
+      <div className="settings-content">
       <Tab.Container defaultActiveKey="notifications">
-
-          <Col md={3} lg={2} className="mb-4" style={{ display: 'block', visibility: 'visible', opacity: 1, zIndex: 1000 }}>
-            <Card className="shadow-sm" style={{ border: '2px solid #e9ecef', backgroundColor: '#ffffff', borderRadius: '0.75rem' ,width:"800px",display:"block" ,marginBottom:"800px" }}>
+        <Row>
+          <Col md={3}>
+            <Card className="shadow-sm mb-4">
               <Card.Body className="p-3">
-                <Nav variant="pills" className="flex-column" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <Nav.Item style={{ marginBottom: '8px' }}>
+                <Nav variant="pills" className="flex-column gap-2">
+                  <Nav.Item>
                     <Nav.Link
                       eventKey="general"
                       className="d-flex align-items-center"
@@ -188,16 +191,14 @@ const SettingsManagement = () => {
                         color: '#212529',
                         fontWeight: 600,
                         borderRadius: '0.5rem',
-                        border: '1px solid #e9ecef',
-                        display: 'flex',
-                        alignItems: 'center'
+                        border: '1px solid #e9ecef'
                       }}
                     >
                       <Globe size={16} className="me-2" />
                       <span>Paramètres généraux</span>
                     </Nav.Link>
                   </Nav.Item>
-                  <Nav.Item style={{ marginBottom: '8px' }}>
+                  <Nav.Item>
                     <Nav.Link
                       eventKey="security"
                       className="d-flex align-items-center"
@@ -207,16 +208,14 @@ const SettingsManagement = () => {
                         color: '#212529',
                         fontWeight: 600,
                         borderRadius: '0.5rem',
-                        border: '1px solid #e9ecef',
-                        display: 'flex',
-                        alignItems: 'center'
+                        border: '1px solid #e9ecef'
                       }}
                     >
                       <Shield size={16} className="me-2" />
                       <span>Paramètres de sécurité</span>
                     </Nav.Link>
                   </Nav.Item>
-                  <Nav.Item style={{ marginBottom: '8px' }}>
+                  <Nav.Item>
                     <Nav.Link
                       eventKey="notifications"
                       className="d-flex align-items-center"
@@ -226,16 +225,14 @@ const SettingsManagement = () => {
                         color: '#ffffff',
                         fontWeight: 600,
                         borderRadius: '0.5rem',
-                        border: '1px solid #4361ee',
-                        display: 'flex',
-                        alignItems: 'center'
+                        border: '1px solid #e9ecef'
                       }}
                     >
                       <Bell size={16} className="me-2" />
                       <span>Paramètres de notifications</span>
                     </Nav.Link>
                   </Nav.Item>
-                  <Nav.Item style={{ marginBottom: '8px' }}>
+                  <Nav.Item>
                     <Nav.Link
                       eventKey="email"
                       className="d-flex align-items-center"
@@ -245,9 +242,7 @@ const SettingsManagement = () => {
                         color: '#212529',
                         fontWeight: 600,
                         borderRadius: '0.5rem',
-                        border: '1px solid #e9ecef',
-                        display: 'flex',
-                        alignItems: 'center'
+                        border: '1px solid #e9ecef'
                       }}
                     >
                       <Mail size={16} className="me-2" />
@@ -259,8 +254,8 @@ const SettingsManagement = () => {
             </Card>
           </Col>
 
-          <Col md={9} lg={10}>
-            <Card className="shadow-sm"style={{marginLeft:"-190px",width:"800px"}}>
+          <Col md={9}>
+            <Card className="shadow-sm">
               <Card.Body>
                 <Tab.Content>
                   {/* General Settings */}
@@ -759,8 +754,9 @@ const SettingsManagement = () => {
               </Card.Body>
             </Card>
           </Col>
-
+        </Row>
       </Tab.Container>
+      </div>
     </Container>
   );
 };
