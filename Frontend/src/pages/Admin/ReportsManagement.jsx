@@ -350,7 +350,7 @@ const ReportsManagement = () => {
       <div className="reports-content">
         <Tab.Container defaultActiveKey="users">
           <Row>
-            <Col md={12} className="mb-4">
+            <Col md={12}>
               <Nav variant="tabs">
                 <Nav.Item>
                   <Nav.Link eventKey="users" className="d-flex align-items-center">
@@ -376,7 +376,7 @@ const ReportsManagement = () => {
             <Col md={12}>
               <Tab.Content>
                 {/* Period Selector - Now inside tab content */}
-                <Card className="period-selector-card shadow-sm mb-4">
+                <Card className="period-selector-card shadow-sm">
                   <Card.Body>
                     <Row className="align-items-center">
                       <Col md={6}>
