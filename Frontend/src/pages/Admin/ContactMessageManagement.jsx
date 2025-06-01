@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Table, Button, Form, InputGroup, Modal, Badg
 import { Search, Filter, Eye, MessageSquare, Send, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
+import './ContactMessageManagement.css'; // Import custom CSS for styling
 
 const ContactMessageManagement = () => {
   const [messages, setMessages] = useState([]);
@@ -205,7 +206,7 @@ const ContactMessageManagement = () => {
     <Container fluid className="py-4">
       <Card className="shadow mb-4">
         <Card.Header className="py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 className="m-0 font-weight-bold text-primary">Gestion des messages de contact</h6>
+          <h4 className="m-0 font-weight-bold text-primary p-3">Gestion des messages de contact</h4>
         </Card.Header>
         <Card.Body>
           {successMessage && (
@@ -328,7 +329,7 @@ const ContactMessageManagement = () => {
       </Card>
       
       {/* Modal de détails du message */}
-      <Modal show={showMessageModal} onHide={handleCloseMessageModal}>
+      <Modal show={showMessageModal} onHide={handleCloseMessageModal} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Détails du message</Modal.Title>
         </Modal.Header>
@@ -336,26 +337,37 @@ const ContactMessageManagement = () => {
           {selectedMessage && (
             <>
               <div className="mb-4">
-                <h5>{selectedMessage.subject}</h5>
-                <Badge bg={getStatusBadgeColor(selectedMessage.status)} className="mb-3">
-                  {selectedMessage.status}
-                </Badge>
-                
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <p><strong>Nom:</strong> {selectedMessage.name}</p>
-                  </Col>
-                  <Col md={6}>
-                    <p><strong>Email:</strong> {selectedMessage.email}</p>
-                  </Col>
-                </Row>
-                
-                <p><strong>Date:</strong> {formatDate(selectedMessage.createdAt)}</p>
-                
-                <div className="mb-3">
-                  <h6>Message:</h6>
-                  <p className="p-3 bg-light rounded">{selectedMessage.message}</p>
-                </div>
+  <div className="mb-3">
+    <h6>Subject:</h6>
+    <p className="p-3 bg-light rounded">{selectedMessage.subject}</p>
+  </div>
+
+  <div className="mb-3">
+    <h6>Status:</h6>
+    <Badge bg={getStatusBadgeColor(selectedMessage.status)} className="badge-content p-2">
+      {selectedMessage.status}
+    </Badge>
+  </div>
+
+  <div className="mb-3">
+    <h6>Name:</h6>
+    <p className="p-3 bg-light rounded">{selectedMessage.name}</p>
+  </div>
+
+  <div className="mb-3">
+    <h6>Email:</h6>
+    <p className="p-3 bg-light rounded">{selectedMessage.email}</p>
+  </div>
+
+  <div className="mb-3">
+    <h6>Date:</h6>
+    <p className="p-3 bg-light rounded">{formatDate(selectedMessage.createdAt)}</p>
+  </div>
+
+  <div className="mb-3">
+    <h6>Message:</h6>
+    <p className="p-3 bg-light rounded">{selectedMessage.message}</p>
+  </div>
                 
                 {selectedMessage.reply && (
                   <div className="mb-3">
@@ -397,7 +409,7 @@ const ContactMessageManagement = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseMessageModal}>
+          <Button className="btn-danger" onClick={handleCloseMessageModal}>
             Fermer
           </Button>
         </Modal.Footer>

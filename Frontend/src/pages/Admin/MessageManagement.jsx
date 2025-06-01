@@ -329,7 +329,7 @@ const MessageManagement = () => {
     <Container fluid className="py-4">
       <Card className="shadow mb-4">
         <Card.Header className="py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 className="m-0 font-weight-bold text-primary">Gestion des messages</h6>
+          <h4 className="m-0 font-weight-bold text-primary">Gestion des messages</h4>
           <Button variant="primary" onClick={handleNewMessage}>
             <Send size={16} className="me-2" />
             Nouveau message
@@ -672,15 +672,13 @@ const MessageManagement = () => {
               <Form.Group className="mb-3">
                 <Form.Label>Destinataires</Form.Label>
                 <Form.Select
-                  multiple
-                  size={5}
                   value={newMessage.recipients}
                   onChange={handleRecipientSelection}
                   required={selectedTab === 'specific'}
                 >
                   {users.map(user => (
                     <option key={user._id} value={user._id}>
-                      {user.fullName} ({user.email}) - {user.role === 'student' ? 'Étudiant' : user.role === 'teacher' ? 'Professeur' : 'Admin'}
+                      {user.fullName} - {user.email} - {user.role === 'student' ? 'Étudiant' : user.role === 'teacher' ? 'Professeur' : 'Admin'}
                     </option>
                   ))}
                 </Form.Select>

@@ -474,6 +474,8 @@ const SettingsManagement = () => {
                   <Tab.Pane eventKey="notifications">
                     <h5 className="mb-4">Paramètres de notifications</h5>
                     <Form>
+                    <Row>
+                    
                       <Form.Group className="mb-4">
                         <Form.Check
                           type="switch"
@@ -483,7 +485,7 @@ const SettingsManagement = () => {
                           onChange={(e) => handleInputChange('notifications', 'emailNotifications', e.target.checked)}
                         />
                       </Form.Group>
-
+                      </Row>
                       <h6 className="mb-3">Notifications administrateur</h6>
                       <Row>
                         <Col md={4}>
