@@ -375,94 +375,67 @@ const ReportsManagement = () => {
 
             <Col md={12}>
               <Tab.Content>
-                {/* Period Selector - Now inside tab content */}
-                <Card className="period-selector-card shadow-sm">
-                  <Card.Body>
-                    <Row className="align-items-center">
-                      <Col md={6}>
-                        <div className="d-flex align-items-center">
-                          <div className="period-label me-3">Période</div>
-                          <select
-                            className="form-select period-select"
-                            value={dateRange}
-                            onChange={(e) => setDateRange(e.target.value)}
-                          >
-                            <option value="last7days">7 derniers jours</option>
-                            <option value="last30days">30 derniers jours</option>
-                            <option value="last90days">90 derniers jours</option>
-                            <option value="thisMonth">Ce mois-ci</option>
-                            <option value="lastMonth">Mois dernier</option>
-                            <option value="thisYear">Cette année</option>
-                            <option value="lastYear">Année dernière</option>
-                            <option value="custom">Période personnalisée</option>
-                          </select>
-                          <Button
-                            variant="outline-secondary"
-                            className="refresh-button ms-3"
-                            onClick={handleRefresh}
-                            disabled={refreshing}
-                          >
-                            {refreshing ? (
-                              <Spinner
-                                as="span"
-                                animation="border"
-                                size="sm"
-                                role="status"
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <RefreshCw size={16} />
-                            )}
-                          </Button>
-                        </div>
-                      </Col>
-
-                      {dateRange === 'custom' && (
-                        <Col md={6}>
-                          <Row>
-                            <Col>
-                              <Form.Group>
-                                <Form.Label>Début</Form.Label>
-                                <Form.Control
-                                  type="date"
-                                  value={customStartDate}
-                                  onChange={(e) => setCustomStartDate(e.target.value)}
-                                />
-                              </Form.Group>
-                            </Col>
-                            <Col>
-                              <Form.Group>
-                                <Form.Label>Fin</Form.Label>
-                                <Form.Control
-                                  type="date"
-                                  value={customEndDate}
-                                  onChange={(e) => setCustomEndDate(e.target.value)}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </Row>
-                        </Col>
-                      )}
-                    </Row>
-                  </Card.Body>
-                </Card>
-
                 {/* Users Report */}
                 <Tab.Pane eventKey="users">
                   <div className="section-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h3>Statistiques des utilisateurs</h3>
-                      <Button
-                        variant="outline-primary"
-                        className="export-btn export-button-lg"
-                        onClick={() => handleShowExportModal('utilisateurs')}
-                      >
-                        <Download size={16} className="me-2" />
-                        <span>Exporter</span>
-                      </Button>
-                    </div>
-                    <div className="section-divider"></div>
-                  </div>
+  <div className="container-fluid">
+    <div className="row align-items-center justify-content-between">
+      <div className="col-md-4 mb-2 mb-md-0">
+        <h3 className="mb-0">Statistiques des utilisateurs</h3>
+      </div>
+
+      <div className="col-md-8">
+        <div className="d-flex flex-wrap justify-content-md-end gap-2">
+          <select
+            className="form-select period-select w-auto"
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="last7days">7 derniers jours</option>
+            <option value="last30days">30 derniers jours</option>
+            <option value="last90days">90 derniers jours</option>
+            <option value="thisMonth">Ce mois-ci</option>
+            <option value="lastMonth">Mois dernier</option>
+            <option value="thisYear">Cette année</option>
+            <option value="lastYear">Année dernière</option>
+            <option value="custom">Période personnalisée</option>
+          </select>
+
+          <Button
+            variant="outline-secondary"
+            className="refresh-button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+          </Button>
+
+          <Button
+            variant="outline-primary"
+            className="export-btn"
+            onClick={() => handleShowExportModal('utilisateurs')}
+          >
+            <Download size={16} className="me-2" />
+            <span>Exporter</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div className="section-divider mt-3"></div>
+  </div>
+</div>
+
 
                   <Row className="stats-summary">
                     <Col md={6} lg={3} className="mb-4">
@@ -611,19 +584,64 @@ const ReportsManagement = () => {
                 {/* Content Report */}
                 <Tab.Pane eventKey="content">
                   <div className="section-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h3>Statistiques du contenu</h3>
-                      <Button
-                        variant="outline-primary"
-                        className="export-button-lg"
-                        onClick={() => handleShowExportModal('contenu')}
-                      >
-                        <Download size={16} className="me-2" />
-                        <span>Exporter</span>
-                      </Button>
-                    </div>
-                    <div className="section-divider"></div>
-                  </div>
+  <div className="container-fluid">
+    <div className="row align-items-center justify-content-between">
+      <div className="col-md-4 mb-2 mb-md-0">
+        <h3 className="mb-0">Statistiques du contenu</h3>
+      </div>
+
+      <div className="col-md-8">
+        <div className="d-flex flex-wrap justify-content-md-end gap-2">
+          <select
+            className="form-select period-select w-auto"
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="last7days">7 derniers jours</option>
+            <option value="last30days">30 derniers jours</option>
+            <option value="last90days">90 derniers jours</option>
+            <option value="thisMonth">Ce mois-ci</option>
+            <option value="lastMonth">Mois dernier</option>
+            <option value="thisYear">Cette année</option>
+            <option value="lastYear">Année dernière</option>
+            <option value="custom">Période personnalisée</option>
+          </select>
+
+          <Button
+            variant="outline-secondary"
+            className="refresh-button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+          </Button>
+
+          <Button
+            variant="outline-primary"
+            className="export-btn"
+            onClick={() => handleShowExportModal('contenu')}
+          >
+            <Download size={16} className="me-2" />
+            <span>Exporter</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div className="section-divider mt-3"></div>
+  </div>
+</div>
+
 
                   <Row className="stats-summary">
                     <Col md={6} lg={4} className="mb-4">
@@ -754,19 +772,64 @@ const ReportsManagement = () => {
                 {/* Sales Report */}
                 <Tab.Pane eventKey="sales">
                   <div className="section-header">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <h3>Statistiques des ventes</h3>
-                      <Button
-                        variant="outline-primary"
-                        className="export-button-lg"
-                        onClick={() => handleShowExportModal('ventes')}
-                      >
-                        <Download size={16} className="me-2" />
-                        <span>Exporter</span>
-                      </Button>
-                    </div>
-                    <div className="section-divider"></div>
-                  </div>
+  <div className="container-fluid">
+    <div className="row align-items-center justify-content-between">
+      <div className="col-md-4 mb-2 mb-md-0">
+        <h3 className="mb-0">Statistiques des ventes</h3>
+      </div>
+
+      <div className="col-md-8">
+        <div className="d-flex flex-wrap justify-content-md-end gap-2">
+          <select
+            className="form-select period-select w-auto"
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="last7days">7 derniers jours</option>
+            <option value="last30days">30 derniers jours</option>
+            <option value="last90days">90 derniers jours</option>
+            <option value="thisMonth">Ce mois-ci</option>
+            <option value="lastMonth">Mois dernier</option>
+            <option value="thisYear">Cette année</option>
+            <option value="lastYear">Année dernière</option>
+            <option value="custom">Période personnalisée</option>
+          </select>
+
+          <Button
+            variant="outline-secondary"
+            className="refresh-button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+          </Button>
+
+          <Button
+            variant="outline-primary"
+            className="export-btn"
+            onClick={() => handleShowExportModal('ventes')}
+          >
+            <Download size={16} className="me-2" />
+            <span>Exporter</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <div className="section-divider mt-3"></div>
+  </div>
+</div>
+
 
                   <Row className="stats-summary">
                     <Col md={6} lg={4} className="mb-4">
