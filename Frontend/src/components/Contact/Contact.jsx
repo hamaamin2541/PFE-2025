@@ -237,7 +237,7 @@ const Contact = () => {
                         </div>
                         <div className="contact-info-content">
                           <h5>Adresse</h5>
-                          <p>123 Rue de l'Éducation, Tunis, Tunisie</p>
+                          <p>Institut Supérieur d'Informatique de Mahdia</p>
                         </div>
                       </div>
 
@@ -247,7 +247,7 @@ const Contact = () => {
                         </div>
                         <div className="contact-info-content">
                           <h5>Email</h5>
-                          <p>contact@welearn.com</p>
+                          <p>lamarimedamin1@gmail.com</p>
                         </div>
                       </div>
 
@@ -257,7 +257,7 @@ const Contact = () => {
                         </div>
                         <div className="contact-info-content">
                           <h5>Téléphone</h5>
-                          <p>+216 71 123 456</p>
+                          <p>+216 27 405 306</p>
                         </div>
                       </div>
 
