@@ -217,7 +217,7 @@ const Contact = () => {
                 <Card className="map-card">
                   <iframe
                     title="Google Maps"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12769.302712004614!2d10.16579!3d36.81897!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1302c94ebf4f91cf%3A0x9a837187e89e2ca6!2sTunis!5e0!3m2!1sfr!2stn!4v1713795079111!5m2!1sfr!2stn"
+                    src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d6494.483020546631!2d11.03233982042808!3d35.5230290425795!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sfr!2stn!4v1749030677129!5m2!1sfr!2stn"
                     className="map-iframe"
                     allowFullScreen=""
                     loading="lazy"
