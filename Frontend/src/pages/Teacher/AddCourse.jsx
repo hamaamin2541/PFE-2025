@@ -213,7 +213,6 @@ const AddCourse = () => {
 
   return (
     <Container className="add-course-container py-5">
-      <h2 className="mb-4 text-center">Créer un nouveau cours</h2>
 
       <Formik
         initialValues={{

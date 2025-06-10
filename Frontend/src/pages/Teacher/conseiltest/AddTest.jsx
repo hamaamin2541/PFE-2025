@@ -218,7 +218,6 @@ const AddTest = () => {
 
   return (
     <Container fluid>
-      <h2 className="mb-4">Ajouter un test d'évaluation</h2>
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">Test créé avec succès!</Alert>}
@@ -226,7 +225,7 @@ const AddTest = () => {
       <Form onSubmit={handleSubmit}>
         <Row>
           <Col md={8}>
-            <Card className="mb-4">
+            <Card className="mb-4 ">
               <Card.Body>
                 <Card.Title>Informations générales</Card.Title>
 
