@@ -963,7 +963,14 @@ const NotreContenu = () => {
               setSelectedCourse(null);
               setSelectedFormation(null);
               setSelectedTest(null);
-              navigate('/dashboard-student');
+
+              // Check user role and redirect to appropriate dashboard
+              const userRole = localStorage.getItem('userRole');
+              if (userRole === 'teacher') {
+                navigate('/dashboard-teacher');
+              } else {
+                navigate('/dashboard-student');
+              }
             }}
           >
             Voir dans mon tableau de bord

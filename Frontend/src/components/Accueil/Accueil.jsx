@@ -7,6 +7,15 @@ import Certif from '../../Assets/certification.jpeg';
 import Cours from '../../Assets/Cours.jpeg';
 import Time from '../../Assets/time.jpeg';
 import Acces from '../../Assets/accessibilite.jpeg';
+import gb from '../../Assets/gb.png'
+import mn from '../../Assets/mn.png'
+import mon from '../../Assets/mon.png'
+import ss from '../../Assets/ss.jpg'
+import kr from '../../Assets/kr.webp'
+
+
+
+
 import FAQ from '../FAQ';
 import StarRating from '../Rating/StarRating';
 import TestimonialForm from '../Testimonial/TestimonialForm';
@@ -515,14 +524,24 @@ function Accueil() {
         <p className="partners-description">
           Nous collaborons avec des universités et entreprises de renom pour vous offrir des formations de qualité et reconnues dans le monde professionnel.
         </p>
-        <div className="partners-logo-container">
-          {/* Remplacez ces divs par de vraies images de logos quand disponibles */}
-          <div className="partner-logo" style={{ width: '120px', height: '60px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Logo 1</div>
-          <div className="partner-logo" style={{ width: '120px', height: '60px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Logo 2</div>
-          <div className="partner-logo" style={{ width: '120px', height: '60px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Logo 3</div>
-          <div className="partner-logo" style={{ width: '120px', height: '60px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Logo 4</div>
-          <div className="partner-logo" style={{ width: '120px', height: '60px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Logo 5</div>
-        </div>
+<div className="partners-logo-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', padding: '20px' }}>
+  {/* Remplacez ces divs par de vraies images de logos quand disponibles */}
+  <div className="partner-logo" style={{ width: '140px', height: '80px', background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <img src={gb} alt="Logo 1" style={{ maxWidth: '100%', maxHeight: '60px', objectFit: 'contain' }} />
+  </div>
+  <div className="partner-logo" style={{ width: '140px', height: '80px', background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <img src={mn} alt="Logo 2" style={{ maxWidth: '100%', maxHeight: '60px', objectFit: 'contain' }} />
+  </div>
+  <div className="partner-logo" style={{ width: '140px', height: '80px', background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <img src={mon} alt="Logo 3" style={{ maxWidth: '100%', maxHeight: '60px', objectFit: 'contain' }} />
+  </div>
+  <div className="partner-logo" style={{ width: '140px', height: '80px', background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <img src={ss} alt="Logo 4" style={{ maxWidth: '100%', maxHeight: '60px', objectFit: 'contain' }} />
+  </div>
+  <div className="partner-logo" style={{ width: '140px', height: '80px', background: '#ffffff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <img src={kr} alt="Logo 5" style={{ maxWidth: '100%', maxHeight: '60px', objectFit: 'contain' }} />
+  </div>
+</div>
       </section>
 
       {/* Section d'Appel à l'Action */}

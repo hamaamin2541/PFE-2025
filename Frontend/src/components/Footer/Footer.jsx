@@ -54,7 +54,7 @@ const Footer = () => {
           <div className="col-md-3 mb-4">
             <h5 className="footer-title">Contactez-nous</h5>
             <div className="contact-info">
-              <p><FaMapMarkerAlt className="me-2" /> 123 Rue de l'Éducation, Tunis</p>
+              <p><FaMapMarkerAlt className="me-2" /> Institut Supérieur d'Informatique de Mahdia</p>
               <p><FaPhone className="me-2" /> +216 27 405 306</p>
               <p><FaEnvelope className="me-2" /> lamarimedamin1@gmail.com</p>
               <p><FaClock className="me-2" /> Lun-Ven: 9h-18h</p>
