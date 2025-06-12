@@ -6,65 +6,20 @@ import generator from 'generate-password';
 import crypto from 'crypto';
 import sendNewPassword  from '../utils/forgotPassword.js';
 
-// Create a nodemailer transporter using ethereal email for testing
-// This will create a temporary test email account for development
-async function createTestEmailAccount() {
-  try {
-    // Generate a test SMTP service account from ethereal.email
-    const testAccount = await nodemailer.createTestAccount();
-    console.log('Created test email account:');
-    console.log('- Email:', testAccount.user);
-    console.log('- Password:', testAccount.pass);
 
-    // Create a transporter using the test account
-    const testTransporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-
-    console.log('Test email transporter created successfully');
-    return testTransporter;
-  } catch (error) {
-    console.error('Failed to create test email account:', error);
-
-    // Fallback to environment variables if test account creation fails
-    console.log('Falling back to configured email settings');
-    return nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE || "gmail",
-      host: process.env.EMAIL_HOST || "smtp.gmail.com",
-      port: parseInt(process.env.EMAIL_PORT || "465"),
-      secure: process.env.EMAIL_SECURE === "false" ? false : true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      debug: process.env.NODE_ENV === 'development'
-    });
-  }
-}
-
-// Initialize the transporter
-let transporter;
-createTestEmailAccount().then(t => {
-  transporter = t;
-  console.log('Email transporter initialized');
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "lamarimedamin1@gmail.com",
+        pass: "hwfg ypvu rwri byvr", 
+    },
+    tls: {
+        rejectUnauthorized: false,
+    },
 });
 
 
-/**
- * Generate a JWT token for authentication
- * @param {string} id - User ID
- * @param {string} role - User role
- * @returns {string} JWT token
- */
+
 const generateToken = (id, role) => {
   return jwt.sign(
     { id, role },
@@ -87,6 +42,7 @@ export const register = async (req, res) => {
     // Set expiration time (24 hours from now)
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    // Create user with isVerified: false
     const user = await User.create({
       fullName,
       email,
@@ -99,111 +55,94 @@ export const register = async (req, res) => {
       ...(role === 'teacher' && { teacherId })
     });
 
-    // Send verification email
-    try {
-      console.log(`Sending verification email to: ${email}`);
-
-      const mailOptions = {
-        from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: 'Vérification de votre compte',
-        html: `
-          <html>
-          <head>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-                margin: 0;
-                padding: 0;
-              }
-              .container {
-                width: 100%;
-                max-width: 600px;
-                margin: 20px auto;
-                background-color: #ffffff;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              }
-              .header {
-                background-color: #4361ee;
-                color: white;
-                padding: 20px;
-                text-align: center;
-                border-radius: 8px 8px 0 0;
-              }
-              .content {
-                padding: 20px;
-              }
-              .verification-code {
-                font-size: 24px;
-                font-weight: bold;
-                text-align: center;
-                margin: 20px 0;
-                padding: 10px;
-                background-color: #f0f0f0;
-                border-radius: 5px;
-                letter-spacing: 5px;
-              }
-              .button {
-                background-color: #4361ee;
-                color: white;
-                padding: 15px 20px;
-                text-decoration: none;
-                border-radius: 5px;
-                display: inline-block;
-                margin: 20px 0;
-              }
-              .footer {
-                text-align: center;
-                padding: 20px;
-                font-size: 14px;
-                color: #777777;
-                border-top: 1px solid #eeeeee;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>Bienvenue chez WeLearn, ${fullName} !</h1>
-              </div>
-              <div class="content">
-                <p>Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, veuillez utiliser le code de vérification ci-dessous :</p>
-                <div class="verification-code">${verificationCode}</div>
-                <p>Ce code est valable pendant 24 heures.</p>
-                <p>Si vous n'avez pas créé de compte sur notre plateforme, veuillez ignorer cet e-mail.</p>
-              </div>
-              <div class="footer">
-                <p>&copy; 2024 WeLearn. Tous droits réservés.</p>
-              </div>
+    // Prepare mailOptions here
+    const mailOptions = {
+      from: `${process.env.EMAIL_FROM_NAME || 'WeLearn'} <${process.env.EMAIL_USER || 'no-reply@welearn.com'}>`,
+      to: email,
+      subject: 'Vérification de votre compte',
+      html: `
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+            .container { width: 100%; max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+            .header { background-color: #4361ee; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { padding: 20px; }
+            .verification-code { font-size: 32px; font-weight: bold; color: #4361ee; margin: 20px 0; }
+            .button { background-color: #4361ee; color: white; padding: 15px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; font-size: 14px; color: #777777; border-top: 1px solid #eeeeee; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Bienvenue chez WeLearn, ${fullName} !</h1>
             </div>
-          </body>
-          </html>
-        `
-      };
+            <div class="content">
+              <p>Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, veuillez utiliser le code de vérification ci-dessous :</p>
+              <div class="verification-code" style="font-size: 32px; font-weight: bold; color: #4361ee; margin: 20px 0;">${verificationCode}</div>
+              <p>Ce code est valable pendant 24 heures.</p>
+              <p>Si vous n'avez pas créé de compte sur notre plateforme, veuillez ignorer cet e-mail.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2024 WeLearn. Tous droits réservés.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `Bonjour ${fullName},
 
+Merci de vous être inscrit sur notre plateforme.
+
+Votre code de vérification est : ${verificationCode}
+
+Ce code est valable pendant 24 heures.
+
+Si vous n'avez pas créé de compte sur notre plateforme, veuillez ignorer cet e-mail.
+
+Cordialement,
+L'équipe WeLearn
+`
+    };
+
+    let previewUrl = null;
+    try {
+     
       const info = await transporter.sendMail(mailOptions);
       console.log('Verification email sent successfully');
       console.log('Message ID:', info.messageId);
+    
+      console.log('DEBUG: Verification code for', email, 'is', verificationCode);
+
+      
+      if (process.env.NODE_ENV !== 'production' && t.get('host') === 'smtp.ethereal.email') {
+        previewUrl = require('nodemailer').getTestMessageUrl(info);
+        if (previewUrl) {
+          global.lastEmailPreviewUrl = previewUrl;
+          console.log('Preview URL:', previewUrl);
+        }
+      }
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
-      // Continue with the response even if email fails
+     
     }
 
-    // Don't send token yet since the account is not verified
+    // Do NOT send token or activate account yet
     user.password = undefined;
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please check your email for verification code.',
+      message: 'Account created. Please check your email for the verification code to activate your account.',
       user: {
         _id: user._id,
         email: user.email,
         fullName: user.fullName,
         role: user.role,
         isVerified: user.isVerified
-      }
+      },
+      // For development: return preview URL if available
+      ...(previewUrl && { previewUrl })
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -352,7 +291,8 @@ export const add_newuser = async (req, res) => {
         `
       };
 
-      const info = await transporter.sendMail(mailOptions);
+      const t = await getTransporter();
+      const info = await t.sendMail(mailOptions);
       console.log('Welcome email sent successfully');
       console.log('Message ID:', info.messageId);
 
@@ -364,7 +304,7 @@ export const add_newuser = async (req, res) => {
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError);
 
-      // Still return success since the user was created
+      
       return res.status(201).json({
         success: true,
         token,
@@ -390,51 +330,6 @@ export const add_newuser = async (req, res) => {
   }
 };
 
-export const createAdmin = async (req, res) => {
-  try {
-    const { fullName, email, password, secretKey } = req.body;
-
-    // Vérifier la clé secrète (à définir dans votre fichier .env)
-    if (secretKey !== process.env.ADMIN_SECRET_KEY) {
-      return res.status(401).json({
-        success: false,
-        message: 'Clé secrète invalide'
-      });
-    }
-
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'Un utilisateur avec cet email existe déjà'
-      });
-    }
-
-    const user = await User.create({
-      fullName,
-      email,
-      password,
-      role: 'admin',
-      isVerified: true // Set admin account as verified by default
-    });
-
-    const token = generateToken(user._id, user.role);
-    user.password = undefined;
-
-    res.status(201).json({
-      success: true,
-      token,
-      user,
-      message: 'Compte administrateur créé avec succès'
-    });
-  } catch (error) {
-    console.error('Create admin error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
 
 export const login = async (req, res) => {
   try {
@@ -449,7 +344,6 @@ export const login = async (req, res) => {
     }
 
     const user = await User.findOne({ email })
-    console.log(user);
 
     if (!user) {
       return res.status(401).json({
@@ -461,7 +355,7 @@ export const login = async (req, res) => {
       console.log(isMatch);
 
       if (isMatch) {
-        // Check if the account is verified - bypass for admin accounts
+      
         if (!user.isVerified && user.role !== 'admin') {
           return res.status(403).json({
             success: false,
@@ -471,7 +365,7 @@ export const login = async (req, res) => {
           });
         }
 
-        // If it's an admin account, automatically mark it as verified
+        
         if (user.role === 'admin' && !user.isVerified) {
           user.isVerified = true;
           await user.save();
@@ -489,7 +383,7 @@ export const login = async (req, res) => {
       } else {
         return res.status(401).json({
           success: false,
-          message: 'Invalid credentials password'
+          message: 'Invalid credentials user'
         });
       }
     }
@@ -502,7 +396,7 @@ export const login = async (req, res) => {
   }
 };
 
-// Password reset request
+
 export const resetPasswordRequest = async (req, res) => {
   try {
     const { email } = req.body;
@@ -514,10 +408,9 @@ export const resetPasswordRequest = async (req, res) => {
       });
     }
 
-    // Find user by email
+    
     const user = await User.findOne({ email });
 
-    // Even if user doesn't exist, we don't want to reveal that for security reasons
     if (!user) {
       return res.status(200).json({
         success: true,
@@ -525,16 +418,14 @@ export const resetPasswordRequest = async (req, res) => {
       });
     }
 
-    // Generate reset token
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
 
-    // Save token to user
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = resetTokenExpiry;
     await user.save();
 
-    // Create reset URL - make sure to use the correct port (5173 for Vite dev server)
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
     console.log(`Generated reset URL: ${resetUrl}`);
 
@@ -542,11 +433,7 @@ export const resetPasswordRequest = async (req, res) => {
     try {
       console.log(`Attempting to send password reset email to: ${email}`);
 
-      // Make sure transporter is initialized
-      if (!transporter) {
-        console.log('Transporter not initialized yet, creating it now...');
-        transporter = await createTestEmailAccount();
-      }
+     
 
       const mailOptions = {
         from: '"WeLearn Password Reset" <reset@welearn.com>',
@@ -635,15 +522,14 @@ export const resetPasswordRequest = async (req, res) => {
         `
       };
 
+   
       const info = await transporter.sendMail(mailOptions);
-      console.log('Password reset email sent successfully');
-      console.log('Message ID:', info.messageId);
+   
 
       // Get the preview URL for Ethereal emails
       const previewUrl = nodemailer.getTestMessageUrl(info);
       console.log('Preview URL:', previewUrl);
 
-      // Store the preview URL in a global variable or database for access
       global.lastEmailPreviewUrl = previewUrl;
       console.log('IMPORTANT: To view the email, open this URL in your browser:', previewUrl);
 
@@ -667,7 +553,6 @@ export const resetPasswordRequest = async (req, res) => {
 };
 
 // Reset password with token
-// Verify account with code
 export const verifyAccount = async (req, res) => {
   try {
     const { userId, verificationCode } = req.body;
@@ -689,7 +574,7 @@ export const verifyAccount = async (req, res) => {
       });
     }
 
-    // Check if already verified
+    // Only activate if not already verified
     if (user.isVerified) {
       return res.status(400).json({
         success: false,
@@ -697,7 +582,7 @@ export const verifyAccount = async (req, res) => {
       });
     }
 
-    // Check if verification code is valid and not expired
+    // Check code and expiration
     if (user.verificationCode !== verificationCode) {
       return res.status(400).json({
         success: false,
@@ -712,7 +597,7 @@ export const verifyAccount = async (req, res) => {
       });
     }
 
-    // Mark account as verified
+    // Activate account
     user.isVerified = true;
     user.verificationCode = undefined;
     user.verificationExpires = undefined;
@@ -844,17 +729,14 @@ export const resendVerificationCode = async (req, res) => {
       });
     }
 
-    // Generate a new verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    // Set new expiration time (24 hours from now)
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Update user with new verification code
     user.verificationCode = verificationCode;
     user.verificationExpires = verificationExpires;
     await user.save();
 
-    // Send new verification email
+    let previewUrl = null;
     try {
       console.log(`Resending verification email to: ${user.email}`);
 
@@ -925,12 +807,28 @@ export const resendVerificationCode = async (req, res) => {
             </div>
           </body>
           </html>
-        `
+        `,
+        text: `Bonjour,
+
+Voici votre nouveau code de vérification pour activer votre compte : ${verificationCode}
+
+Ce code est valable pendant 24 heures.
+
+Cordialement,
+L'équipe WeLearn
+`
       };
 
       const info = await transporter.sendMail(mailOptions);
-      console.log('New verification email sent successfully');
-      console.log('Message ID:', info.messageId);
+
+
+      if (process.env.NODE_ENV !== 'production' && t.get('host') === 'smtp.ethereal.email') {
+        previewUrl = require('nodemailer').getTestMessageUrl(info);
+        if (previewUrl) {
+          global.lastEmailPreviewUrl = previewUrl;
+          console.log('Preview URL:', previewUrl);
+        }
+      }
     } catch (emailError) {
       console.error('Error sending new verification email:', emailError);
       return res.status(500).json({
@@ -941,7 +839,8 @@ export const resendVerificationCode = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'New verification code sent successfully'
+      message: 'New verification code sent successfully',
+      ...(previewUrl && { previewUrl })
     });
   } catch (error) {
     console.error('Resend verification code error:', error);
@@ -965,7 +864,6 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Find user with valid token
     console.log(`Looking for user with reset token: ${token.substring(0, 10)}...`);
     const user = await User.findOne({
       resetPasswordToken: token,
@@ -982,13 +880,11 @@ export const resetPassword = async (req, res) => {
 
     console.log(`Found user: ${user.email} with valid reset token`);
 
-    // Update password
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    // Send confirmation email with better error handling
     try {
       console.log(`Attempting to send password change confirmation email to: ${user.email}`);
 
@@ -1051,12 +947,12 @@ export const resetPassword = async (req, res) => {
         `
       };
 
-      const info = await transporter.sendMail(mailOptions);
+      const t = await getTransporter();
+      const info = await t.sendMail(mailOptions);
       console.log('Password change confirmation email sent successfully');
       console.log('Message ID:', info.messageId);
     } catch (emailError) {
       console.error('Error sending password change confirmation email:', emailError);
-      // Continue with the response even if email fails
     }
 
     console.log('Password reset successful for user:', user.email);
@@ -1073,7 +969,6 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// Send a new password to user's email
 export const sendPasswordToEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -1085,7 +980,6 @@ export const sendPasswordToEmail = async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -1095,7 +989,6 @@ export const sendPasswordToEmail = async (req, res) => {
       });
     }
 
-    // Generate a new random password
     const newPassword = generator.generate({
       length: 12,
       numbers: true,
@@ -1105,11 +998,10 @@ export const sendPasswordToEmail = async (req, res) => {
       strict: true
     });
 
-    // Update user's password in the database
     user.password = newPassword;
     await user.save();
 
-    // Send the new password to the user's email
+   
     try {
       console.log(`Sending new password to: ${user.email}`);
 
@@ -1124,10 +1016,9 @@ export const sendPasswordToEmail = async (req, res) => {
     } catch (emailError) {
       console.error('Error sending new password email:', emailError);
 
-      // Revert the password change if email fails
       const oldUser = await User.findOne({ email });
       if (oldUser) {
-        oldUser.password = user.password; // Revert to previous password hash
+        oldUser.password = user.password; 
         await oldUser.save();
       }
 

@@ -1,3 +1,4 @@
+// server.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -7,39 +8,12 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import http from 'http';
 import { Server } from 'socket.io';
-
-// Get the directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables first, before any other imports
-// Explicitly specify the path to the .env file
-const envPath = join(__dirname, '.env');
-console.log('Looking for .env file at:', envPath);
-if (fs.existsSync(envPath)) {
-  console.log('.env file exists');
-} else {
-  console.log('.env file does NOT exist at this location');
-}
-
-const result = dotenv.config({ path: envPath });
-console.log('Dotenv config result:', result.error ? `Error loading .env file: ${result.error.message}` : '.env file loaded successfully');
-
-// Check if OPENAI_API_KEY is loaded
-if (process.env.OPENAI_API_KEY) {
-  const keyPreview = process.env.OPENAI_API_KEY.substring(0, 5) + '...';
-  console.log(`OPENAI_API_KEY is loaded (starts with ${keyPreview}, length: ${process.env.OPENAI_API_KEY.length})`);
-} else {
-  console.log('OPENAI_API_KEY is NOT loaded');
-}
-
-console.log('Environment variables loaded:', Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('KEY')).join(', '));
-
-import connectDB from './config/db.js';
-import { errorHandler } from './utils/errorHandler.js'; // Import custom error handler
 import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-// Import routes
+import bodyParser from 'body-parser';
+
+// Controllers
+import { enroll } from './controllers/enrollmentController.js';
+
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
@@ -68,119 +42,148 @@ import postRoutes from './routes/postRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 
-// Make sure you have JWT_SECRET in your environment variables
-if (!process.env.JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET is not defined.');
-  process.exit(1);
-}
+// Utilities
+import connectDB from './config/db.js';
+import { errorHandler } from './utils/errorHandler.js';
 
+// __dirname setup
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
+
+// Load environment
+dotenv.config({ path: join(__dirname, '.env') });
+
+// Connect to DB
 connectDB();
 
-// Ensure uploads directory exists
-const uploadsDir = join(__dirname, 'uploads', 'profiles');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Stripe setup
+const stripe       = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2022-11-15' });
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-// Create required directories if they don't exist
-const publicImagesDir = join(__dirname, 'public/images');
-const uploadsBaseDir = join(__dirname, 'uploads');
-const uploadsVideosDir = join(__dirname, 'uploads/videos');
-const uploadsProfilesDir = join(__dirname, 'uploads/profiles');
-const uploadsComplaintsDir = join(__dirname, 'uploads/complaints');
-const uploadsExportsDir = join(__dirname, 'uploads/exports');
-const uploadsCertificatesDir = join(__dirname, 'uploads/certificates');
-
-[publicImagesDir, uploadsBaseDir, uploadsVideosDir, uploadsProfilesDir, uploadsComplaintsDir, uploadsExportsDir, uploadsCertificatesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    console.log(`Created directory: ${dir}`);
-  }
+// Ensure upload dirs
+[
+  'uploads',
+  'uploads/profiles',
+  'uploads/videos',
+  'uploads/complaints',
+  'uploads/exports',
+  'uploads/certificates'
+].forEach(dir => {
+  const full = join(__dirname, dir);
+  if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
 });
 
 const app = express();
 
-// Parse CORS origins from environment variable or use default in development
+// CORS
 const corsOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
-  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
-
-console.log('CORS origins:', corsOrigins);
-
-app.use(cors({
-  origin: corsOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-}));
-
-// Serve static files
-app.use('/uploads', express.static(join(__dirname, 'uploads')));
-app.use('/images', express.static(join(__dirname, 'public/images')));
-
-app.use(express.json());
+  : ['http://localhost:5173'];
+app.use(cors({ origin: corsOrigins, credentials: true }));
 app.use(morgan('dev'));
 
-// Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/teacher-advice', teacherAdviceRouter);
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/tests', testRoutes);
-app.use('/api/formations', formationRoutes);
-app.use('/api/enrollments', enrollmentRoutes);
-app.use('/api/ratings', ratingRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/complaints', complaintRoutes);
-app.use('/api/contact', contactMessageRoutes);
-app.use('/api/teacher-ratings', teacherRatingRoutes);
-app.use('/api/testimonials', testimonialRoutes);
-app.use('/api/exports', exportRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/certificates', certificateRoutes);
-app.use('/api/study-sessions', studySessionRoutes);
-app.use('/api/gamification', gamificationRoutes);
-app.use('/api/study-time', studyTimeRoutes);
-app.use('/api/course-questions', courseQuestionRoutes);
-app.use('/api/assistants', assistantRoutes);
-app.use('/api/assistant', assistantHelpRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/recommendations', recommendationRoutes);
-app.use('/api/documents', documentRoutes);
-app.post('/create-checkout-session', async (req, res) => {
-  try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: { name: 'Produit de test' },
-          unit_amount: 1000,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: 'http://localhost:5173/success',
-      cancel_url:  'http://localhost:5173/cancel',
-    });
-    res.json({ id: session.id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Impossible de créer la session' });
-  }
-});
+// Serve static
+app.use('/uploads', express.static(join(__dirname, 'uploads')));
+app.use('/images' , express.static(join(__dirname, 'public/images')));
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error details:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
+// Stripe Webhook (raw body)
+app.post(
+  '/webhook',
+  bodyParser.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error('⚠️ Webhook signature failed.', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const { itemId, itemType, userId } = session.metadata;
+
+      // Simulate req/res for enroll()
+      const fakeReq = { user: { _id: userId }, body: { itemId, itemType } };
+      const fakeRes = {
+        status: code => ({ json: obj => console.log('[ENROLL]', code, obj) })
+      };
+
+      try {
+        await enroll(fakeReq, fakeRes);
+        console.log(`✅ User ${userId} enrolled in ${itemType} ${itemId}`);
+      } catch (e) {
+        console.error('❌ Enrollment error:', e);
+      }
+    }
+
+    res.json({ received: true });
+  }
+);
+
+// Body parser
+app.use(express.json());
+
+// Mount routes
+app.use('/api/auth'            , authRoutes);
+app.use('/api/users'           , userRoutes);
+app.use('/api/courses'         , courseRoutes);
+app.use('/api/teacher-advice'  , teacherAdviceRouter);
+app.use('/api/messages'        , messageRoutes);
+app.use('/api/tests'           , testRoutes);
+app.use('/api/formations'      , formationRoutes);
+app.use('/api/enrollments'     , enrollmentRoutes);
+app.use('/api/ratings'         , ratingRoutes);
+app.use('/api/admin'           , adminRoutes);
+app.use('/api/complaints'      , complaintRoutes);
+app.use('/api/contact'         , contactMessageRoutes);
+app.use('/api/teacher-ratings' , teacherRatingRoutes);
+app.use('/api/testimonials'    , testimonialRoutes);
+app.use('/api/exports'         , exportRoutes);
+app.use('/api/settings'        , settingsRoutes);
+app.use('/api/ai'              , aiRoutes);
+app.use('/api/certificates'    , certificateRoutes);
+app.use('/api/study-sessions'  , studySessionRoutes);
+app.use('/api/gamification'    , gamificationRoutes);
+app.use('/api/study-time'      , studyTimeRoutes);
+app.use('/api/course-questions', courseQuestionRoutes);
+app.use('/api/assistants'      , assistantRoutes);
+app.use('/api/assistant'       , assistantHelpRoutes);
+app.use('/api/posts'           , postRoutes);
+app.use('/api/recommendations' , recommendationRoutes);
+app.use('/api/documents'       , documentRoutes);
+
+// Create checkout session
+app.post(
+  '/create-checkout-session',
+  async (req, res) => {
+    const { itemId, itemType, amount } = req.body;
+    const userId = req.user._id.toString();
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'eur',
+            product_data: { name: `Achat ${itemType}` },
+            unit_amount: Math.round(amount * 100),
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url : `http://localhost:5173/cancel`,
+        metadata: { itemId, itemType, userId }
+      });
+      res.json({ id: session.id });
+    } catch (err) {
+      console.error('Stripe session error:', err);
+      res.status(500).json({ error: 'Impossible de créer la session' });
+    }
+  }
+);
 
 const PORT = process.env.PORT || 5001;
 
@@ -255,3 +258,4 @@ server.listen(PORT, () => {
 
 // Error handling middleware
 app.use(errorHandler); // Use the custom error handler
+

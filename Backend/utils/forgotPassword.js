@@ -6,16 +6,23 @@ dotenv.config();
 // Function to send a new password to user's email
 const sendNewPassword = async (userName, userEmail, newPassword) => {
     try {
+        // Use the same environment variables as in authController.js
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            service: process.env.EMAIL_SERVICE || 'gmail',
+            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.EMAIL_PORT || "465"),
+            secure: process.env.EMAIL_SECURE === "false" ? false : true,
             auth: {
-                user: process.env.Gmail,
-                pass: process.env.gmailApp,
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
             },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         const mailOptions = {
-            from: `"WeLearn Support" <${process.env.Gmail}>`,
+            from: `"WeLearn Support" <${process.env.EMAIL_USER}>`,
             to: userEmail,
             subject: `Votre nouveau mot de passe WeLearn`,
             text: `

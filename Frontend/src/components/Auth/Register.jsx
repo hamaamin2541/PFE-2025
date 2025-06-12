@@ -158,16 +158,15 @@ const Register = () => {
           }, 3000);
         } else {
           // If account doesn't need verification (unlikely with our new system)
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.user.role);
-          localStorage.setItem('user', JSON.stringify(data.user));
-
+          // localStorage.setItem('token', data.token);
+          // localStorage.setItem('userRole', data.user.role);
+          // localStorage.setItem('user', JSON.stringify(data.user));
           // Navigate based on role
-          if (data.user.role === 'teacher') {
-            navigate('/dashboard-teacher');
-          } else if (data.user.role === 'student') {
-            navigate('/dashboard-student');
-          }
+          // if (data.user.role === 'teacher') {
+          //   navigate('/dashboard-teacher');
+          // } else if (data.user.role === 'student') {
+          //   navigate('/dashboard-student');
+          // }
         }
       } else {
         setError(data.message || 'Erreur lors de l\'inscription');

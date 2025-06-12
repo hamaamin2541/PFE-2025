@@ -9,7 +9,9 @@ import FAQ from '../components/FAQ';
 import { Modal } from 'react-bootstrap';
 import Footer from '../components/Footer/Footer';
 import PurchaseForm from '../components/PurchaseForm';
-
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe } from '@stripe/react-stripe-js';
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const categories = {
   'Développement Web': ['HTML & CSS', 'JavaScript', 'React', 'Node.js', 'PHP', 'Python Web'],
@@ -105,14 +107,44 @@ const NotreContenu = () => {
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [showFormationModal, setShowFormationModal] = useState(false);
-  const [showTestModal, setShowTestModal] = useState(false);
+
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
   const [currentItemType, setCurrentItemType] = useState('course'); // 'course', 'formation', or 'test'
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
   const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
+
+
+
+function CheckoutForm({ amount }) {
+  const stripe = useStripe();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (!stripe) return;
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
+      const { id: sessionId } = await res.json();
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) console.error(error.message);
+    } catch (err) {
+      console.error('Erreur création session :', err);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <h5>Payer {amount} €</h5>
+      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
+      </Button>
+    </div>
+  );
+}
+
 
 
   // Fetch all courses, tests, and formations from API
@@ -636,7 +668,7 @@ const NotreContenu = () => {
                   </Card>
                 </Col>
               ))
-            ) : (
+            ) :(
               <Col xs={12} className="text-center">
                 <p>Aucune formation disponible pour le moment</p>
               </Col>
@@ -855,19 +887,11 @@ const NotreContenu = () => {
                 </div>
               )}
             </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>
-                Retour
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setShowCourseModal(false);
-                  setShowPurchaseForm(true);
-                }}
-              >
-                Acheter ({selectedCourse.price}€)
-              </Button>
+             <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
+              <Elements stripe={stripePromise}>
+                <CheckoutForm amount={selectedCourse.price} />
+              </Elements>
             </Modal.Footer>
           </>
         )}
@@ -898,8 +922,7 @@ const NotreContenu = () => {
                   'test'
                 }
                 onPurchaseComplete={() => {
-                  setShowPurchaseForm(false);
-                  setShowPurchaseSuccess(true);
+                  handleClick()
                 }}
                 onCancel={() => {
                   setShowPurchaseForm(false);

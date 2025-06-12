@@ -54,7 +54,6 @@ const ITEM_MODELS = {
   test:      Test
 };
 
-// Pour savoir dans quel champ de l'item on pousse l'utilisateur
 const ITEM_PUSH_FIELD = {
   course:    'students',
   formation: 'students',
@@ -67,7 +66,6 @@ export const enroll = async (req, res) => {
     const { itemId, itemType } = req.body;
     const userId = req.user._id;
 
-    // 1. Validation basique
     const validTypes = ['course','formation','test'];
     if (!itemId || !validTypes.includes(itemType)) {
       return res.status(400).json({
@@ -76,11 +74,10 @@ export const enroll = async (req, res) => {
       });
     }
 
-    // 2. Filtre AND : user + itemType + champ correspondant
     const filter = {
       user:       userId,
-      itemType,             // s'assure de ne pas confondre plusieurs types
-      [itemType]: itemId    // ex. { test: ObjectId(...) }
+      itemType,            
+      [itemType]: itemId   
     };
 
     let enrollment = await Enrollment.findOne(filter);
