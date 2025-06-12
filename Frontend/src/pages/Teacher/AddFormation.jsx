@@ -226,12 +226,11 @@ const AddFormation = () => {
 
   return (
     <Container fluid>
-      <h2 className="mb-4">Ajouter une formation</h2>
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">Formation créée avec succès!</Alert>}
 
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} className=''>
         <Row>
           <Col md={8}>
             <Card className="mb-4">

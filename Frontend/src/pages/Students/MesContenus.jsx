@@ -7,7 +7,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import { useNavigate } from 'react-router-dom';
 import CourseRecommendations from '../../components/Recommendation/CourseRecommendations';
-import './DashboardStudent.css';
+import './MesContenus.css';
 
 
 const MesContenus = () => {
@@ -498,18 +498,39 @@ const MesContenus = () => {
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : filteredEnrollments.length === 0 ? (
-        <>
-          <div className="dashboard-card text-center py-5 mb-4">
-            <BookOpen size={48} className="text-muted mb-3" />
-            <h4>Aucun contenu trouvé</h4>
-            <p className="text-muted">Essayez de modifier vos critères de recherche ou inscrivez-vous à de nouveaux contenus</p>
-          </div>
-
-          {/* Show recommendations when no content is found */}
-          <div className="mt-5">
-            <CourseRecommendations limit={4} />
-          </div>
-        </>
+        <><div className="d-flex flex-column align-items-center justify-content-center"
+              style={{
+                minHeight: '400px',
+                backgroundColor: 'var(--white)',
+                borderRadius: 'var(--border-radius-lg)',
+                boxShadow: 'var(--shadow-sm)',
+                padding: '2rem'
+              }}>
+              <div className="text-center">
+                <div className="mb-4">
+                  <BookOpen
+                    size={80}
+                    className="text-muted"
+                    style={{ opacity: 0.5 }} />
+                </div>
+                <h3 className="mb-3" style={{ color: 'var(--dark)' }}>
+                  Aucun contenu trouvé
+                </h3>
+                <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                  Essayez de modifier vos critères de recherche ou inscrivez-vous à de nouveaux contenus
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/courses')}
+                  className="mt-2"
+                >
+                  Découvrir les cours
+                </Button>
+              </div>
+            </div>
+              <div className="mt-5">
+                <CourseRecommendations limit={4} />
+              </div></>
       ) : (
         <>
           <Row className="g-4">

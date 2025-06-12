@@ -155,7 +155,10 @@ const AdminLayout = () => {
 
             {/* Right Navigation Items */}
             <Nav className="ms-auto d-flex align-items-center">
-              {/* Notifications Dropdown */}              <Dropdown align="end" className="me-3">                  <Dropdown.Toggle variant="light" id="dropdown-notifications" className="notification-toggle border-0 position-relative d-flex align-items-center justify-content-center gap-2">                  <Bell size={20} />
+              {/* Notifications Dropdown */}              
+              <Dropdown align="end" className="me-3">                  
+                <Dropdown.Toggle variant="light" id="dropdown-notifications" className="notification-toggle border-0 position-relative d-flex align-items-center justify-content-center gap-2">                  
+                <Bell size={20} />
                   <span className={`d-inline-flex align-items-center justify-content-center rounded-circle ${totalNotifications > 0 ? 'bg-danger' : 'bg-secondary'}`} 
                         style={{ width: '22px', height: '22px', fontSize: '12px' }}>
                     <span className="text-white">
@@ -251,10 +254,6 @@ const AdminLayout = () => {
                     <div className="user-email">{user?.email}</div>
                   </div>
                   <Dropdown.Divider />
-                  <Dropdown.Item onClick={() => navigate('/admin/profile')} className="user-menu-item">
-                    <User size={16} className="me-2" />
-                    Profil
-                  </Dropdown.Item>
                   <Dropdown.Item onClick={() => navigate('/admin/settings')} className="user-menu-item">
                     <User size={16} className="me-2" />
                     Paramètres

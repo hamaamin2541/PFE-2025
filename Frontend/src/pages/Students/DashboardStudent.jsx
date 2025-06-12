@@ -913,38 +913,38 @@ const DashboardStudent = () => {
       </div>
     );
   };
-
   const renderNotifications = () => (
     <div className="notification-dropdown" style={{ display: showNotifications ? 'block' : 'none' }}>
       {notifications.length > 0 ? (
         notifications.map((notif, index) => (
           <div
             key={index}
-            className="notification-item p-2"
+            className="notification-item"
             onClick={() => {
               if (notif.action) {
                 notif.action();
                 setShowNotifications(false);
               }
             }}
-            style={{ cursor: notif.action ? 'pointer' : 'default' }}
           >
-            <div className="d-flex justify-content-between align-items-center">
-              <p className="mb-1">{notif.message}</p>
+            <div className="d-flex justify-content-between align-items-center mb-1">
+              <p>{notif.message}</p>
               {notif.type === 'study-session' && (
                 <Badge bg="warning" pill>Session</Badge>
               )}
             </div>
-            <small className="text-muted">{notif.time}</small>
-            {notif.type === 'study-session' && (
-              <div className="mt-1">
+            <div className="d-flex justify-content-between align-items-center">
+              <small>{notif.time}</small>
+              {notif.type === 'study-session' && (
                 <small className="text-primary">Cliquez pour voir l'invitation</small>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))
       ) : (
-        <p className="text-center p-3">Aucune notification</p>
+        <div className="no-notifications">
+          <p>Aucune notification</p>
+        </div>
       )}
     </div>
   );
@@ -1058,21 +1058,19 @@ const DashboardStudent = () => {
         </Col>
 
         {/* Main content */}
-        <Col md={9} className="teacher-content">
-          <div className="dashboard-header p-4">
-            <div className="d-flex justify-content-between align-items-center">
-              <h2>{activeTab === 'overview' && 'Vue d\'ensemble'}
-                  {activeTab === 'contenus' && 'Mes Contenus'}
-                  {activeTab === 'messages' && 'Messages'}
-                  {activeTab === 'parametres' && 'Paramètres'}
-                  {activeTab === 'studySessions' && 'Sessions d\'étude'}
-                  {activeTab === 'communityWall' && 'Mur Communautaire'}
-                  {activeTab === 'assistant' && 'Tableau de Bord Assistant'}
-              </h2>
-              <div className="d-flex align-items-center">
-                <div className="notification-icon me-3 position-relative">
+        <Col md={9} className="teacher-content">          <div className="dashboard-header">
+            <div className="header-container">
+              <h2>
+                {activeTab === 'overview' && 'Vue d\'ensemble'}
+                {activeTab === 'contenus' && 'Mes Contenus'}
+                {activeTab === 'messages' && 'Messages'}
+                {activeTab === 'parametres' && 'Paramètres'}
+                {activeTab === 'studySessions' && 'Sessions d\'étude'}
+                {activeTab === 'communityWall' && 'Mur Communautaire'}
+                {activeTab === 'assistant' && 'Tableau de Bord Assistant'}
+              </h2>              <div className="right-section">
+                <div className={`notification-icon ${notifications.length > 0 ? 'has-notifications' : ''}`}>
                   <Bell
-                    size={20}
                     className="cursor-pointer"
                     onClick={() => setShowNotifications(!showNotifications)}
                   />
@@ -1081,11 +1079,11 @@ const DashboardStudent = () => {
                   )}
                   {renderNotifications()}
                 </div>
-                <div className="profile d-flex align-items-center">
-                  <Image src={profileImage} roundedCircle width={40} height={40} className="me-2" />
-                  <div>
-                    <div className="profile-name">{studentData?.fullName || 'Loading...'}</div>
-                    <small className="text-muted">{studentData?.studentCard || '#ID'}</small>
+                <div className="profile">
+                  <Image src={profileImage} roundedCircle width={40} height={40} />
+                  <div className="profile-info">
+                    <span className="profile-name">{studentData?.fullName || 'Loading...'}</span>
+                    <small>{studentData?.studentCard || '#ID'}</small>
                   </div>
                 </div>
               </div>

@@ -144,7 +144,6 @@ const Parametres = ({
 
   return (
     <div className="settings-page">
-      <h2 className="mb-4">Paramètres du compte</h2>
 
       {successMessage && (
         <Alert variant="success" className="mb-4 d-flex align-items-center">

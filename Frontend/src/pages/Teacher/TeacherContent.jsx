@@ -160,12 +160,12 @@ export const TeacherContent = () => {
               />
             )}
             <Dropdown className="position-absolute top-0 end-0 m-2">
-              <Dropdown.Toggle variant="light" size="sm" className="rounded-circle">
+              <Dropdown.Toggle variant="light" size="sm" className="">
                 <MoreVertical size={16} />
               </Dropdown.Toggle>
-              <Dropdown.Menu>
+              <Dropdown.Menu className='me-4'>
                 <Dropdown.Item onClick={() => handleEdit(item._id, itemType)}>
-                  <Edit size={16} className="me-2" />
+                  <Edit size={16} />
                   Modifier
                 </Dropdown.Item>
                 <Dropdown.Item

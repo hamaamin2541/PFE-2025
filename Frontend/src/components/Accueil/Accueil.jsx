@@ -358,7 +358,7 @@ function Accueil() {
           <p>Rejoignez une communauté dynamique et développez vos compétences.</p>
           {!userAuthenticated && (
             <div className="hero-buttons">
-              <button className="btn-secondary" onClick={goToRegister}>Rejoindre un cours</button>
+              <button className="btn-primary" onClick={goToRegister}>Rejoindre un cours</button>
             </div>
           )}
           <div className="hero-features">

@@ -85,7 +85,7 @@ const Overview = () => {
 
   return (
     <div className="overview-container">
-      <h3 className="overview-title">Vue d'ensemble</h3>
+
 
       {isLoading || gamificationLoading ? (
         <Card className="text-center p-4 mb-4">

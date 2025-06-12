@@ -157,7 +157,6 @@ const StudySessions = () => {
 
   return (
     <div className="study-sessions-container">
-      <h3 className="mb-4">Mes Sessions d'Étude</h3>
 
       {studySessions.length === 0 ? (
         <Alert variant="info">

@@ -64,22 +64,70 @@
 }
 
 .notification-icon {
+  position: relative;
   cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
+
 
 .notification-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: 0;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
   background-color: #f72585;
   color: white;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
   font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #fff;
+}
+.notification-icon:hover, .notification-icon:focus {
+  background-color: rgba(67, 97, 238, 0.15);
+  color: #4361ee;
+  box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
+}
+
+.notification-icon:focus {
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+  outline: none;
+}
+
+.notification-icon svg {
+  transition: all 0.3s ease;
+  color: #4361ee;
+  width: 24px;
+  height: 24px;
+  stroke-width: 2px;
+}
+.notification-icon:hover svg {
+  transform: scale(1.1) rotate(12deg);
+}
+
+
+@keyframes bellShake {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(5deg); }
+  30% { transform: rotate(-5deg); }
+  45% { transform: rotate(4deg); }
+  60% { transform: rotate(-4deg); }
+  75% { transform: rotate(2deg); }
+  85% { transform: rotate(-2deg); }
+  92% { transform: rotate(1deg); }
+  100% { transform: rotate(0); }
+}
+
+.notification-icon:has(+ .dropdown-menu.show) svg {
+  animation: bellShake 0.8s ease-out;
 }
 
 .profile-name {
@@ -116,9 +164,83 @@
   background-color: #e9ecef;
 }
 
+/* Dashboard Header Styles */
+.dashboard-header {
+  background-color: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
 
+.dashboard-header .header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
 
+.dashboard-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
 
+.dashboard-header .right-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.notification-icon {
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  background-color: #f72585;
+  color: white;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #fff;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.profile small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
 
 /* DashboardStudent.css */
 
@@ -221,87 +343,99 @@
 /* Notification styles */
 .notification-dropdown {
   position: absolute;
-  top: 100%;
-  right: 0;
-  width: 300px;
+  top: calc(100% + 10px);
+  right: -10px;
+  width: 320px;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   max-height: 400px;
   overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-dropdown:before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .notification-item {
-  border-bottom: 1px solid #eee;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background-color: rgba(67, 97, 238, 0.05);
 }
 
 .notification-item:last-child {
   border-bottom: none;
 }
 
-.notification-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #dc3545;
-  color: white;
-  border-radius: 50%;
-  padding: 0.25rem 0.5rem;
+.notification-item p {
+  margin: 0;
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.notification-item small {
+  color: #6c757d;
   font-size: 0.75rem;
 }
 
-.cursor-pointer {
-  cursor: pointer;
-}
-
-/* Progress circle styles */
-.progress-circle {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background-color: #f8f9fa;
-  border: 5px solid #0d6efd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.progress-circle h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-/* Points badge styles */
-.points-badge {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.8rem;
-}
-
-.points-gold {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.points-silver {
-  background-color: #6c757d;
-  color: white;
-}
-
-.points-bronze {
-  background-color: #cd7f32;
-  color: white;
-}
-
-.points-sm {
+.notification-item .badge {
   font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25em 0.75em;
+  border-radius: 12px;
 }
 
-.points-lg {
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
+/* Custom scrollbar for the dropdown */
+.notification-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.notification-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.notification-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Empty state styling */
+.notification-dropdown .no-notifications {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
 }
