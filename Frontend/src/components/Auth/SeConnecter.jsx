@@ -64,6 +64,7 @@ function SeConnecter({ onCloseModal }) {
       });
 
       const data = await response.json();
+      console.log(data)
 
       // Check if account needs verification
       if (response.status === 403 && data.requiresVerification) {

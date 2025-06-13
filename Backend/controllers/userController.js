@@ -29,6 +29,7 @@ export const upload = multer({ storage: storage });
 
 export const uploadProfileImage = async (req, res) => {
   try {
+    console.log("object")
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }

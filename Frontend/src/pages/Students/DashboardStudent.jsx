@@ -957,14 +957,14 @@ const DashboardStudent = () => {
           <div className="profile-section text-center p-4">
             <div className="avatar mb-3">
               <Image
-                src={"https://randomuser.me/api/portraits/men/32.jpg"}
+                src={`${profileImage}`}
                 alt="Profile"
                 roundedCircle
                 width={120}
                 height={120}
               />
             </div>
-            <h5>{studentData?.fullName || 'Loading...'}</h5>
+            <h5 className='TitleSideBar'>{studentData?.fullName || 'Loading...'}</h5>
             <p className="text-muted">{studentData?.role || 'Étudiant'}</p>
 
             {/* Points Display */}

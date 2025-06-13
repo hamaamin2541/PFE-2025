@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Card, Form, Button, Image, Modal, Row, Col, Alert } from 'react-bootstrap';
 import { Upload, User, Mail, Lock, Save, Camera, Shield, Eye, EyeOff } from 'lucide-react';
 import './DashboardStudent.css';
+import './Parametres.css'
 
 
 const Parametres = ({
@@ -48,10 +49,11 @@ const Parametres = ({
     if (selectedImage) {
       try {
         const formData = new FormData();
+        console.log(formData)
         formData.append('profileImage', selectedImage);
 
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/users/profile-image', {
+        const response = await fetch('http://localhost:5001/api/users/upload-profile-image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -159,8 +161,8 @@ const Parametres = ({
         </Alert>
       )}
 
-      <Row>
-        <Col lg={4} md={5} className="mb-4 mb-md-0">
+      <Row className='RowParams'>
+        <Col lg={3} md={5} className="mb-4 mb-md-0">
           <Card className="profile-card text-center h-100" style={{ borderRadius: 'var(--border-radius-lg)', boxShadow: 'var(--shadow-md)' }}>
             <Card.Body className="d-flex flex-column align-items-center">
               <div className="profile-image-container mb-4 position-relative">
@@ -227,7 +229,7 @@ const Parametres = ({
           </Card>
         </Col>
 
-        <Col lg={8} md={7}>
+        <Col lg={7} md={7}>
           <Card className="mb-4" style={{ borderRadius: 'var(--border-radius-lg)', boxShadow: 'var(--shadow-md)' }}>
             <Card.Body>
               <div className="d-flex align-items-center mb-4">
