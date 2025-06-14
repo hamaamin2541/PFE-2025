@@ -41,6 +41,7 @@ import assistantHelpRoutes from './routes/assistantHelpRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import { protect } from './middleware/authMiddleware.js';
 
 // Utilities
 import connectDB from './config/db.js';
@@ -157,8 +158,10 @@ app.use('/api/documents'       , documentRoutes);
 // Create checkout session
 app.post(
   '/create-checkout-session',
+  protect,
   async (req, res) => {
     const { itemId, itemType, amount } = req.body;
+    console.log(itemId, itemType, amount);
     const userId = req.user._id.toString();
 
     try {

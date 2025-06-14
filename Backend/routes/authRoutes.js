@@ -2,7 +2,6 @@ import express from 'express';
 import {
   login,
   register,
- 
   add_newuser,
   resetPasswordRequest,
   resetPassword,

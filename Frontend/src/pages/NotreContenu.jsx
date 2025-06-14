@@ -125,7 +125,12 @@ function CheckoutForm({ amount }) {
     if (!stripe) return;
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
+      console.log(selectedCourse?._id)
+      const res = await fetch('http://localhost:5001/create-checkout-session', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ itemId: selectedCourse?._id, itemType: 'subscription', amount: amount })
+      });
       const { id: sessionId } = await res.json();
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) console.error(error.message);

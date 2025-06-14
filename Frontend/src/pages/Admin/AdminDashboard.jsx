@@ -33,6 +33,7 @@ const AdminDashboard = () => {
           });
 
           if (response.data.success) {
+            console.log(response.data.data);
             setStats(response.data.data);
             return;
           }
