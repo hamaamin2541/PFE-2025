@@ -275,8 +275,7 @@
   background-color: #fff;
   border-radius: 0.75rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 2rem;
-  height: auto;
+  height: 100% !important;
   overflow: hidden;
   transition: all 0.3s ease;
   border-top: 3px solid #4361ee;
@@ -309,7 +308,7 @@
 }
 
 .chart-card-body {
-  padding: 1.25rem;
+  padding: 1.25rem ;
   margin-bottom: 1.25rem;
 }
 

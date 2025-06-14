@@ -141,9 +141,8 @@ function CheckoutForm({ amount }) {
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h5>Payer {amount} €</h5>
-      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+    <div style={{ textAlign: 'center' }}>
+      <Button onClick={handleClick} disabled={loading || !stripe} className='btn-success'>
         {loading ? 'Chargement…' : `Acheter (${amount}€)`}
       </Button>
     </div>
@@ -556,7 +555,7 @@ function CheckoutForm({ amount }) {
                               ? `${API_BASE_URL}/${course.teacher.profileImage}`
                               : "https://placehold.co/30x30?text=T"}
                             alt={course.teacher?.fullName || "Teacher"}
-                            className="rounded-circle me-2"
+                            className="rounded "
                             width="30"
                             height="30"
                             onError={(e) => {
@@ -893,7 +892,7 @@ function CheckoutForm({ amount }) {
               )}
             </Modal.Body>
              <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
+              <Button className="btn-danger" onClick={() => setShowCourseModal(false)}>Retour</Button>
               <Elements stripe={stripePromise}>
                 <CheckoutForm amount={selectedCourse.price} />
               </Elements>

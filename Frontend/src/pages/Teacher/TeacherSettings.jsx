@@ -233,9 +233,8 @@ const TeacherSettings = () => {
           <div className="d-flex align-items-center mb-3">
             <Image
               src={previewImage || '/images/default-profile.jpg'}
-              roundedCircle
+              rounded
               width={100}
-              height={100}
               className="me-3"
               style={{ objectFit: 'cover' }}
               onError={(e) => {

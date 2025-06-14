@@ -36,7 +36,7 @@ function FAQ() {
   return (
     <div className="mt-5 py-5">
       <h2 className="text-center mb-4">Questions fréquentes</h2>
-      <Accordion activeKey={activeKey} onSelect={(key) => setActiveKey(key)} flush>
+      <Accordion onSelect={(key) => setActiveKey(key)} flush>
         {faqItems.map((item) => (
           <Accordion.Item key={item.key} eventKey={item.key}>
             <Accordion.Header>
