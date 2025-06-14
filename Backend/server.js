@@ -10,6 +10,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import Stripe from 'stripe';
 import bodyParser from 'body-parser';
+import  cours from "./models/Course.js"
+import enrollement from "./models/Enrollment.js"
 
 // Controllers
 import { enroll } from './controllers/enrollmentController.js';
@@ -163,7 +165,8 @@ app.post(
     const { itemId, itemType, amount } = req.body;
     console.log(itemId, itemType, amount);
     const userId = req.user._id.toString();
-
+  console.log("userid",userId);
+  
     try {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -180,6 +183,58 @@ app.post(
         cancel_url : `http://localhost:5173/cancel`,
         metadata: { itemId, itemType, userId }
       });
+
+       const existe_enroulement=await enrollement.findOne({user:userId})
+       if (existe_enroulement){
+  if (itemType=='course'){
+
+        
+       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{course:itemId}},{new:true})
+     }
+ if(itemType=='formation'){
+       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{formation:itemId}},{new:true})
+
+ }
+     if (itemType== "test") {
+       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{test:itemId}},{new:true})
+      
+        }
+       }else{
+         const payload = {
+      user: userId,
+      itemType,
+      paymentStatus: 'completed',
+      amount,
+    };
+
+    switch (itemType) {
+      case 'course':
+        payload.course = [itemId];
+        payload.formation = [];
+        payload.test = [];
+        break;
+
+      case 'formation':
+        payload.course = [];
+        payload.formation = [itemId];
+        payload.test = [];
+        break;
+
+      case 'test':
+        payload.course = [];
+        payload.formation = [];
+        payload.test = [itemId];
+        break;
+
+    }
+
+    const new_enrollment = new enrollement(payload);
+    await new_enrollment.save();
+       }
+    
+
+    
+
       res.json({ id: session.id });
     } catch (err) {
       console.error('Stripe session error:', err);
@@ -187,6 +242,10 @@ app.post(
     }
   }
 );
+
+
+
+
 
 const PORT = process.env.PORT || 5001;
 

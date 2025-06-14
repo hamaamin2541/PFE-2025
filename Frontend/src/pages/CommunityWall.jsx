@@ -332,7 +332,7 @@ const CommunityWall = () => {
       { type: 'love', icon: <Heart size={16} />, label: 'J\'adore', activeColor: '#E41E3F' }
     ];
 
-    // Get the current user's ID from localStorage
+    
     const token = localStorage.getItem('token');
     const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
 

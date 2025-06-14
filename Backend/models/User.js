@@ -39,7 +39,7 @@
     specialty: String,
     bio: String,
     phone: String,
-    // Gamification fields
+   
     points: {
       type: Number,
       default: 0
