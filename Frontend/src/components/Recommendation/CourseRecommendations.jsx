@@ -56,8 +56,8 @@ const CourseRecommendations = ({ limit = 3, showTitle = true, className = '' }) 
     fetchRecommendations();
   }, [limit]);
   
-  const handleCourseClick = (courseId) => {
-    navigate(`/courses/${courseId}`);
+  const handleCourseClick = () => {
+    navigate(`/notrecontenu`);
   };
   
   // Format price to display with Euro symbol
