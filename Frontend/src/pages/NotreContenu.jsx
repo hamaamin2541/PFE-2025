@@ -158,12 +158,18 @@ function CheckoutForm({ amount, itemId, itemType }) {
   };
 
   return (
+<<<<<<< Updated upstream
     <div style={{ textAlign: 'center' }}>
       <Button
         onClick={handleClick}
         disabled={loading || !stripe}
         variant="success"
       >
+=======
+    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+   
+      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+>>>>>>> Stashed changes
         {loading ? 'Chargement…' : `Acheter (${amount}€)`}
       </Button>
     </div>
