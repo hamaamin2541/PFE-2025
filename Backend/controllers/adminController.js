@@ -910,3 +910,66 @@ const getRevenueByMonth = async () => {
 
   return { months, revenues };
 };
+
+export const getTeacherRevenue = async (req, res) => {
+  try {
+    // Récupérer toutes les inscriptions avec paiement complété
+    const enrollments = await Enrollment.find({ paymentStatus: 'completed' })
+        .populate({
+          path: 'course',
+          select: 'price teacher',
+          populate: {
+            path: 'teacher',
+            select: 'fullName email',
+            match: { role: 'teacher' }
+          }
+        });
+
+    // Agréger les revenus par professeur
+    const revenueByTeacher = {};
+
+    enrollments.forEach(enrollment => {
+      if (enrollment.course && enrollment.course.teacher) {
+        const teacherId = enrollment.course.teacher._id.toString();
+        const teacherName = enrollment.course.teacher.fullName;
+        const teacherEmail = enrollment.course.teacher.email;
+
+        // Initialiser l'entrée pour le professeur si elle n'existe pas
+        if (!revenueByTeacher[teacherId]) {
+          revenueByTeacher[teacherId] = {
+            teacherId,
+            fullName: teacherName,
+            email: teacherEmail,
+            totalRevenue: 0,
+            enrollmentCount: 0
+          };
+        }
+
+        // Calculer le prix (priorité à enrollment.amount, sinon course.price)
+        const price = enrollment.amount || (enrollment.course.price || 0);
+
+        // Ajouter au total
+        revenueByTeacher[teacherId].totalRevenue += price;
+        revenueByTeacher[teacherId].enrollmentCount += 1;
+      }
+    });
+
+    // Convertir l'objet en tableau pour la réponse
+    const revenueList = Object.values(revenueByTeacher);
+
+    // Trier par revenu décroissant
+    revenueList.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    res.status(200).json({
+      success: true,
+      data: revenueList,
+      message: 'Revenus par professeur récupérés avec succès'
+    });
+  } catch (error) {
+    console.error('Error fetching teacher revenue:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Une erreur est survenue lors de la récupération des revenus des professeurs'
+    });
+  }
+};

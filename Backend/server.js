@@ -155,6 +155,7 @@ app.use('/api/posts'           , postRoutes);
 app.use('/api/recommendations' , recommendationRoutes);
 app.use('/api/documents'       , documentRoutes);
 app.use('/api/gemini', chatiaRoutes);
+
 // Create checkout session
 app.post(
   '/create-checkout-session',

@@ -44,7 +44,7 @@ const AdminDashboard = () => {
 
         // Fallback: Use mock data if API call fails
         console.log('Using mock data for dashboard');
-        const mockData = {
+      /*  const mockData = {
           counts: {
             users: { total: 120, students: 100, teachers: 19, admin: 1 },
             content: { total: 45, courses: 25, tests: 15, formations: 5 },
@@ -85,9 +85,8 @@ const AdminDashboard = () => {
               revenues: [150, 220, 310, 380, 450, 520]
             }
           }
-        };
+        };*/
 
-        setStats(mockData);
       } catch (err) {
         console.error('Error in dashboard component:', err);
         setError('Une erreur est survenue lors du chargement du tableau de bord');
@@ -230,24 +229,25 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <div>
-              <h6 className="stat-card-title">Revenus</h6>
-              <h2 className="stat-card-value">{stats.counts.revenue.toFixed(2)} €</h2>
+        <Link to="/admin/prof" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ cursor: 'pointer' }}>
+            <div className="stat-card-header">
+              <div>
+                <h6 className="stat-card-title">Revenus</h6>
+                <h2 className="stat-card-value">{stats.counts.revenue.toFixed(2)} €</h2>
+              </div>
+              <div className="stat-card-icon success">
+                <DollarSign size={24} />
+              </div>
             </div>
-            <div className="stat-card-icon success">
-              <DollarSign size={24} />
+            <div className="stat-card-footer">
+              <div className="stat-detail">
+                <span className="stat-label">Inscriptions:</span>
+                <span className="stat-value">{stats.counts.enrollments}</span>
+              </div>
             </div>
           </div>
-          <div className="stat-card-footer">
-            <div className="stat-detail">
-              <span className="stat-label">Inscriptions:</span>
-              <span className="stat-value">{stats.counts.enrollments}</span>
-            </div>
-          </div>
-        </div>
-
+        </Link>
         <div className="stat-card">
           <div className="stat-card-header">
             <div>

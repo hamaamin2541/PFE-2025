@@ -422,12 +422,32 @@ export const Messages = ({ teacherId }) => {
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5 className="mb-0">{selectedMessage.subject}</h5>
                     <div>
-                      <Button variant="light" size="sm" className="me-2">
+                      <Button variant="light" size="sm" className="me-2"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(`${API_BASE_URL}/api/messages/${selectedMessage._id}/star`, {}, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                  });
+
+                                  // Update the message in the list
+                                  setMessages(prevMessages =>
+                                      prevMessages.map(msg =>
+                                          msg._id === selectedMessage._id ? { ...msg, starred: !msg.starred } : msg
+                                      )
+                                  );
+
+                                  // Update selected message
+                                  setSelectedMessage(prev => ({ ...prev, starred: !prev.starred }));
+                                } catch (err) {
+                                  console.error('Error toggling star:', err);
+                                }
+                              }}>
                         <Star size={16} />
                       </Button>
-                      <Button variant="light" size="sm" className="me-2">
+                   {/*    <Button variant="light" size="sm" className="me-2">
                         <Archive size={16} />
-                      </Button>
+                      </Button>*/}
                       <Button variant="light" size="sm" onClick={async () => {
                         try {
                           const token = localStorage.getItem('token');
