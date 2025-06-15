@@ -428,8 +428,25 @@ export const Messages = ({ teacherId }) => {
                       <Button variant="light" size="sm" className="me-2">
                         <Archive size={16} />
                       </Button>
-                      <Button variant="light" size="sm">
-                        <Trash2 size={16} />
+                      <Button variant="light" size="sm" onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          await axios.put(`${API_BASE_URL}/api/messages/${selectedMessage._id}/trash`, {}, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+
+                          // Remove the message from the current list
+                          setMessages(prevMessages =>
+                              prevMessages.filter(msg => msg._id !== selectedMessage._id)
+                          );
+
+                          // Clear selected message
+                          setSelectedMessage(null);
+                        } catch (err) {
+                          console.error('Error moving to trash:', err);
+                        }
+                      }}>
+                        <Trash2 size={16}  />
                       </Button>
                     </div>
                   </div>

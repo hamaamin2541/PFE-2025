@@ -183,12 +183,12 @@ export const deleteCourse = async (req, res) => {
     }
 
     // Check if the logged-in teacher owns this course
-    if (course.teacher.toString() !== req.user._id.toString()) {
+   /* if (course.teacher.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this course'
       });
-    }
+    }*/
 
     await Course.findByIdAndDelete(req.params.id);
 
