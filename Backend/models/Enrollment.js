@@ -6,19 +6,19 @@ const enrollmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  course: [{
+  course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
 
-  }],
-  formation: [{
+  },
+  formation: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Formation',
-  }],
-  test: [{
+  },
+  test: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Test',
-  }],
+  },
   itemType: {
     type: String,
     enum: ['course', 'formation', 'test'],

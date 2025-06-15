@@ -11,6 +11,7 @@ import { useGamification } from '../../context/GamificationContext';
 import { useStudyTime } from '../../context/StudyTimeContext';
 import { useStudyTimeTracking } from '../../services/studyTimeService';
 import '../../styles/CertificateVerification.css';
+import { CheckLg } from 'react-bootstrap-icons';
 
 const CourseView = () => {
   const { enrollmentId } = useParams();
@@ -37,7 +38,7 @@ const CourseView = () => {
   const [certificateData, setCertificateData] = useState(null);
   const [activeStudyTime, setActiveStudyTime] = useState(null);
   const studyTimeTrackingRef = useRef(null);
-
+ const [selectedResource, setSelectedResource] = useState(null);
   // Initialize study time tracking
   useEffect(() => {
     if (course && course._id) {
@@ -72,6 +73,8 @@ const CourseView = () => {
           setIsLoading(false);
           return;
         }
+
+        console.log(enrollmentId);
 
         const response = await axios.get(`${API_BASE_URL}/api/enrollments/${enrollmentId}`, {
           headers: {
@@ -150,70 +153,11 @@ const CourseView = () => {
   };
 
   const handleResourceClick = (resource) => {
-    // If the resource has a file path, download it
-    if (resource.file) {
-      // Get the token for authentication
-      const token = localStorage.getItem('token');
-
-      // Method 1: Use the new secure document download endpoint
-      if (resource._id && course._id) {
-        // Construct the secure URL with authentication
-        const secureUrl = `${API_BASE_URL}/api/documents/download/course/${course._id}/${resource._id}`;
-        console.log("Downloading resource securely from:", secureUrl);
-
-        // Create a form for authenticated download
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = secureUrl;
-        form.target = '_blank';
-
-        // Add token as hidden field
-        const tokenField = document.createElement('input');
-        tokenField.type = 'hidden';
-        tokenField.name = 'token';
-        tokenField.value = token;
-        form.appendChild(tokenField);
-
-        // Submit the form
-        document.body.appendChild(form);
-        form.submit();
-
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(form);
-        }, 100);
-      } else {
-        // Fallback to direct file download if IDs are missing
-        // Extract the filename from the path
-        const filename = resource.file.split('/').pop();
-
-        // Use the simpler filename-based endpoint
-        const resourceUrl = `${API_BASE_URL}/api/documents/download-file/${filename}`;
-        console.log("Downloading resource from:", resourceUrl);
-
-        // Create a form for authenticated download
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = resourceUrl;
-        form.target = '_blank';
-
-        // Add token as hidden field
-        const tokenField = document.createElement('input');
-        tokenField.type = 'hidden';
-        tokenField.name = 'token';
-        tokenField.value = token;
-        form.appendChild(tokenField);
-
-        // Submit the form
-        document.body.appendChild(form);
-        form.submit();
-
-        // Clean up
-        setTimeout(() => {
-          document.body.removeChild(form);
-        }, 100);
-      }
-    }
+    console.log(resource);
+    
+   const cleanedPath = resource.file.replace(/\\/g, '/');
+    const fileUrl     = `${API_BASE_URL}/${cleanedPath}`;
+    setSelectedResource({ ...resource, fileUrl });
   };
 
   const handleSectionComplete = async (sectionIndex) => {
@@ -695,6 +639,30 @@ const CourseView = () => {
                                 </div>
                               </Button>
                             ))}
+        {selectedResource && (
+        <div className="mt-4">
+          <h5>{selectedResource.name}</h5>
+          <object
+            data={selectedResource.fileUrl}
+            type="application/pdf"
+            width="100%"
+            height="600px"
+            style={{ border: '1px solid #ccc', borderRadius: 8 }}
+          >
+            <p>
+              Votre navigateur ne peut pas afficher ce PDF.{' '}
+              <a
+                href={selectedResource.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Téléchargez-le ici
+              </a>.
+            </p>
+          </object>
+        </div>
+      )}
+                               
                           </div>
                         </div>
                       )}
@@ -817,9 +785,9 @@ const CourseView = () => {
                 </div>
               </div>
 
-              <hr className="my-3" />
+              {/* <hr className="my-3" /> */}
 
-              <h5>Exporter le cours</h5>
+              {/* <h5>Exporter le cours</h5>
               <div className="d-grid gap-2">
                 <Button
                   variant="outline-primary"
@@ -839,7 +807,7 @@ const CourseView = () => {
                   <Download size={16} className="me-2" />
                   {isExporting ? 'Exportation en cours...' : 'Exporter avec ressources (ZIP)'}
                 </Button>
-              </div>
+              </div> */}
             </Card.Body>
           </Card>
         </Col>

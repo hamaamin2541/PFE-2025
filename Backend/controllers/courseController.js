@@ -75,47 +75,45 @@ export const getPublicCourseById = async (req, res) => {
 };
 
 // Create a new course
+
 export const createCourse = async (req, res) => {
   try {
-    let courseData = {
-      title: req.body.title,
+    // 1) Base courseData
+    const courseData = {
+      title:       req.body.title,
       description: req.body.description,
-      category: req.body.category,
-      price: req.body.price,
-      language: req.body.language,
-      level: req.body.level,
-      teacher: req.user._id,
-      coverImage: req.files?.coverImage ? req.files.coverImage[0].path : null
+      category:    req.body.category,
+      price:       req.body.price,
+      language:    req.body.language,
+      level:       req.body.level,
+      teacher:     req.user._id,
+      coverImage:  req.files.coverImage
+                   ? req.files.coverImage[0].path
+                   : null
     };
 
-    if (req.body.sections) {
-      const parsedSections = JSON.parse(req.body.sections);
-      courseData.sections = parsedSections.map(section => ({
-        title: section.title,
-        description: section.description,
-        resources: section.resources.map(resource => ({
-          name: resource.name,
-          type: resource.type,
-          file: resource.file?.path || '',
-          size: Number(resource.size) || 0
-        }))
-      }));
-    }
+    const sectionsMeta = JSON.parse(req.body.sectionsMeta || '[]');
+
+   courseData.sections = sectionsMeta.map((secMeta) => ({
+  ...secMeta,
+  resources: (req.files.resources || []).map(file => ({
+    name: file.originalname,
+    type: file.mimetype,
+    size: file.size,
+    file: file.path
+  }))
+}));
 
     const course = await Course.create(courseData);
-    res.status(201).json({
-      success: true,
-      data: course
-    });
-
-  } catch (error) {
+    res.status(201).json({ success: true, data: course });
+  }
+  catch (error) {
     console.error('Course creation error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Error creating course'
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
 
 // Update a course
 export const updateCourse = async (req, res) => {

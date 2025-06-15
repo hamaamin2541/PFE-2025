@@ -10,17 +10,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import Stripe from 'stripe';
 import bodyParser from 'body-parser';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import  cours from "./models/Course.js"
 import enrollement from "./models/Enrollment.js"
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 // Controllers
 import { enroll } from './controllers/enrollmentController.js';
@@ -97,13 +88,6 @@ app.use(morgan('dev'));
 // Serve static
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/images' , express.static(join(__dirname, 'public/images')));
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 // Stripe Webhook (raw body)
 app.post(
@@ -176,8 +160,6 @@ app.use('/api/documents'       , documentRoutes);
 // Create checkout session
 app.post(
   '/create-checkout-session',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   protect,
   async (req, res) => {
     const { itemId, itemType, amount } = req.body;
@@ -202,22 +184,7 @@ app.post(
         metadata: { itemId, itemType, userId }
       });
 
-       const existe_enroulement=await enrollement.findOne({user:userId})
-       if (existe_enroulement){
-  if (itemType=='course'){
-
-        
-       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{course:itemId}},{new:true})
-     }
- if(itemType=='formation'){
-       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{formation:itemId}},{new:true})
-
- }
-     if (itemType== "test") {
-       await enrollement.findByIdAndUpdate({_id:existe_enroulement._id},{$addToSet:{test:itemId}},{new:true})
       
-        }
-       }else{
          const payload = {
       user: userId,
       itemType,
@@ -227,28 +194,27 @@ app.post(
 
     switch (itemType) {
       case 'course':
-        payload.course = [itemId];
-        payload.formation = [];
-        payload.test = [];
+        payload.course = itemId;
+      
         break;
 
       case 'formation':
-        payload.course = [];
-        payload.formation = [itemId];
-        payload.test = [];
+   
+        payload.formation = itemId;
+       
         break;
 
       case 'test':
-        payload.course = [];
-        payload.formation = [];
-        payload.test = [itemId];
+     
+      
+        payload.test = itemId;
         break;
 
     }
 
     const new_enrollment = new enrollement(payload);
     await new_enrollment.save();
-       }
+       
     
 
     
@@ -264,117 +230,6 @@ app.post(
 
 
 
-=======
-
-// Stripe Webhook (raw body)
-app.post(
-  '/webhook',
-  bodyParser.raw({ type: 'application/json' }),
-  async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } catch (err) {
-      console.error('⚠️ Webhook signature failed.', err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const { itemId, itemType, userId } = session.metadata;
-
-      // Simulate req/res for enroll()
-      const fakeReq = { user: { _id: userId }, body: { itemId, itemType } };
-      const fakeRes = {
-        status: code => ({ json: obj => console.log('[ENROLL]', code, obj) })
-      };
-
-      try {
-        await enroll(fakeReq, fakeRes);
-        console.log(`✅ User ${userId} enrolled in ${itemType} ${itemId}`);
-      } catch (e) {
-        console.error('❌ Enrollment error:', e);
-      }
-    }
-
-    res.json({ received: true });
-  }
-);
-
-// Body parser
-app.use(express.json());
-
-// Mount routes
-app.use('/api/auth'            , authRoutes);
-app.use('/api/users'           , userRoutes);
-app.use('/api/courses'         , courseRoutes);
-app.use('/api/teacher-advice'  , teacherAdviceRouter);
-app.use('/api/messages'        , messageRoutes);
-app.use('/api/tests'           , testRoutes);
-app.use('/api/formations'      , formationRoutes);
-app.use('/api/enrollments'     , enrollmentRoutes);
-app.use('/api/ratings'         , ratingRoutes);
-app.use('/api/admin'           , adminRoutes);
-app.use('/api/complaints'      , complaintRoutes);
-app.use('/api/contact'         , contactMessageRoutes);
-app.use('/api/teacher-ratings' , teacherRatingRoutes);
-app.use('/api/testimonials'    , testimonialRoutes);
-app.use('/api/exports'         , exportRoutes);
-app.use('/api/settings'        , settingsRoutes);
-app.use('/api/ai'              , aiRoutes);
-app.use('/api/certificates'    , certificateRoutes);
-app.use('/api/study-sessions'  , studySessionRoutes);
-app.use('/api/gamification'    , gamificationRoutes);
-app.use('/api/study-time'      , studyTimeRoutes);
-app.use('/api/course-questions', courseQuestionRoutes);
-app.use('/api/assistants'      , assistantRoutes);
-app.use('/api/assistant'       , assistantHelpRoutes);
-app.use('/api/posts'           , postRoutes);
-app.use('/api/recommendations' , recommendationRoutes);
-app.use('/api/documents'       , documentRoutes);
-
-// Create checkout session
-app.post(
-  '/create-checkout-session',
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-  async (req, res) => {
-    const { itemId, itemType, amount } = req.body;
-    const userId = req.user._id.toString();
-
-    try {
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: 'eur',
-            product_data: { name: `Achat ${itemType}` },
-            unit_amount: Math.round(amount * 100),
-          },
-          quantity: 1,
-        }],
-        mode: 'payment',
-        success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url : `http://localhost:5173/cancel`,
-        metadata: { itemId, itemType, userId }
-      });
-      res.json({ id: session.id });
-    } catch (err) {
-      console.error('Stripe session error:', err);
-      res.status(500).json({ error: 'Impossible de créer la session' });
-    }
-  }
-);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 const PORT = process.env.PORT || 5001;
 

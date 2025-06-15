@@ -165,51 +165,73 @@ const AddCourse = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
+const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+  try {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
 
-      // Add basic course info
-      Object.keys(values).forEach(key => {
-        if (values[key]) {
-          formData.append(key, values[key]);
-        }
+    // 1) Champs textes du cours
+    formData.append('title',       values.title);
+    formData.append('description', values.description);
+    formData.append('category',    values.category);
+    formData.append('price',       values.price);
+    formData.append('language',    values.language);
+    formData.append('level',       values.level);
+
+    // 2) Image de couverture
+    if (courseData.coverImage) {
+      formData.append('coverImage', courseData.coverImage);
+    }
+
+    // 3) Sections sans fichiers (titre + description)
+    const sectionsMeta = sections.map(sec => ({
+      title:       sec.title,
+      description: sec.description
+    }));
+    formData.append('sectionsMeta', JSON.stringify(sectionsMeta));
+
+    // 4) Tous les fichiers de ressources
+    sections.forEach(sec => {
+      sec.resources.forEach(res => {
+        // 'resources' doit correspondre à votre upload.fields() côté serveur
+        formData.append('resources', res.file, res.file.name);
       });
+    });
 
-      // Add cover image
-      if (courseData.coverImage) {
-        formData.append('coverImage', courseData.coverImage);
-      }
-
-      // Add sections as JSON string
-      if (sections.length > 0) {
-        formData.append('sections', JSON.stringify(sections));
-      }
-
-      const response = await axios.post('http://localhost:5001/api/courses', formData, {
+    // 5) Envoi avec suivi de progression
+    const response = await axios.post(
+      'http://localhost:5001/api/courses',
+      formData,
+      {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
+        },
+        onUploadProgress: ({ loaded, total }) => {
+          setUploadProgress(Math.round((loaded * 100) / total));
         }
-      });
-
-      if (response.data.success) {
-        setSubmitStatus({ success: true, message: 'Cours créé avec succès!' });
-        resetForm();
-        setSections([{ title: '', description: '', resources: [] }]);
       }
-    } catch (error) {
-      console.error('Error creating course:', error);
-      setSubmitStatus({
-        success: false,
-        message: error.response?.data?.message || 'Erreur lors de la création du cours'
-      });
-    } finally {
-      setSubmitting(false);
-      setUploadProgress(0);
+    );
+
+    if (response.data.success) {
+      setSubmitStatus({ success: true, message: 'Cours créé avec succès !' });
+      resetForm();
+      setSections([{ title: '', description: '', resources: [] }]);
+      setCourseData({ ...courseData, coverImage: null });
     }
-  };
+  } catch (error) {
+    console.error('Error creating course:', error);
+    setSubmitStatus({
+      success: false,
+      message: error.response?.data?.message || 'Erreur lors de la création du cours'
+    });
+  } finally {
+    setSubmitting(false);
+    setUploadProgress(0);
+  }
+};
+
+
 
   return (
     <Container className="add-course-container py-5">

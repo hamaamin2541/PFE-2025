@@ -107,20 +107,8 @@ const NotreContenu = () => {
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 const [itemType,setItemType]=useState('')
 const [itemId,setItemId]=useState('')
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
@@ -170,116 +158,13 @@ function CheckoutForm({ amount, itemId, itemType }) {
   };
 
   return (
-<<<<<<< Updated upstream
-    <div style={{ textAlign: 'center' }}>
-      <Button
-        onClick={handleClick}
-        disabled={loading || !stripe}
-        variant="success"
-      >
-=======
     <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-   
-      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
->>>>>>> Stashed changes
-        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
-      </Button>
-    </div>
-  );
-}
-
-
-
-function CheckoutForm({ amount }) {
-  const stripe = useStripe();
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = async () => {
-    if (!stripe) return;
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
-      const { id: sessionId } = await res.json();
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) console.error(error.message);
-    } catch (err) {
-      console.error('Erreur création session :', err);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h5>Payer {amount} €</h5>
       <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
         {loading ? 'Chargement…' : `Acheter (${amount}€)`}
       </Button>
     </div>
   );
 }
-
-
-
-
-function CheckoutForm({ amount }) {
-  const stripe = useStripe();
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = async () => {
-    if (!stripe) return;
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
-      const { id: sessionId } = await res.json();
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) console.error(error.message);
-    } catch (err) {
-      console.error('Erreur création session :', err);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h5>Payer {amount} €</h5>
-      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
-        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
-      </Button>
-    </div>
-  );
-}
-
-
-
-
-function CheckoutForm({ amount }) {
-  const stripe = useStripe();
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = async () => {
-    if (!stripe) return;
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
-      const { id: sessionId } = await res.json();
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) console.error(error.message);
-    } catch (err) {
-      console.error('Erreur création session :', err);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h5>Payer {amount} €</h5>
-      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
-        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
-      </Button>
-    </div>
-  );
-}
-
 
 
   // Fetch all courses, tests, and formations from API
@@ -790,7 +675,6 @@ function CheckoutForm({ amount }) {
                             size="sm"
                             onClick={() => {
                               setSelectedFormation(formation);
-                              setCurrentItemType('formation');
                               setShowPurchaseForm(true);
                             }}
                           >
@@ -1023,19 +907,7 @@ function CheckoutForm({ amount }) {
               )}
             </Modal.Body>
              <Modal.Footer>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-              <Button className="btn-danger" onClick={() => setShowCourseModal(false)}>Retour</Button>
-=======
-              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
->>>>>>> Stashed changes
-=======
-              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
->>>>>>> Stashed changes
-=======
-              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
->>>>>>> Stashed changes
+              <Button className="btn-danger mt-4" onClick={() => setShowCourseModal(false)}>Retour</Button>
               <Elements stripe={stripePromise}>
                 <CheckoutForm amount={selectedCourse.price} />
               </Elements>
@@ -1045,84 +917,25 @@ function CheckoutForm({ amount }) {
       </Modal>
 
       {/* Purchase Form Modal */}
-<<<<<<< Updated upstream
-     <Modal
-  show={showPurchaseForm}
-  onHide={() => setShowPurchaseForm(false)}
-  size="lg"
-  centered
->
-  {currentItem && (
-    <>
-      <Modal.Header closeButton>
-        <Modal.Title>
-          {currentItemType === 'course'    && `Acheter le cours : ${currentItem.title}`}
-          {currentItemType === 'formation' && `Acheter la formation : ${currentItem.title}`}
-          {currentItemType === 'test'      && `Acheter le test : ${currentItem.title}`}
-        </Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <PurchaseForm
-          itemId={currentItemId}
-          itemType={currentItemType}
-          onPurchaseComplete={() => {
-           
-            handleClick();
-          }}
-          onCancel={() => {
-            setShowPurchaseForm(false);
-            if (selectedCourse) setShowCourseModal(true);
-            setSelectedFormation(null);
-            setSelectedTest(null);
-          }}
-        />
-      </Modal.Body>
-    </>
-  )}
-</Modal>
-
-=======
-      <Modal
-        show={showPurchaseForm}
-        onHide={() => setShowPurchaseForm(false)}
-        size="lg"
-        centered
-      >
+     <Modal show={showPurchaseForm} onHide={() => setShowPurchaseForm(false)} size="lg" centered>
         {(selectedCourse || selectedFormation || selectedTest) && (
           <>
             <Modal.Header closeButton>
               <Modal.Title>
-                {selectedCourse && `Acheter le cours: ${selectedCourse.title}`}
-                {selectedFormation && `Acheter la formation: ${selectedFormation.title}`}
-                {selectedTest && `Acheter le test: ${selectedTest.title}`}
+                {selectedCourse ? `Acheter le cours: ${selectedCourse.title}` : selectedFormation ? `Acheter la formation: ${selectedFormation.title}` : `Acheter le test: ${selectedTest.title}`}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <PurchaseForm
-                item={selectedCourse || selectedFormation || selectedTest}
-                itemType={
-                  selectedCourse ? 'course' :
-                  selectedFormation ? 'formation' :
-                  'test'
-                }
-                onPurchaseComplete={() => {
-                  handleClick()
-                }}
-                onCancel={() => {
-                  setShowPurchaseForm(false);
-                  if (selectedCourse) setShowCourseModal(true);
-                  // Reset selected items
-                  if (!selectedCourse) {
-                    setSelectedFormation(null);
-                    setSelectedTest(null);
-                  }
-                }}
-              />
+              {/* Votre PurchaseForm ici... */}
+              <Elements stripe={stripePromise}>
+                <CheckoutForm amount={
+                  selectedCourse ? selectedCourse.price : selectedFormation ? selectedFormation.price : selectedTest.duration
+                } />
+              </Elements>
             </Modal.Body>
           </>
         )}
       </Modal>
->>>>>>> Stashed changes
 
       {/* Purchase Success Modal */}
       <Modal
