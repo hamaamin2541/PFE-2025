@@ -308,7 +308,7 @@ const AdminDashboard = () => {
                 <h6 className="chart-card-title">Activité mensuelle</h6>
                 <div className="chart-actions">
                   <Button
-                    variant={activeChart === 'enrollments' ? 'primary' : 'outline-primary'}
+                    variant={activeChart === 'enrollments' ? 'info' : 'outline-info'}
                     size="sm"
                     className="me-2"
                     onClick={() => setActiveChart('enrollments')}

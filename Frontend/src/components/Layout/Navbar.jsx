@@ -159,7 +159,7 @@ const Navbar = () => {
                 onClick={() => setExpanded(false)}
               >
                 <ListTodo className="navbar-icon" size={18} />
-                {t('NotreContenu')}
+                {t('Notre Contenu')}
               </NavLink>
             </li>
 
@@ -170,7 +170,7 @@ const Navbar = () => {
                 onClick={() => setExpanded(false)}
               >
                 <Presentation className="navbar-icon" size={18} />
-                {t('NosProfesseurs')}
+                {t('Nos Professeurs')}
               </NavLink>
             </li>
 
@@ -191,7 +191,7 @@ const Navbar = () => {
               <Dropdown>
                 <Dropdown.Toggle variant="outline-light" className="navbar-custom-dropdown-toggle">
                   <UserRound className="navbar-icon" size={18} />
-                  {t('MonCompte')}
+                  {t('Mon Compte')}
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                   {isLoggedIn ? (

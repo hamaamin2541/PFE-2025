@@ -202,7 +202,7 @@ const TestimonialManagement = () => {
                 <option value="approved">Approuvés</option>
                 <option value="pending">En attente</option>
               </Form.Select>
-              <Button variant="outline-secondary" onClick={() => fetchTestimonials()}>
+              <Button className="btn-primary" onClick={() => fetchTestimonials()}>
                 <Filter size={16} className="me-1" />
                 Filtrer
               </Button>

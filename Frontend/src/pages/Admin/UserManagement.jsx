@@ -255,34 +255,38 @@ const UserManagement = ({ newUser = false }) => {
             <Col md={6}>
               <Form onSubmit={handleSearch}>
                 <InputGroup>
+                 <div className="d-flex align-items-center">
+                  <Button variant="primary" type="submit" className="search-btn me-2">
+                    <Search size={16} />
+                  </Button>
                   <Form.Control
                     className="search-input"
                     placeholder="Rechercher par nom ou email"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <Button variant="primary" type="submit">
-                    <Search size={16} />
-                  </Button>
+                </div>                 
                 </InputGroup>
               </Form>
             </Col>
             <Col md={6}>
-              <InputGroup>
-                <InputGroup.Text>
-                  <Filter size={16} />
-                </InputGroup.Text>
-                <Form.Select
-                  className="search-input"
-                  value={roleFilter}
-                  onChange={handleRoleFilterChange}
-                >
-                  <option value="">Tous les rôles</option>
-                  <option value="student">Étudiants</option>
-                  <option value="teacher">Enseignants</option>
-                  <option value="admin">Administrateurs</option>
-                </Form.Select>
-              </InputGroup>
+              <Form.Group className="position-relative">
+    <InputGroup className="filter-group">
+      <InputGroup.Text className="filter-icon-wrapper bg-primary text-white border-0">
+        <Filter size={18} strokeWidth={2} />
+      </InputGroup.Text>
+      <Form.Select
+        className="form-select ps-4 border-start-0"
+        value={roleFilter}
+        onChange={handleRoleFilterChange}
+      >
+        <option value="">Tous les rôles</option>
+        <option value="student">Étudiants</option>
+        <option value="teacher">Enseignants</option>
+        <option value="admin">Administrateurs</option>
+      </Form.Select>
+    </InputGroup>
+  </Form.Group>
             </Col>
           </Row>
 
