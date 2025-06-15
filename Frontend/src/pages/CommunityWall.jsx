@@ -401,9 +401,9 @@ const CommunityWall = () => {
       { type: "love", icon: <ThumbsDown size={16} />, label: "J'aime pas", activeColor: "#6c757d" },
     ]
 
-    // Note: userId could be extracted here if needed for future features
-    // const token = localStorage.getItem('token');
-    // const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
+    
+    const token = localStorage.getItem('token');
+    const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
 
     return (
       <div className="reaction-buttons">
