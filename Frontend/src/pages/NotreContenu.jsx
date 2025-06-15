@@ -107,8 +107,9 @@ const NotreContenu = () => {
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
-const [itemType,setItemType]=useState('')
-const [itemId,setItemId]=useState('')
+  const [itemType,setItemType]=useState('')
+  const [itemId,setItemId]=useState('')
+  const [CurrentItemType,setCurrentItemType]=useState('')
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
@@ -612,6 +613,7 @@ function CheckoutForm({ amount, itemId, itemType }) {
 
       {/* Formation Section */}
       {!isLoading && !searchTerm && !selectedCategory && (
+
         <div className="mt-5 pt-4 animate-slide">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h3>Nos Formations</h3>
@@ -908,6 +910,7 @@ function CheckoutForm({ amount, itemId, itemType }) {
             </Modal.Body>
              <Modal.Footer>
               <Button className="btn-danger mt-4" onClick={() => setShowCourseModal(false)}>Retour</Button>
+              // {<Button className="btn-danger" onClick={() => setShowCourseModal(false)}>Retour</Button>}
               <Elements stripe={stripePromise}>
                 <CheckoutForm amount={selectedCourse.price} />
               </Elements>
@@ -917,7 +920,12 @@ function CheckoutForm({ amount, itemId, itemType }) {
       </Modal>
 
       {/* Purchase Form Modal */}
-     <Modal show={showPurchaseForm} onHide={() => setShowPurchaseForm(false)} size="lg" centered>
+      <Modal
+        show={showPurchaseForm}
+        onHide={() => setShowPurchaseForm(false)}
+        size="lg"
+        centered
+      >
         {(selectedCourse || selectedFormation || selectedTest) && (
           <>
             <Modal.Header closeButton>
