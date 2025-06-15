@@ -109,8 +109,12 @@ const NotreContenu = () => {
   const [showCourseModal, setShowCourseModal] = useState(false);
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 const [itemType,setItemType]=useState('')
 const [itemId,setItemId]=useState('')
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -183,6 +187,37 @@ function CheckoutForm({ amount, itemId, itemType }) {
     </div>
   );
 }
+
+
+
+function CheckoutForm({ amount }) {
+  const stripe = useStripe();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (!stripe) return;
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
+      const { id: sessionId } = await res.json();
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) console.error(error.message);
+    } catch (err) {
+      console.error('Erreur création session :', err);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <h5>Payer {amount} €</h5>
+      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
+      </Button>
+    </div>
+  );
+}
+
 
 
 
@@ -990,7 +1025,11 @@ function CheckoutForm({ amount }) {
              <Modal.Footer>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <Button className="btn-danger" onClick={() => setShowCourseModal(false)}>Retour</Button>
+=======
+              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
+>>>>>>> Stashed changes
 =======
               <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
 >>>>>>> Stashed changes
