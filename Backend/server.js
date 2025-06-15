@@ -10,17 +10,10 @@ import http from 'http';
 import { Server } from 'socket.io';
 import Stripe from 'stripe';
 import bodyParser from 'body-parser';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
 import  cours from "./models/Course.js"
 import enrollement from "./models/Enrollment.js"
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 
 // Controllers
 import { enroll } from './controllers/enrollmentController.js';
@@ -97,13 +90,6 @@ app.use(morgan('dev'));
 // Serve static
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/images' , express.static(join(__dirname, 'public/images')));
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 // Stripe Webhook (raw body)
 app.post(
@@ -176,8 +162,7 @@ app.use('/api/documents'       , documentRoutes);
 // Create checkout session
 app.post(
   '/create-checkout-session',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+
   protect,
   async (req, res) => {
     const { itemId, itemType, amount } = req.body;
@@ -264,8 +249,6 @@ app.post(
 
 
 
-=======
-
 // Stripe Webhook (raw body)
 app.post(
   '/webhook',
@@ -337,10 +320,7 @@ app.use('/api/documents'       , documentRoutes);
 // Create checkout session
 app.post(
   '/create-checkout-session',
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
   async (req, res) => {
     const { itemId, itemType, amount } = req.body;
     const userId = req.user._id.toString();
@@ -368,13 +348,7 @@ app.post(
     }
   }
 );
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 
 const PORT = process.env.PORT || 5001;
 
