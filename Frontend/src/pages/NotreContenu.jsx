@@ -107,8 +107,12 @@ const NotreContenu = () => {
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
+<<<<<<< Updated upstream
 const [itemType,setItemType]=useState('')
 const [itemId,setItemId]=useState('')
+=======
+
+>>>>>>> Stashed changes
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
@@ -175,6 +179,37 @@ function CheckoutForm({ amount, itemId, itemType }) {
     </div>
   );
 }
+
+
+
+function CheckoutForm({ amount }) {
+  const stripe = useStripe();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    if (!stripe) return;
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:5001/create-checkout-session', { method: 'POST' });
+      const { id: sessionId } = await res.json();
+      const { error } = await stripe.redirectToCheckout({ sessionId });
+      if (error) console.error(error.message);
+    } catch (err) {
+      console.error('Erreur création session :', err);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <h5>Payer {amount} €</h5>
+      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
+      </Button>
+    </div>
+  );
+}
+
 
 
   // Fetch all courses, tests, and formations from API
@@ -918,7 +953,11 @@ function CheckoutForm({ amount, itemId, itemType }) {
               )}
             </Modal.Body>
              <Modal.Footer>
+<<<<<<< Updated upstream
               <Button className="btn-danger" onClick={() => setShowCourseModal(false)}>Retour</Button>
+=======
+              <Button variant="secondary" onClick={() => setShowCourseModal(false)}>Retour</Button>
+>>>>>>> Stashed changes
               <Elements stripe={stripePromise}>
                 <CheckoutForm amount={selectedCourse.price} />
               </Elements>
@@ -928,6 +967,7 @@ function CheckoutForm({ amount, itemId, itemType }) {
       </Modal>
 
       {/* Purchase Form Modal */}
+<<<<<<< Updated upstream
      <Modal
   show={showPurchaseForm}
   onHide={() => setShowPurchaseForm(false)}
@@ -963,6 +1003,48 @@ function CheckoutForm({ amount, itemId, itemType }) {
   )}
 </Modal>
 
+=======
+      <Modal
+        show={showPurchaseForm}
+        onHide={() => setShowPurchaseForm(false)}
+        size="lg"
+        centered
+      >
+        {(selectedCourse || selectedFormation || selectedTest) && (
+          <>
+            <Modal.Header closeButton>
+              <Modal.Title>
+                {selectedCourse && `Acheter le cours: ${selectedCourse.title}`}
+                {selectedFormation && `Acheter la formation: ${selectedFormation.title}`}
+                {selectedTest && `Acheter le test: ${selectedTest.title}`}
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <PurchaseForm
+                item={selectedCourse || selectedFormation || selectedTest}
+                itemType={
+                  selectedCourse ? 'course' :
+                  selectedFormation ? 'formation' :
+                  'test'
+                }
+                onPurchaseComplete={() => {
+                  handleClick()
+                }}
+                onCancel={() => {
+                  setShowPurchaseForm(false);
+                  if (selectedCourse) setShowCourseModal(true);
+                  // Reset selected items
+                  if (!selectedCourse) {
+                    setSelectedFormation(null);
+                    setSelectedTest(null);
+                  }
+                }}
+              />
+            </Modal.Body>
+          </>
+        )}
+      </Modal>
+>>>>>>> Stashed changes
 
       {/* Purchase Success Modal */}
       <Modal

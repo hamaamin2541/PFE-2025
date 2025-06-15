@@ -2,6 +2,10 @@ import express from 'express';
 import {
   login,
   register,
+<<<<<<< Updated upstream
+=======
+ 
+>>>>>>> Stashed changes
   add_newuser,
   resetPasswordRequest,
   resetPassword,
