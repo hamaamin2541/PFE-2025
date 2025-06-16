@@ -107,65 +107,53 @@ const NotreContenu = () => {
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [showCourseModal, setShowCourseModal] = useState(false);
-const [itemType,setItemType]=useState('')
-const [itemId,setItemId]=useState('')
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
   const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
   const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
 
-const currentItem = selectedCourse || selectedFormation || selectedTest;
-const currentItemType = selectedCourse
-  ? 'course'
-  : selectedFormation
-    ? 'formation'
-    : 'test';
-const currentItemId = currentItem?._id;
+  function CheckoutForm({ amount, itemId, itemType }) {
+    const stripe = useStripe();
+    const [loading, setLoading] = useState(false);
 
-function CheckoutForm({ amount, itemId, itemType }) {
-  const stripe = useStripe();
-  const [loading, setLoading] = useState(false);
+    const handleClick = async () => {
+      if (!stripe) return;
 
-  const handleClick = async () => {
-    if (!stripe) return;
-
-    console.log('Checkout payload:', { currentItemId, currentItemType, amount });
-
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5001/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ itemId:currentItemId, itemType:currentItemType, amount })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        console.error('Backend error:', data);
-        setLoading(false);
-        return;
+      // Use the passed props for itemId/itemType
+      setLoading(true);
+      try {
+        const res = await fetch('http://localhost:5001/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ itemId, itemType, amount })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.error('Backend error:', data);
+          setLoading(false);
+          return;
+        }
+        const sessionId = data.id;
+        const { error } = await stripe.redirectToCheckout({ sessionId });
+        if (error) console.error('Stripe redirect error:', error.message);
+      } catch (err) {
+        console.error('Erreur création session :', err);
       }
-      const sessionId = data.id;
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) console.error('Stripe redirect error:', error.message);
-    } catch (err) {
-      console.error('Erreur création session :', err);
-    }
-    setLoading(false);
-  };
+      setLoading(false);
+    };
 
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
-        {loading ? 'Chargement…' : `Acheter (${amount}€)`}
-      </Button>
-    </div>
-  );
-}
-
+    return (
+      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+        <Button onClick={handleClick} disabled={loading || !stripe} variant="primary">
+          {loading ? 'Chargement…' : `Acheter (${amount}€)`}
+        </Button>
+      </div>
+    );
+  }
 
   // Fetch all courses, tests, and formations from API
   useEffect(() => {
@@ -773,14 +761,13 @@ function CheckoutForm({ amount, itemId, itemType }) {
                             size="sm"
                             onClick={() => {
                               setSelectedTest(test);
-                              setCurrentItemType('test');
                               setShowPurchaseForm(true);
                             }}
                           >
                             Acheter le test
                           </Button>
-                          <span className="text-success fw-bold">
-                            {test.duration} min
+                          <span className="text-primary fw-bold">
+                            {test.price}€
                           </span>
                         </div>
                       </div>
@@ -926,11 +913,176 @@ function CheckoutForm({ amount, itemId, itemType }) {
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              {/* Votre PurchaseForm ici... */}
+              {/* Show details for Course */}
+              {selectedCourse && (
+                <Row>
+                  <Col md={6}>
+                    {selectedCourse.coverImage ? (
+                      <img
+                        src={`${API_BASE_URL}/${selectedCourse.coverImage}`}
+                        alt={selectedCourse.title}
+                        className="img-fluid rounded mb-3"
+                        style={{ maxHeight: '250px', width: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.target.src = "https://placehold.co/600x400?text=Course+Image";
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="bg-light rounded d-flex justify-content-center align-items-center mb-3"
+                        style={{ height: '250px' }}
+                      >
+                        <p className="text-muted">Pas d'image disponible</p>
+                      </div>
+                    )}
+                  </Col>
+                  <Col md={6}>
+                    <h5>Détails du cours</h5>
+                    <p><strong>Catégorie:</strong> {selectedCourse.category}</p>
+                    <p><strong>Niveau:</strong> {selectedCourse.level}</p>
+                    <p><strong>Langue:</strong> {selectedCourse.language}</p>
+                    <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedCourse.price}€</span></p>
+
+                    <div className="d-flex align-items-center mt-3 mb-3">
+                      <img
+                        src={selectedCourse.teacher?.profileImage
+                          ? `${API_BASE_URL}/${selectedCourse.teacher.profileImage}`
+                          : "https://placehold.co/40x40?text=T"}
+                        alt={selectedCourse.teacher?.fullName || "Teacher"}
+                        className="rounded-circle me-2"
+                        width="40"
+                        height="40"
+                        onError={(e) => {
+                          e.target.src = "https://placehold.co/40x40?text=T";
+                        }}
+                      />
+                      <div>
+                        <p className="mb-0 fw-bold">{selectedCourse.teacher?.fullName || "Professeur"}</p>
+                        <small className="text-muted">Instructeur</small>
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              )}
+
+              {/* Show details for Formation */}
+              {selectedFormation && (
+                <div>
+                  <h5>Détails de la formation</h5>
+                  <p><strong>Catégorie:</strong> {selectedFormation.category}</p>
+                  <p><strong>Niveau:</strong> {selectedFormation.level}</p>
+                  <p><strong>Langue:</strong> {selectedFormation.language}</p>
+                  <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedFormation.price}€</span></p>
+
+                  <div className="d-flex align-items-center mt-3 mb-3">
+                    <img
+                      src={selectedFormation.teacher?.profileImage
+                        ? `${API_BASE_URL}/${selectedFormation.teacher.profileImage}`
+                        : "https://placehold.co/40x40?text=T"}
+                      alt={selectedFormation.teacher?.fullName || "Teacher"}
+                      className="rounded-circle me-2"
+                      width="40"
+                      height="40"
+                      onError={(e) => {
+                        e.target.src = "https://placehold.co/40x40?text=T";
+                      }}
+                    />
+                    <div>
+                      <p className="mb-0 fw-bold">{selectedFormation.teacher?.fullName || "Professeur"}</p>
+                      <small className="text-muted">Instructeur</small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Show details for Test */}
+              {selectedTest && (
+                <>
+                  <Row>
+                    <Col md={6}>
+                      {selectedTest.coverImage ? (
+                        <img
+                          src={`${API_BASE_URL}/${selectedTest.coverImage}`}
+                          alt={selectedTest.title}
+                          className="img-fluid rounded mb-3"
+                          style={{ maxHeight: '250px', width: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/600x400?text=Test";
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="bg-light rounded d-flex justify-content-center align-items-center mb-3"
+                          style={{ height: '250px' }}
+                        >
+                          <p className="text-muted">Pas d'image disponible</p>
+                        </div>
+                      )}
+                    </Col>
+                    <Col md={6}>
+                      <h5>Détails du test</h5>
+                      <p><strong>Catégorie:</strong> {selectedTest.category}</p>
+                      <p><strong>Difficulté:</strong> {selectedTest.difficulty}</p>
+                      <p><strong>Durée:</strong> {selectedTest.duration} min</p>
+                      <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedTest.price}€</span></p>
+                      <div className="d-flex align-items-center mt-3 mb-3">
+                        <img
+                          src={selectedTest.teacher?.profileImage
+                            ? `${API_BASE_URL}/${selectedTest.teacher.profileImage}`
+                            : "https://placehold.co/40x40?text=T"}
+                          alt={selectedTest.teacher?.fullName || "Teacher"}
+                          className="rounded-circle me-2"
+                          width="40"
+                          height="40"
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/40x40?text=T";
+                          }}
+                        />
+                        <div>
+                          <p className="mb-0 fw-bold">{selectedTest.teacher?.fullName || "Professeur"}</p>
+                          <small className="text-muted">Instructeur</small>
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+                  <div className="mt-4">
+                    <h5>Description</h5>
+                    <p>{selectedTest.description}</p>
+                  </div>
+                  {/* If you have sections or questions, you can add them here */}
+                </>
+              )}
+
               <Elements stripe={stripePromise}>
-                <CheckoutForm amount={
-                  selectedCourse ? selectedCourse.price : selectedFormation ? selectedFormation.price : selectedTest.duration
-                } />
+                <CheckoutForm
+                  amount={
+                    selectedCourse
+                      ? selectedCourse.price
+                      : selectedFormation
+                      ? selectedFormation.price
+                      : selectedTest
+                      ? selectedTest.price
+                      : 0
+                  }
+                  itemId={
+                    selectedCourse
+                      ? selectedCourse._id
+                      : selectedFormation
+                      ? selectedFormation._id
+                      : selectedTest
+                      ? selectedTest._id
+                      : ''
+                  }
+                  itemType={
+                    selectedCourse
+                      ? 'course'
+                      : selectedFormation
+                      ? 'formation'
+                      : selectedTest
+                      ? 'test'
+                      : ''
+                  }
+                />
               </Elements>
             </Modal.Body>
           </>

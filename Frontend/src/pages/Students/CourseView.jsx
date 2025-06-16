@@ -151,7 +151,7 @@ const CourseView = () => {
       console.error('Error updating progress:', err);
     }
   };
-
+//formation et test
   const handleResourceClick = (resource) => {
     console.log(resource);
     
@@ -662,6 +662,7 @@ const CourseView = () => {
           </object>
         </div>
       )}
+      //test formation
                                
                           </div>
                         </div>

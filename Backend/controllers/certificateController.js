@@ -48,21 +48,18 @@ const generateQRCode = async (verificationUrl) => {
   }
 };
 
-// Generate a PDF certificate with a beautiful design
+
+
 const generateCertificatePDF = async (certificate, student, content) => {
   return new Promise((resolve, reject) => {
     try {
-      // Create directory for certificates if it doesn't exist
       const certificatesDir = join(__dirname, '..', 'uploads', 'certificates');
       if (!fs.existsSync(certificatesDir)) {
         fs.mkdirSync(certificatesDir, { recursive: true });
       }
-
-      // Create a unique filename
       const filename = `certificate_${certificate.certificateId}.pdf`;
       const filePath = join(certificatesDir, filename);
 
-      // Create a new PDF document
       const doc = new PDFDocument({
         size: 'A4',
         layout: 'landscape',
@@ -70,220 +67,170 @@ const generateCertificatePDF = async (certificate, student, content) => {
         info: {
           Title: 'Certificat de réussite',
           Author: 'WeLearn Platform',
-          Subject: 'Certificat',
-          Keywords: 'certificat, formation, cours, test'
         }
       });
 
-      // Pipe the PDF to a file
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      // Set page background color - using a more modern light color
-      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#FAFAFA');
+      // === Colors ===
+      const primaryColor = '#1F3BB3'; // Navy
+      const accentColor = '#E4B363';  // Gold
+      const textDark = '#222';
+      const textSoft = '#555';
 
-      // Check if template exists (try PNG first, then PDF)
-      let templatePath = join(__dirname, '..', 'uploads', 'templates', 'certificate_template.png');
-      let useTemplate = fs.existsSync(templatePath);
+      // === Background ===
+      doc.rect(0, 0, doc.page.width, doc.page.height)
+        .fill('#f5f7fa');
 
-      // If PNG doesn't exist, try PDF
-      if (!useTemplate) {
-        templatePath = join(__dirname, '..', 'uploads', 'templates', 'certificate_template.pdf');
-        useTemplate = fs.existsSync(templatePath);
-      }
+      doc.save()
+        .fillColor(primaryColor)
+        .opacity(0.1)
+        .polygon(
+          [0, doc.page.height], 
+          [doc.page.width / 2, 0], 
+          [doc.page.width, doc.page.height]
+        )
+        .fill()
+        .restore();
 
-      if (useTemplate) {
-        // Use the Canva template as background
-        doc.image(templatePath, 0, 0, {
-          width: doc.page.width,
-          height: doc.page.height
+      // === Decorative Title Bar ===
+      doc.rect(0, 60, doc.page.width, 70)
+        .fill(primaryColor);
+
+      doc.fontSize(42)
+        .font('Helvetica-Bold')
+        .fillColor('#FFFFFF')
+        .text('CERTIFICAT DE RÉUSSITE', {
+          align: 'center',
+          y: 75
         });
-      } else {
-        // If no template exists, create a stylish border with modern design
-        // Add a sleek border with rounded corners
-        doc.roundedRect(15, 15, doc.page.width - 30, doc.page.height - 30, 10)
-           .lineWidth(3)
-           .stroke('#000000');
 
-        // Add a second inner border with different color
-        doc.roundedRect(25, 25, doc.page.width - 50, doc.page.height - 50, 8)
-           .lineWidth(1)
-           .stroke('#333333');
-
-        // Add decorative elements - modern geometric shapes
-        // Top left decorative element
-        doc.circle(50, 50, 15)
-           .fill('#000000');
-
-        // Top right decorative element
-        doc.circle(doc.page.width - 50, 50, 15)
-           .fill('#000000');
-
-        // Bottom left decorative element
-        doc.circle(50, doc.page.height - 50, 15)
-           .fill('#000000');
-
-        // Bottom right decorative element
-        doc.circle(doc.page.width - 50, doc.page.height - 50, 15)
-           .fill('#000000');
-      }
-
-      // Add a header with modern styling
-      doc.fontSize(40)
-         .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text('CERTIFICAT DE RÉUSSITE', {
-           align: 'center',
-           y: 80
-         });
-
-      // Add decorative line under title - thinner and more elegant
-      doc.moveTo(doc.page.width / 2 - 180, 130)
-         .lineTo(doc.page.width / 2 + 180, 130)
-         .lineWidth(1.5)
-         .stroke('#000000');
-
-      // Add certificate text
+      // === Recipient ===
       doc.fontSize(20)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text('Ce certificat est décerné à', {
-           align: 'center',
-           y: 170
-         });
+        .font('Helvetica')
+        .fillColor(textSoft)
+        .text('Ce certificat est décerné à', {
+          align: 'center',
+          y: 160
+        });
 
-      // Add student name with more prominent styling
-      doc.fontSize(38)
-         .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text(student.fullName, {
-           align: 'center',
-           y: 210
-         });
+      doc.fontSize(36)
+        .font('Helvetica-Bold')
+        .fillColor(primaryColor)
+        .text(student.fullName.toUpperCase(), {
+          align: 'center',
+          y: 200
+        });
 
-      // Add decorative line under name - subtle
-      doc.moveTo(doc.page.width / 2 - 150, 260)
-         .lineTo(doc.page.width / 2 + 150, 260)
-         .lineWidth(0.75)
-         .stroke('#555555');
+      doc.moveTo(doc.page.width / 2 - 160, 255)
+        .lineTo(doc.page.width / 2 + 160, 255)
+        .lineWidth(1)
+        .stroke(primaryColor);
 
-      // Add course completion text
+      // === Course Title ===
       doc.fontSize(20)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text('pour avoir complété avec succès', {
-           align: 'center',
-           y: 280
-         });
+        .font('Helvetica')
+        .fillColor(textSoft)
+        .text('Pour avoir complété avec succès', {
+          align: 'center',
+          y: 270
+        });
 
-      // Add course title with more emphasis
       doc.fontSize(30)
-         .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text(content.title, {
-           align: 'center',
-           y: 320
-         });
+        .font('Helvetica-Bold')
+        .fillColor(textDark)
+        .text(content.title, {
+          align: 'center',
+          y: 310
+        });
 
-      // Format the date
       const issueDate = new Date(certificate.issueDate).toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
 
-      // Add date with cleaner styling
       doc.fontSize(16)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text(`Délivré le ${issueDate}`, {
-           align: 'center',
-           y: 370
-         });
+        .font('Helvetica')
+        .fillColor(textSoft)
+        .text(`Délivré le ${issueDate}`, {
+          align: 'center',
+          y: 360
+        });
 
-      // Add a modern official seal
-      doc.circle(150, doc.page.height - 120, 40)
-         .lineWidth(2)
-         .fillAndStroke('#FAFAFA', '#000000');
-
-      doc.circle(150, doc.page.height - 120, 35)
-         .lineWidth(1)
-         .stroke('#333333');
+      // === Decorative Seal ===
+      doc.save()
+        .circle(120, doc.page.height - 120, 50)
+        .fillAndStroke('#FFFFFF', primaryColor)
+        .restore();
 
       doc.fontSize(12)
-         .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text('OFFICIEL', 150, doc.page.height - 125, {
-           width: 60,
-           align: 'center'
-         });
+        .font('Helvetica-Bold')
+        .fillColor(primaryColor)
+        .text('OFFICIEL', 70, doc.page.height - 125, {
+          width: 100,
+          align: 'center'
+        });
 
-      // Add signature line - cleaner and more minimal
-      doc.moveTo(doc.page.width - 250, doc.page.height - 100)
-         .lineTo(doc.page.width - 100, doc.page.height - 100)
-         .lineWidth(1)
-         .stroke('#333333');
+      // === Signature ===
+      doc.moveTo(doc.page.width - 270, doc.page.height - 120)
+        .lineTo(doc.page.width - 100, doc.page.height - 120)
+        .lineWidth(1)
+        .stroke(primaryColor);
 
-      doc.fontSize(14)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text('Signature du Directeur', doc.page.width - 250, doc.page.height - 90, {
-           width: 150,
-           align: 'center'
-         });
+      doc.fontSize(12)
+        .font('Helvetica')
+        .fillColor(textSoft)
+        .text('Signature du Directeur', doc.page.width - 250, doc.page.height - 110, {
+          width: 150, align: 'center'
+        });
 
-      // Add WeLearn logo or platform name
-      doc.fontSize(16)
-         .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text('WeLearn', 100, doc.page.height - 90, {
-           width: 100,
-           align: 'center'
-         });
+      // === QR Code (if exists) ===
+      if (certificate.qrCodeUrl) {
+        doc.image(certificate.qrCodeUrl, doc.page.width / 2 - 50, doc.page.height - 180, {
+          fit: [100, 100]
+        });
+      }
 
-      // Add QR code with better positioning
-      const qrCodeImage = certificate.qrCodeUrl;
-      doc.image(qrCodeImage, doc.page.width / 2 - 50, doc.page.height - 170, {
-        fit: [100, 100]
-      });
+      // === ID & Verification URL ===
+      doc.fontSize(9)
+        .font('Helvetica')
+        .fillColor(textSoft)
+        .text(`ID certificat: ${certificate.certificateId}`, {
+          align: 'center',
+          y: doc.page.height - 45
+        });
 
-      // Add certificate ID with cleaner styling
-      doc.fontSize(10)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text(`ID du certificat: ${certificate.certificateId}`, {
-           align: 'center',
-           y: doc.page.height - 40
-         });
+      doc.fontSize(9)
+        .fillColor(primaryColor)
+        .text(`Vérifiez : ${certificate.verificationUrl}`, {
+          align: 'center',
+          y: doc.page.height - 30
+        });
 
-      // Add verification URL with cleaner styling
-      doc.fontSize(8)
-         .font('Helvetica')
-         .fillColor('#333333')
-         .text(`Vérifiez l'authenticité: ${certificate.verificationUrl}`, {
-           align: 'center',
-           y: doc.page.height - 25
-         });
+      // === Watermark (Optional) ===
+      doc.save()
+        .fontSize(60)
+        .font('Helvetica-Bold')
+        .opacity(0.05)
+        .fillColor(textDark)
+        .rotate(-30, { origin: [doc.page.width / 2, doc.page.height / 2] })
+        .text('WeLearn', doc.page.width / 4, doc.page.height / 2)
+        .restore();
 
-      // Finalize the PDF
       doc.end();
 
-      // When the stream is finished, resolve with the file path
-      stream.on('finish', () => {
-        resolve(filePath);
-      });
+      stream.on('finish', () => resolve(filePath));
+      stream.on('error', (err) => reject(err));
 
-      // Handle stream errors
-      stream.on('error', (err) => {
-        console.error('Stream error:', err);
-        reject(err);
-      });
     } catch (error) {
-      console.error('Error generating certificate PDF:', error);
       reject(error);
     }
   });
 };
+
+
 
 // Generate a certificate for a completed enrollment
 export const generateCertificate = async (req, res) => {

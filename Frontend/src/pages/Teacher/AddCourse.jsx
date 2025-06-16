@@ -165,6 +165,8 @@ const AddCourse = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+//
+// formation same method 
 const handleSubmit = async (values, { setSubmitting, resetForm }) => {
   try {
     const token = localStorage.getItem('token');
