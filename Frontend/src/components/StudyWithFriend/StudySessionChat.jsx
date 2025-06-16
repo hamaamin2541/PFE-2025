@@ -151,7 +151,7 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
             console.log('Message:', message);
             const isCurrentUser = guest._id === message.sender || (host._id === currentUser._id && guest._id === currentUser._id);
             const senderName = guest.fullName;
-            console.log(isCurrentUser);
+            console.log(host.fullName);
 
             
             return (
@@ -164,7 +164,7 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
                     {isCurrentUser ?  (
                       <span>{studentData.fullName}</span>
                     ) : (
-                      <span>{senderName}</span>
+                      <span>{host.fullName}</span>
                     )}
                   </div>
                   <div className="message-bubble">

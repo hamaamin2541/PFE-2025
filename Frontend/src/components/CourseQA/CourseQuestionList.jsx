@@ -165,13 +165,16 @@ const CourseQuestionList = ({ courseId }) => {
           <div className="mb-3 d-flex justify-content-between">
             <Form.Group className="search-container">
               <div className="position-relative">
+                
                 <Form.Control
+                  className='px-5'
                   type="text"
                   placeholder="Rechercher une question..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <Search size={16} className="search-icon" />
+                
               </div>
             </Form.Group>
             <div className="filter-buttons">

@@ -345,7 +345,7 @@ export const TeacherPurchasedContent = () => {
           <BookOpen size={48} className="text-muted mb-3" />
           <h4>Aucun contenu acheté</h4>
           <p className="text-muted">Vous n'avez pas encore acheté de contenu</p>
-          <Button variant="primary" onClick={() => navigate('/notre-contenu')}>
+          <Button variant="primary" onClick={() => navigate('/NotreContenu')}>
             Découvrir des contenus
           </Button>
         </div>
