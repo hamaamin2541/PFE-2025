@@ -75,7 +75,9 @@ const TestView = () => {
         if (response.data.success) {
           setEnrollment(response.data.data);
           if (response.data.data.itemType === 'test' && response.data.data.test) {
-            setTest(response.data.data.test);
+            setTest(response.data.data.test); // <-- This sets the test, including questions
+            console.log("aaaaaaaaaa        ",response.data.data.test.questions);
+            
             setProgress(response.data.data.progress || 0);
 
             // If test is already completed
@@ -122,15 +124,15 @@ const TestView = () => {
     
   };
 
-  const handleAnswerChange = (questionId, answer) => {
+  const handleAnswerChange = (questionIdx, answerIdx) => {
     setAnswers({
       ...answers,
-      [questionId]: answer
+      [questionIdx]: answerIdx
     });
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestion < test.questions.length - 1) {
+    if (currentQuestion < questionsArray.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
@@ -145,13 +147,13 @@ const TestView = () => {
     try {
       // Calculate score
       let correctAnswers = 0;
-      test.questions.forEach(question => {
-        if (answers[question._id] === question.correctAnswer) {
+      questionsArray.forEach((question, idx) => {
+        if (answers[idx] === question.correctAnswer) {
           correctAnswers++;
         }
       });
 
-      const scorePercentage = Math.round((correctAnswers / test.questions.length) * 100);
+      const scorePercentage = Math.round((correctAnswers / questionsArray.length) * 100);
 
       // Update enrollment with score and progress
       await api.put(`/api/enrollments/${enrollmentId}`, {
@@ -498,7 +500,7 @@ const TestView = () => {
                     Durée: {test.duration} minutes
                   </Badge>
                   <Badge bg="secondary" className="p-2">
-                    Questions: {test.questions.length}
+                    Questions: {(test.questions && Array.isArray(test.questions)) ? test.questions.length : 0}
                   </Badge>
                 </div>
 
@@ -513,7 +515,7 @@ const TestView = () => {
                     <h5>Ressources du test</h5>
                     <p className="text-muted">Vous pouvez télécharger ces ressources avant de commencer le test.</p>
                     <div className="list-group">
-                      {test.resources.map((resource, idx) => (
+                      {(test.resources || []).map((resource, idx) => (
                         <Button
                           key={idx}
                           variant="outline-info"
@@ -548,7 +550,9 @@ const TestView = () => {
   }
 
   // Active test view
-  const question = test.questions[currentQuestion];
+  const questionsArray = (test.questions && Array.isArray(test.questions)) ? test.questions : [];
+  
+  const question = questionsArray[currentQuestion] || { text: '', answers: [] };
 
   return (
     <Container className="py-5">
@@ -557,7 +561,7 @@ const TestView = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <div>
-                <h5 className="mb-0">Question {currentQuestion + 1} sur {test.questions.length}</h5>
+                <h5 className="mb-0">Question {currentQuestion + 1} sur {questionsArray.length}</h5>
               </div>
               <div className="d-flex align-items-center">
                 <Clock size={16} className="me-1 text-danger" />
@@ -573,16 +577,16 @@ const TestView = () => {
               <h4 className="mb-4">{question.text}</h4>
 
               <Form>
-                {question.options.map((option, index) => (
+                {(question.answers || []).map((answer, index) => (
                   <Form.Check
                     key={index}
                     type="radio"
-                    id={`option-${index}`}
-                    label={option}
-                    name={`question-${question._id}`}
+                    id={`answer-${index}`}
+                    label={answer.text}
+                    name={`question-${currentQuestion}`}
                     className="mb-3 p-2 border rounded"
-                    checked={answers[question._id] === option}
-                    onChange={() => handleAnswerChange(question._id, option)}
+                    checked={answers[currentQuestion] === index}
+                    onChange={() => handleAnswerChange(currentQuestion, index)}
                   />
                 ))}
               </Form>
@@ -597,7 +601,7 @@ const TestView = () => {
                 Précédent
               </Button>
 
-              {currentQuestion < test.questions.length - 1 ? (
+              {currentQuestion < questionsArray.length - 1 ? (
                 <Button
                   variant="primary"
                   onClick={handleNextQuestion}
@@ -619,13 +623,13 @@ const TestView = () => {
 
           <div className="mt-4">
             <ProgressBar
-              now={(currentQuestion + 1) / test.questions.length * 100}
+              now={(currentQuestion + 1) / (questionsArray.length || 1) * 100}
               variant="info"
               className="mb-2"
             />
             <div className="d-flex justify-content-between">
               <small>Question 1</small>
-              <small>Question {test.questions.length}</small>
+              <small>Question {questionsArray.length}</small>
             </div>
           </div>
         </Col>
