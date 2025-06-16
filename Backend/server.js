@@ -44,7 +44,7 @@ import postRoutes from './routes/postRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import { protect } from './middleware/authMiddleware.js';
-
+import chatiaRoutes from './routes/chatia.js';
 // Utilities
 import connectDB from './config/db.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -156,6 +156,7 @@ app.use('/api/assistant'       , assistantHelpRoutes);
 app.use('/api/posts'           , postRoutes);
 app.use('/api/recommendations' , recommendationRoutes);
 app.use('/api/documents'       , documentRoutes);
+app.use('/api/gemini', chatiaRoutes);
 
 // Create checkout session
 app.post(

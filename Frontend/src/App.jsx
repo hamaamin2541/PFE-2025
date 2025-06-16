@@ -78,6 +78,7 @@ import CommunityWallManagement from './pages/Admin/CommunityWallManagement';
 // User Components
 import UserComplaints from './pages/User/UserComplaints';
 import CommunityWall from './pages/CommunityWall';
+import TeacherRevenueDashboard from "./pages/Admin/TeacherRevenueDashboard.jsx";
 
 function App() {
   const [showModal, setShowModal] = useState(false);
@@ -262,6 +263,7 @@ function App() {
                   <Route path="user-experiences" element={<TestimonialManagement />} />
                   <Route path="assistants" element={<AssistantManagement />} />
                   <Route path="community-wall" element={<CommunityWallManagement />} />
+                    <Route path="prof" element={<TeacherRevenueDashboard/>}/>
                 </Route>
 
                 <Route path="*" element={<Navigate to="/Accueil" />} />

@@ -45,7 +45,7 @@ router.put('/:id',
 );
 
 // Delete a course (only teachers)
-router.delete('/:id', protect, authorize('teacher'), deleteCourse);
+router.delete('/:id', protect, authorize('teacher','admin'), deleteCourse);
 
 // Enroll in a course
 router.post('/:id/enroll', protect, authorize('student'), enrollInCourse);
