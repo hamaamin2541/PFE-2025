@@ -116,8 +116,10 @@ const TestView = () => {
   }, [testStarted, timeLeft, testCompleted]);
 
   const startTest = () => {
+    console.log("TEst startt");
     setTestStarted(true);
     setTimeLeft(test.duration * 60); // Convert minutes to seconds
+    
   };
 
   const handleAnswerChange = (questionId, answer) => {

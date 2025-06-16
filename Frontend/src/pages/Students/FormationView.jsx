@@ -8,6 +8,8 @@ import { useGamification } from '../../context/GamificationContext';
 import { useStudyTime } from '../../context/StudyTimeContext';
 import { useStudyTimeTracking } from '../../services/studyTimeService';
 import StudySessionInvite from '../../components/StudyWithFriend/StudySessionInvite';
+import CourseQuestionList from '../../components/CourseQA/CourseQuestionList';
+
 
 const FormationView = () => {
   const { enrollmentId } = useParams();
@@ -513,6 +515,16 @@ const FormationView = () => {
               );
             })}
           </Accordion>
+
+          {/* --- Add CourseQuestionList component here --- */}
+          <div className="mt-5">
+            <h5 className="mb-3">Questions sur la formation</h5>
+            <CourseQuestionList
+              courseId={formation._id}
+              courseType="formation"
+            />
+          </div>
+          {/* --- End CourseQuestionList --- */}
         </Col>
 
         <Col md={4}>

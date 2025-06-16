@@ -74,8 +74,7 @@ export const getPublicCourseById = async (req, res) => {
   }
 };
 
-// Create a new course
-
+// Create a new courseformationtest
 export const createCourse = async (req, res) => {
   try {
     // 1) Base courseData
