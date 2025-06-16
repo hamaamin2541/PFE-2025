@@ -112,13 +112,22 @@ const NotreContenu = () => {
   const [formations, setFormations] = useState([]);
   const [tests, setTests] = useState([]);
   const [displayCount, setDisplayCount] = useState(10); // For controlling the number of displayed courses
+  const currentItem = selectedCourse || selectedFormation || selectedTest;
+  const currentItemType = selectedCourse
+    ? 'course'
+    : selectedFormation
+      ? 'formation'
+      : 'test';
+  const currentItemId = currentItem?._id;
 
-  function CheckoutForm({ amount, itemId, itemType }) {
-    const stripe = useStripe();
-    const [loading, setLoading] = useState(false);
+
+function CheckoutForm({ amount, itemId, itemType }) {
+  const stripe = useStripe();
+  const [loading, setLoading] = useState(false);
 
     const handleClick = async () => {
       if (!stripe) return;
+    console.log('Checkout payload:', { currentItemId, currentItemType, amount });
 
       // Use the passed props for itemId/itemType
       setLoading(true);
@@ -129,7 +138,7 @@ const NotreContenu = () => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify({ itemId, itemType, amount })
+          body: JSON.stringify({ itemId:currentItemId, itemType:currentItemType, amount })
         });
         const data = await res.json();
         if (!res.ok) {
@@ -289,7 +298,7 @@ const NotreContenu = () => {
 
   return (
     <>
-    <div className="explore-hero py-5 mb-4">
+      <div className="explore-hero py-5 mb-4">
         <center><h1 className="hero-title">Développez vos compétences</h1></center>
         <center><p className="hero-subtitle">Apprenez avec les meilleurs instructeurs</p></center>
 
@@ -316,220 +325,41 @@ const NotreContenu = () => {
           </Button>
         </Form>
       </div>
-    <Container className="notre-contenu-container position-relative">
-      
+      <Container className="notre-contenu-container position-relative">
 
-      {error && (
-        <div className="alert alert-danger text-center mb-4">
-          {error}
-        </div>
-      )}
 
-      {/* Category Selection */}
-      <div className="category-selection mb-4">
-        <Form.Select
-          size="lg"
-          value={selectedCategory || ''}
-          onChange={(e) => setSelectedCategory(e.target.value || null)}
-          className="w-75 mx-auto"
-        >
-          <option value="">Tous les cours</option>
-          {Object.keys(categorizedCourses).map((category) => (
-            <option key={category} value={category}>
-              {category} ({categorizedCourses[category] ? categorizedCourses[category].length : 0} cours)
-            </option>
-          ))}
-        </Form.Select>
-      </div>
+        {error && (
+          <div className="alert alert-danger text-center mb-4">
+            {error}
+          </div>
+        )}
 
-      {/* Display Logic for All Courses */}
-      {!isLoading && !searchTerm && !selectedCategory && (
-        <div className="mt-4 animate-slide">
-          <h3 className="mb-4">Découvrez nos cours exclusifs</h3>
-          <Row>
-            {allCourses.slice(-displayCount).map((course) => (
-              <Col key={course._id} md={6} lg={4} className="mb-4">
-                <Card className="course-card h-100 shadow-sm hover-effect">
-                  {/* Existing course card content */}
-                  {course.coverImage && (
-                    <Card.Img
-                      variant="top"
-                      src={`${API_BASE_URL}/${course.coverImage}`}
-                      onError={(e) => {
-                        e.target.src = "https://placehold.co/600x400?text=Course+Image";
-                      }}
-                      style={{ height: '180px', objectFit: 'cover' }}
-                    />
-                  )}
-                  <Card.Body className="d-flex flex-column">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <Badge bg="primary" className="mb-2">{course.category}</Badge>
-                      <Badge bg="secondary">{course.level}</Badge>
-                    </div>
-                    <Card.Title className="h5 mb-2">{course.title}</Card.Title>
-                    <Card.Text className="text-muted small mb-2">
-                      {course.description.length > 100
-                        ? course.description.substring(0, 100) + '...'
-                        : course.description}
-                    </Card.Text>
-
-                    <div className="mt-auto">
-                      <div className="d-flex align-items-center mb-2">
-                        <img
-                          src={course.teacher?.profileImage
-                            ? `${API_BASE_URL}/${course.teacher.profileImage}`
-                            : "https://placehold.co/30x30?text=T"}
-                          alt={course.teacher?.fullName || "Teacher"}
-                          className="rounded-circle me-2"
-                          width="30"
-                          height="30"
-                          onError={(e) => {
-                            e.target.src = "https://placehold.co/30x30?text=T";
-                          }}
-                        />
-                        <span className="small">{course.teacher?.fullName || "Professeur"}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => handleCourseSelect(course)}
-                        >
-                          Voir le cours
-                        </Button>
-                        <span className="text-primary fw-bold">{course.price}€</span>
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
+        {/* Category Selection */}
+        <div className="category-selection mb-4">
+          <Form.Select
+            size="lg"
+            value={selectedCategory || ''}
+            onChange={(e) => setSelectedCategory(e.target.value || null)}
+            className="w-75 mx-auto"
+          >
+            <option value="">Tous les cours</option>
+            {Object.keys(categorizedCourses).map((category) => (
+              <option key={category} value={category}>
+                {category} ({categorizedCourses[category] ? categorizedCourses[category].length : 0} cours)
+              </option>
             ))}
-          </Row>
-
-          {/* Load More Button */}
-          {allCourses.length > displayCount && (
-            <div className="text-center mt-4">
-              <Button
-                variant="outline-primary"
-                onClick={() => setDisplayCount(prev => prev + 10)}
-                className="px-4 py-2"
-              >
-                Afficher plus de cours
-                <span className="ms-2 small">
-                  ({Math.min(displayCount, allCourses.length)}/{allCourses.length})
-                </span>
-              </Button>
-            </div>
-          )}
+          </Form.Select>
         </div>
-      )}
 
-      {/* Loading state */}
-      {isLoading && (
-        <div className="text-center my-5">
-          <Spinner animation="border" variant="primary" />
-          <p className="mt-3">Chargement des cours...</p>
-        </div>
-      )}
-
-      {/* Display filtered results if there's a search term */}
-      {!isLoading && searchTerm && (
-        <Row className="mt-4 animate-slide">
-          {filteredCourses.length > 0 ? (
-            filteredCourses.map((item) => (
-              <Col key={item._id} md={6} lg={4} className="mb-4">
-                <Card className="course-card h-100 shadow-sm hover-effect">
-                  {item.coverImage && (
-                    <Card.Img
-                      variant="top"
-                      src={`${API_BASE_URL}/${item.coverImage}`}
-                      onError={(e) => {
-                        e.target.src = `https://placehold.co/600x400?text=${encodeURIComponent(item.type === 'course' ? 'Cours' : item.type === 'formation' ? 'Formation' : 'Test')}`;
-                      }}
-                      style={{ height: '180px', objectFit: 'cover' }}
-                    />
-                  )}
-                  <Card.Body className="d-flex flex-column">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <Badge
-                        bg={item.type === 'course' ? 'primary' : item.type === 'formation' ? 'warning' : 'info'}
-                        className="mb-2"
-                      >
-                        {item.type === 'course' ? 'Cours' : item.type === 'formation' ? 'Formation' : 'Test'}
-                      </Badge>
-                      <Badge bg="secondary">
-                        {item.level || item.difficulty || ''}
-                      </Badge>
-                    </div>
-                    <Card.Title className="h5 mb-2">{item.title}</Card.Title>
-                    <Card.Text className="text-muted small mb-2">
-                      {item.description.length > 100
-                        ? item.description.substring(0, 100) + '...'
-                        : item.description}
-                    </Card.Text>
-
-                    <div className="mt-auto">
-                      <div className="d-flex align-items-center mb-2">
-                        <img
-                          src={item.teacher?.profileImage
-                            ? `${API_BASE_URL}/${item.teacher.profileImage}`
-                            : "https://placehold.co/30x30?text=T"}
-                          alt={item.teacher?.fullName || "Teacher"}
-                          className="rounded-circle me-2"
-                          width="30"
-                          height="30"
-                          onError={(e) => {
-                            e.target.src = "https://placehold.co/30x30?text=T";
-                          }}
-                        />
-                        <span className="small">{item.teacher?.fullName || "Professeur"}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => {
-                            if (item.type === 'course') {
-                              handleCourseSelect(item);
-                            } else if (item.type === 'formation') {
-                              navigate(`/formations/${item._id}`);
-                            } else if (item.type === 'test') {
-                              navigate(`/tests/${item._id}`);
-                            }
-                          }}
-                        >
-                          {item.type === 'course' ? 'Voir le cours' :
-                           item.type === 'formation' ? 'Voir la formation' :
-                           'Commencer le test'}
-                        </Button>
-                        {item.type === 'test' ? (
-                          <span className="text-success fw-bold">{item.duration} min</span>
-                        ) : (
-                          <span className="text-primary fw-bold">{item.price}€</span>
-                        )}
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))
-          ) : (
-            <Col xs={12} className="text-center">
-              <p>Aucun résultat trouvé pour "{searchTerm}"</p>
-            </Col>
-          )}
-        </Row>
-      )}
-
-      {/* Show category-based content when no search */}
-      {!isLoading && !searchTerm && selectedCategory && (
-        <div className="mt-4 animate-slide">
-          <h3 className="mb-4">{selectedCategory}</h3>
-          {categorizedCourses[selectedCategory] && categorizedCourses[selectedCategory].length > 0 ? (
+        {/* Display Logic for All Courses */}
+        {!isLoading && !searchTerm && !selectedCategory && (
+          <div className="mt-4 animate-slide">
+            <h3 className="mb-4">Découvrez nos cours exclusifs</h3>
             <Row>
-              {categorizedCourses[selectedCategory].map((course) => (
+              {allCourses.slice(-displayCount).map((course) => (
                 <Col key={course._id} md={6} lg={4} className="mb-4">
                   <Card className="course-card h-100 shadow-sm hover-effect">
+                    {/* Existing course card content */}
                     {course.coverImage && (
                       <Card.Img
                         variant="top"
@@ -559,7 +389,7 @@ const NotreContenu = () => {
                               ? `${API_BASE_URL}/${course.teacher.profileImage}`
                               : "https://placehold.co/30x30?text=T"}
                             alt={course.teacher?.fullName || "Teacher"}
-                            className="rounded "
+                            className="rounded-circle me-2"
                             width="30"
                             height="30"
                             onError={(e) => {
@@ -584,168 +414,76 @@ const NotreContenu = () => {
                 </Col>
               ))}
             </Row>
-          ) : (
-            <div className="text-center p-5 bg-light rounded">
-              <p className="mb-3">Aucun cours disponible dans cette catégorie pour le moment</p>
-              <Button
-                variant="outline-primary"
-                onClick={() => setSelectedCategory(null)}
-              >
-                Retourner à toutes les catégories
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* Formation Section */}
-      {!isLoading && !searchTerm && !selectedCategory && (
-        <div className="mt-5 pt-4 animate-slide">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3>Nos Formations</h3>
-            <Button
-              variant="outline-primary"
-              onClick={() => navigate('/formations')}
-            >
-              Voir toutes les formations
-            </Button>
-          </div>
-
-          <Row>
-            {formations.length > 0 ? (
-              formations.slice(0, 3).map((formation) => (
-                <Col key={formation._id} md={6} lg={4} className="mb-4">
-                  <Card className="course-card h-100 shadow-sm hover-effect">
-                    {formation.coverImage ? (
-                      <Card.Img
-                        variant="top"
-                        src={`${API_BASE_URL}/${formation.coverImage}`}
-                        style={{ height: '180px', objectFit: 'cover' }}
-                        onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400?text=Formation";
-                        }}
-                      />
-                    ) : (
-                      <Card.Img
-                        variant="top"
-                        src={`https://placehold.co/600x400?text=${encodeURIComponent(formation.title)}`}
-                        style={{ height: '180px', objectFit: 'cover' }}
-                      />
-                    )}
-                    <Card.Body className="d-flex flex-column">
-                      <Badge bg="warning" className="mb-2">Formation Certifiante</Badge>
-                      <Card.Title className="h5 mb-2">{formation.title}</Card.Title>
-                      <Card.Text className="text-muted small mb-2">
-                        {formation.description.length > 100
-                          ? formation.description.substring(0, 100) + '...'
-                          : formation.description}
-                      </Card.Text>
-
-                      <div className="mt-auto">
-                        <div className="d-flex align-items-center mb-2">
-                          <img
-                            src={formation.teacher?.profileImage
-                              ? `${API_BASE_URL}/${formation.teacher.profileImage}`
-                              : "https://placehold.co/30x30?text=T"}
-                            alt={formation.teacher?.fullName || "Teacher"}
-                            className="rounded-circle me-2"
-                            width="30"
-                            height="30"
-                            onError={(e) => {
-                              e.target.src = "https://placehold.co/30x30?text=T";
-                            }}
-                          />
-                          <span className="small">{formation.teacher?.fullName || "Professeur"}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedFormation(formation);
-                              setShowPurchaseForm(true);
-                            }}
-                          >
-                            Acheter la formation
-                          </Button>
-                          <span className="text-primary fw-bold">{formation.price}€</span>
-                        </div>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))
-            ) :(
-              <Col xs={12} className="text-center">
-                <p>Aucune formation disponible pour le moment</p>
-              </Col>
+            {/* Load More Button */}
+            {allCourses.length > displayCount && (
+              <div className="text-center mt-4">
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setDisplayCount(prev => prev + 10)}
+                  className="px-4 py-2"
+                >
+                  Afficher plus de cours
+                  <span className="ms-2 small">
+                    ({Math.min(displayCount, allCourses.length)}/{allCourses.length})
+                  </span>
+                </Button>
+              </div>
             )}
-          </Row>
-
-          <div className="text-center mt-3">
-            <Button
-              variant="link"
-              onClick={() => navigate('/formations')}
-            >
-              Découvrir toutes nos formations
-            </Button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Tests Section */}
-      {!isLoading && !searchTerm && !selectedCategory && (
-        <div className="mt-5 pt-4 animate-slide">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3>Nos Tests d'Évaluation</h3>
-            <Button
-              variant="outline-primary"
-              onClick={() => navigate('/tests')}
-            >
-              Voir tous les tests
-            </Button>
+        {/* Loading state */}
+        {isLoading && (
+          <div className="text-center my-5">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-3">Chargement des cours...</p>
           </div>
+        )}
 
-          <Row>
-            {tests.length > 0 ? (
-              tests.slice(0, 3).map((test) => (
-                <Col key={test._id} md={6} lg={4} className="mb-4">
+        {/* Display filtered results if there's a search term */}
+        {!isLoading && searchTerm && (
+          <Row className="mt-4 animate-slide">
+            {filteredCourses.length > 0 ? (
+              filteredCourses.map((item) => (
+                <Col key={item._id} md={6} lg={4} className="mb-4">
                   <Card className="course-card h-100 shadow-sm hover-effect">
-                    {test.coverImage ? (
+                    {item.coverImage && (
                       <Card.Img
                         variant="top"
-                        src={`${API_BASE_URL}/${test.coverImage}`}
-                        style={{ height: '180px', objectFit: 'cover' }}
+                        src={`${API_BASE_URL}/${item.coverImage}`}
                         onError={(e) => {
-                          e.target.src = "https://placehold.co/600x400?text=Test";
+                          e.target.src = `https://placehold.co/600x400?text=${encodeURIComponent(item.type === 'course' ? 'Cours' : item.type === 'formation' ? 'Formation' : 'Test')}`;
                         }}
-                      />
-                    ) : (
-                      <Card.Img
-                        variant="top"
-                        src={`https://placehold.co/600x400?text=${encodeURIComponent(test.title)}`}
                         style={{ height: '180px', objectFit: 'cover' }}
                       />
                     )}
                     <Card.Body className="d-flex flex-column">
                       <div className="d-flex justify-content-between align-items-start mb-2">
-                        <Badge bg="info" className="mb-2">Test</Badge>
-                        <Badge bg="secondary">{test.difficulty}</Badge>
+                        <Badge
+                          bg={item.type === 'course' ? 'primary' : item.type === 'formation' ? 'warning' : 'info'}
+                          className="mb-2"
+                        >
+                          {item.type === 'course' ? 'Cours' : item.type === 'formation' ? 'Formation' : 'Test'}
+                        </Badge>
+                        <Badge bg="secondary">
+                          {item.level || item.difficulty || ''}
+                        </Badge>
                       </div>
-                      <Card.Title className="h5 mb-2">{test.title}</Card.Title>
+                      <Card.Title className="h5 mb-2">{item.title}</Card.Title>
                       <Card.Text className="text-muted small mb-2">
-                        {test.description.length > 100
-                          ? test.description.substring(0, 100) + '...'
-                          : test.description}
+                        {item.description.length > 100
+                          ? item.description.substring(0, 100) + '...'
+                          : item.description}
                       </Card.Text>
 
                       <div className="mt-auto">
                         <div className="d-flex align-items-center mb-2">
                           <img
-                            src={test.teacher?.profileImage
-                              ? `${API_BASE_URL}/${test.teacher.profileImage}`
+                            src={item.teacher?.profileImage
+                              ? `${API_BASE_URL}/${item.teacher.profileImage}`
                               : "https://placehold.co/30x30?text=T"}
-                            alt={test.teacher?.fullName || "Teacher"}
+                            alt={item.teacher?.fullName || "Teacher"}
                             className="rounded-circle me-2"
                             width="30"
                             height="30"
@@ -753,22 +491,31 @@ const NotreContenu = () => {
                               e.target.src = "https://placehold.co/30x30?text=T";
                             }}
                           />
-                          <span className="small">{test.teacher?.fullName || "Professeur"}</span>
+                          <span className="small">{item.teacher?.fullName || "Professeur"}</span>
                         </div>
                         <div className="d-flex justify-content-between align-items-center">
                           <Button
                             variant="success"
                             size="sm"
                             onClick={() => {
-                              setSelectedTest(test);
-                              setShowPurchaseForm(true);
+                              if (item.type === 'course') {
+                                handleCourseSelect(item);
+                              } else if (item.type === 'formation') {
+                                navigate(`/formations/${item._id}`);
+                              } else if (item.type === 'test') {
+                                navigate(`/tests/${item._id}`);
+                              }
                             }}
                           >
-                            Acheter le test
+                            {item.type === 'course' ? 'Voir le cours' :
+                              item.type === 'formation' ? 'Voir la formation' :
+                                'Commencer le test'}
                           </Button>
-                          <span className="text-primary fw-bold">
-                            {test.price}€
-                          </span>
+                          {item.type === 'test' ? (
+                            <span className="text-success fw-bold">{item.duration} min</span>
+                          ) : (
+                            <span className="text-primary fw-bold">{item.price}€</span>
+                          )}
                         </div>
                       </div>
                     </Card.Body>
@@ -777,144 +524,302 @@ const NotreContenu = () => {
               ))
             ) : (
               <Col xs={12} className="text-center">
-                <p>Aucun test disponible pour le moment</p>
+                <p>Aucun résultat trouvé pour "{searchTerm}"</p>
               </Col>
             )}
           </Row>
-
-          <div className="text-center mt-3">
-            <Button
-              variant="link"
-              onClick={() => navigate('/tests')}
-            >
-              Découvrir tous nos tests d'évaluation
-            </Button>
-          </div>
-        </div>
-      )}
-
-
-      
-      
-      
-
-      {/* Course Detail Modal */}
-      <Modal
-        show={showCourseModal}
-        onHide={() => setShowCourseModal(false)}
-        size="lg"
-        centered
-      >
-        {selectedCourse && (
-          <>
-            <Modal.Header closeButton>
-              <Modal.Title>{selectedCourse.title}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <Row>
-                <Col md={6}>
-                  {selectedCourse.coverImage ? (
-                    <img
-                      src={`${API_BASE_URL}/${selectedCourse.coverImage}`}
-                      alt={selectedCourse.title}
-                      className="img-fluid rounded mb-3"
-                      style={{ maxHeight: '250px', width: '100%', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.target.src = "https://placehold.co/600x400?text=Course+Image";
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className="bg-light rounded d-flex justify-content-center align-items-center mb-3"
-                      style={{ height: '250px' }}
-                    >
-                      <p className="text-muted">Pas d'image disponible</p>
-                    </div>
-                  )}
-                </Col>
-                <Col md={6}>
-                  <h5>Détails du cours</h5>
-                  <p><strong>Catégorie:</strong> {selectedCourse.category}</p>
-                  <p><strong>Niveau:</strong> {selectedCourse.level}</p>
-                  <p><strong>Langue:</strong> {selectedCourse.language}</p>
-                  <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedCourse.price}€</span></p>
-
-                  <div className="d-flex align-items-center mt-3 mb-3">
-                    <img
-                      src={selectedCourse.teacher?.profileImage
-                        ? `${API_BASE_URL}/${selectedCourse.teacher.profileImage}`
-                        : "https://placehold.co/40x40?text=T"}
-                      alt={selectedCourse.teacher?.fullName || "Teacher"}
-                      className="rounded-circle me-2"
-                      width="40"
-                      height="40"
-                      onError={(e) => {
-                        e.target.src = "https://placehold.co/40x40?text=T";
-                      }}
-                    />
-                    <div>
-                      <p className="mb-0 fw-bold">{selectedCourse.teacher?.fullName || "Professeur"}</p>
-                      <small className="text-muted">Instructeur</small>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-
-              <div className="mt-4">
-                <h5>Description</h5>
-                <p>{selectedCourse.description}</p>
-              </div>
-
-              {selectedCourse.sections && selectedCourse.sections.length > 0 && (
-                <div className="mt-4">
-                  <h5>Contenu du cours</h5>
-                  <div className="accordion">
-                    {selectedCourse.sections.map((section, index) => (
-                      <div className="card mb-2" key={index}>
-                        <div className="card-header bg-light">
-                          <h6 className="mb-0">{section.title}</h6>
-                        </div>
-                        <div className="card-body">
-                          <p>{section.description}</p>
-                          {section.resources && section.resources.length > 0 && (
-                            <ul className="list-group">
-                              {section.resources.map((resource, idx) => (
-                                <li className="list-group-item d-flex justify-content-between align-items-center" key={idx}>
-                                  {resource.name}
-                                  <Badge bg="info">{resource.type}</Badge>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Modal.Body>
-             <Modal.Footer>
-              <Button className="btn-danger mt-4" onClick={() => setShowCourseModal(false)}>Retour</Button>
-              <Elements stripe={stripePromise}>
-                <CheckoutForm amount={selectedCourse.price} />
-              </Elements>
-            </Modal.Footer>
-          </>
         )}
-      </Modal>
 
-      {/* Purchase Form Modal */}
-     <Modal show={showPurchaseForm} onHide={() => setShowPurchaseForm(false)} size="lg" centered>
-        {(selectedCourse || selectedFormation || selectedTest) && (
-          <>
-            <Modal.Header closeButton>
-              <Modal.Title>
-                {selectedCourse ? `Acheter le cours: ${selectedCourse.title}` : selectedFormation ? `Acheter la formation: ${selectedFormation.title}` : `Acheter le test: ${selectedTest.title}`}
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              {/* Show details for Course */}
-              {selectedCourse && (
+        {/* Show category-based content when no search */}
+        {!isLoading && !searchTerm && selectedCategory && (
+          <div className="mt-4 animate-slide">
+            <h3 className="mb-4">{selectedCategory}</h3>
+            {categorizedCourses[selectedCategory] && categorizedCourses[selectedCategory].length > 0 ? (
+              <Row>
+                {categorizedCourses[selectedCategory].map((course) => (
+                  <Col key={course._id} md={6} lg={4} className="mb-4">
+                    <Card className="course-card h-100 shadow-sm hover-effect">
+                      {course.coverImage && (
+                        <Card.Img
+                          variant="top"
+                          src={`${API_BASE_URL}/${course.coverImage}`}
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/600x400?text=Course+Image";
+                          }}
+                          style={{ height: '180px', objectFit: 'cover' }}
+                        />
+                      )}
+                      <Card.Body className="d-flex flex-column">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <Badge bg="primary" className="mb-2">{course.category}</Badge>
+                          <Badge bg="secondary">{course.level}</Badge>
+                        </div>
+                        <Card.Title className="h5 mb-2">{course.title}</Card.Title>
+                        <Card.Text className="text-muted small mb-2">
+                          {course.description.length > 100
+                            ? course.description.substring(0, 100) + '...'
+                            : course.description}
+                        </Card.Text>
+
+                        <div className="mt-auto">
+                          <div className="d-flex align-items-center mb-2">
+                            <img
+                              src={course.teacher?.profileImage
+                                ? `${API_BASE_URL}/${course.teacher.profileImage}`
+                                : "https://placehold.co/30x30?text=T"}
+                              alt={course.teacher?.fullName || "Teacher"}
+                              className="rounded "
+                              width="30"
+                              height="30"
+                              onError={(e) => {
+                                e.target.src = "https://placehold.co/30x30?text=T";
+                              }}
+                            />
+                            <span className="small">{course.teacher?.fullName || "Professeur"}</span>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => handleCourseSelect(course)}
+                            >
+                              Voir le cours
+                            </Button>
+                            <span className="text-primary fw-bold">{course.price}€</span>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <div className="text-center p-5 bg-light rounded">
+                <p className="mb-3">Aucun cours disponible dans cette catégorie pour le moment</p>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Retourner à toutes les catégories
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Formation Section */}
+        {!isLoading && !searchTerm && !selectedCategory && (
+          <div className="mt-5 pt-4 animate-slide">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h3>Nos Formations</h3>
+              <Button
+                variant="outline-primary"
+                onClick={() => navigate('/formations')}
+              >
+                Voir toutes les formations
+              </Button>
+            </div>
+
+            <Row>
+              {formations.length > 0 ? (
+                formations.slice(0, 3).map((formation) => (
+                  <Col key={formation._id} md={6} lg={4} className="mb-4">
+                    <Card className="course-card h-100 shadow-sm hover-effect">
+                      {formation.coverImage ? (
+                        <Card.Img
+                          variant="top"
+                          src={`${API_BASE_URL}/${formation.coverImage}`}
+                          style={{ height: '180px', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/600x400?text=Formation";
+                          }}
+                        />
+                      ) : (
+                        <Card.Img
+                          variant="top"
+                          src={`https://placehold.co/600x400?text=${encodeURIComponent(formation.title)}`}
+                          style={{ height: '180px', objectFit: 'cover' }}
+                        />
+                      )}
+                      <Card.Body className="d-flex flex-column">
+                        <Badge bg="warning" className="mb-2">Formation Certifiante</Badge>
+                        <Card.Title className="h5 mb-2">{formation.title}</Card.Title>
+                        <Card.Text className="text-muted small mb-2">
+                          {formation.description.length > 100
+                            ? formation.description.substring(0, 100) + '...'
+                            : formation.description}
+                        </Card.Text>
+
+                        <div className="mt-auto">
+                          <div className="d-flex align-items-center mb-2">
+                            <img
+                              src={formation.teacher?.profileImage
+                                ? `${API_BASE_URL}/${formation.teacher.profileImage}`
+                                : "https://placehold.co/30x30?text=T"}
+                              alt={formation.teacher?.fullName || "Teacher"}
+                              className="rounded-circle me-2"
+                              width="30"
+                              height="30"
+                              onError={(e) => {
+                                e.target.src = "https://placehold.co/30x30?text=T";
+                              }}
+                            />
+                            <span className="small">{formation.teacher?.fullName || "Professeur"}</span>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedFormation(formation);
+                                setShowPurchaseForm(true);
+                              }}
+                            >
+                              Acheter la formation
+                            </Button>
+                            <span className="text-primary fw-bold">{formation.price}€</span>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))
+              ) : (
+                <Col xs={12} className="text-center">
+                  <p>Aucune formation disponible pour le moment</p>
+                </Col>
+              )}
+            </Row>
+
+            <div className="text-center mt-3">
+              <Button
+                variant="link"
+                onClick={() => navigate('/formations')}
+              >
+                Découvrir toutes nos formations
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Tests Section */}
+        {!isLoading && !searchTerm && !selectedCategory && (
+          <div className="mt-5 pt-4 animate-slide">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h3>Nos Tests d'Évaluation</h3>
+              <Button
+                variant="outline-primary"
+                onClick={() => navigate('/tests')}
+              >
+                Voir tous les tests
+              </Button>
+            </div>
+
+            <Row>
+              {tests.length > 0 ? (
+                tests.slice(0, 3).map((test) => (
+                  <Col key={test._id} md={6} lg={4} className="mb-4">
+                    <Card className="course-card h-100 shadow-sm hover-effect">
+                      {test.coverImage ? (
+                        <Card.Img
+                          variant="top"
+                          src={`${API_BASE_URL}/${test.coverImage}`}
+                          style={{ height: '180px', objectFit: 'cover' }}
+                          onError={(e) => {
+                            e.target.src = "https://placehold.co/600x400?text=Test";
+                          }}
+                        />
+                      ) : (
+                        <Card.Img
+                          variant="top"
+                          src={`https://placehold.co/600x400?text=${encodeURIComponent(test.title)}`}
+                          style={{ height: '180px', objectFit: 'cover' }}
+                        />
+                      )}
+                      <Card.Body className="d-flex flex-column">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <Badge bg="info" className="mb-2">Test</Badge>
+                          <Badge bg="secondary">{test.difficulty}</Badge>
+                        </div>
+                        <Card.Title className="h5 mb-2">{test.title}</Card.Title>
+                        <Card.Text className="text-muted small mb-2">
+                          {test.description.length > 100
+                            ? test.description.substring(0, 100) + '...'
+                            : test.description}
+                        </Card.Text>
+
+                        <div className="mt-auto">
+                          <div className="d-flex align-items-center mb-2">
+                            <img
+                              src={test.teacher?.profileImage
+                                ? `${API_BASE_URL}/${test.teacher.profileImage}`
+                                : "https://placehold.co/30x30?text=T"}
+                              alt={test.teacher?.fullName || "Teacher"}
+                              className="rounded-circle me-2"
+                              width="30"
+                              height="30"
+                              onError={(e) => {
+                                e.target.src = "https://placehold.co/30x30?text=T";
+                              }}
+                            />
+                            <span className="small">{test.teacher?.fullName || "Professeur"}</span>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTest(test);
+                                setShowPurchaseForm(true);
+                              }}
+                            >
+                              Acheter le test
+                            </Button>
+                            <span className="text-primary fw-bold">
+                              {test.price}€
+                            </span>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))
+              ) : (
+                <Col xs={12} className="text-center">
+                  <p>Aucun test disponible pour le moment</p>
+                </Col>
+              )}
+            </Row>
+
+            <div className="text-center mt-3">
+              <Button
+                variant="link"
+                onClick={() => navigate('/tests')}
+              >
+                Découvrir tous nos tests d'évaluation
+              </Button>
+            </div>
+          </div>
+        )}
+
+
+
+
+
+
+        {/* Course Detail Modal */}
+        <Modal
+          show={showCourseModal}
+          onHide={() => setShowCourseModal(false)}
+          size="lg"
+          centered
+        >
+          {selectedCourse && (
+            <>
+              <Modal.Header closeButton>
+                <Modal.Title>{selectedCourse.title}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
                 <Row>
                   <Col md={6}>
                     {selectedCourse.coverImage ? (
@@ -963,51 +868,72 @@ const NotreContenu = () => {
                     </div>
                   </Col>
                 </Row>
-              )}
 
-              {/* Show details for Formation */}
-              {selectedFormation && (
-                <div>
-                  <h5>Détails de la formation</h5>
-                  <p><strong>Catégorie:</strong> {selectedFormation.category}</p>
-                  <p><strong>Niveau:</strong> {selectedFormation.level}</p>
-                  <p><strong>Langue:</strong> {selectedFormation.language}</p>
-                  <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedFormation.price}€</span></p>
+                <div className="mt-4">
+                  <h5>Description</h5>
+                  <p>{selectedCourse.description}</p>
+                </div>
 
-                  <div className="d-flex align-items-center mt-3 mb-3">
-                    <img
-                      src={selectedFormation.teacher?.profileImage
-                        ? `${API_BASE_URL}/${selectedFormation.teacher.profileImage}`
-                        : "https://placehold.co/40x40?text=T"}
-                      alt={selectedFormation.teacher?.fullName || "Teacher"}
-                      className="rounded-circle me-2"
-                      width="40"
-                      height="40"
-                      onError={(e) => {
-                        e.target.src = "https://placehold.co/40x40?text=T";
-                      }}
-                    />
-                    <div>
-                      <p className="mb-0 fw-bold">{selectedFormation.teacher?.fullName || "Professeur"}</p>
-                      <small className="text-muted">Instructeur</small>
+                {selectedCourse.sections && selectedCourse.sections.length > 0 && (
+                  <div className="mt-4">
+                    <h5>Contenu du cours</h5>
+                    <div className="accordion">
+                      {selectedCourse.sections.map((section, index) => (
+                        <div className="card mb-2" key={index}>
+                          <div className="card-header bg-light">
+                            <h6 className="mb-0">{section.title}</h6>
+                          </div>
+                          <div className="card-body">
+                            <p>{section.description}</p>
+                            {section.resources && section.resources.length > 0 && (
+                              <ul className="list-group">
+                                {section.resources.map((resource, idx) => (
+                                  <li className="list-group-item d-flex justify-content-between align-items-center" key={idx}>
+                                    {resource.name}
+                                    <Badge bg="info">{resource.type}</Badge>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button className="btn-danger mt-4" onClick={() => setShowCourseModal(false)}>Retour</Button>
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm amount={selectedCourse.price} />
+                </Elements>
+              </Modal.Footer>
+            </>
+          )}
+        </Modal>
 
-              {/* Show details for Test */}
-              {selectedTest && (
-                <>
+        {/* Purchase Form Modal */}
+        <Modal show={showPurchaseForm} onHide={() => setShowPurchaseForm(false)} size="lg" centered>
+          {(selectedCourse || selectedFormation || selectedTest) && (
+            <>
+              <Modal.Header closeButton>
+                <Modal.Title>
+                  {selectedCourse ? `Acheter le cours: ${selectedCourse.title}` : selectedFormation ? `Acheter la formation: ${selectedFormation.title}` : `Acheter le test: ${selectedTest.title}`}
+                </Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                {/* Show details for Course */}
+                {selectedCourse && (
                   <Row>
                     <Col md={6}>
-                      {selectedTest.coverImage ? (
+                      {selectedCourse.coverImage ? (
                         <img
-                          src={`${API_BASE_URL}/${selectedTest.coverImage}`}
-                          alt={selectedTest.title}
+                          src={`${API_BASE_URL}/${selectedCourse.coverImage}`}
+                          alt={selectedCourse.title}
                           className="img-fluid rounded mb-3"
                           style={{ maxHeight: '250px', width: '100%', objectFit: 'cover' }}
                           onError={(e) => {
-                            e.target.src = "https://placehold.co/600x400?text=Test";
+                            e.target.src = "https://placehold.co/600x400?text=Course+Image";
                           }}
                         />
                       ) : (
@@ -1020,17 +946,18 @@ const NotreContenu = () => {
                       )}
                     </Col>
                     <Col md={6}>
-                      <h5>Détails du test</h5>
-                      <p><strong>Catégorie:</strong> {selectedTest.category}</p>
-                      <p><strong>Difficulté:</strong> {selectedTest.difficulty}</p>
-                      <p><strong>Durée:</strong> {selectedTest.duration} min</p>
-                      <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedTest.price}€</span></p>
+                      <h5>Détails du cours</h5>
+                      <p><strong>Catégorie:</strong> {selectedCourse.category}</p>
+                      <p><strong>Niveau:</strong> {selectedCourse.level}</p>
+                      <p><strong>Langue:</strong> {selectedCourse.language}</p>
+                      <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedCourse.price}€</span></p>
+
                       <div className="d-flex align-items-center mt-3 mb-3">
                         <img
-                          src={selectedTest.teacher?.profileImage
-                            ? `${API_BASE_URL}/${selectedTest.teacher.profileImage}`
+                          src={selectedCourse.teacher?.profileImage
+                            ? `${API_BASE_URL}/${selectedCourse.teacher.profileImage}`
                             : "https://placehold.co/40x40?text=T"}
-                          alt={selectedTest.teacher?.fullName || "Teacher"}
+                          alt={selectedCourse.teacher?.fullName || "Teacher"}
                           className="rounded-circle me-2"
                           width="40"
                           height="40"
@@ -1039,120 +966,202 @@ const NotreContenu = () => {
                           }}
                         />
                         <div>
-                          <p className="mb-0 fw-bold">{selectedTest.teacher?.fullName || "Professeur"}</p>
+                          <p className="mb-0 fw-bold">{selectedCourse.teacher?.fullName || "Professeur"}</p>
                           <small className="text-muted">Instructeur</small>
                         </div>
                       </div>
                     </Col>
                   </Row>
-                  <div className="mt-4">
-                    <h5>Description</h5>
-                    <p>{selectedTest.description}</p>
+                )}
+
+                {/* Show details for Formation */}
+                {selectedFormation && (
+                  <div>
+                    <h5>Détails de la formation</h5>
+                    <p><strong>Catégorie:</strong> {selectedFormation.category}</p>
+                    <p><strong>Niveau:</strong> {selectedFormation.level}</p>
+                    <p><strong>Langue:</strong> {selectedFormation.language}</p>
+                    <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedFormation.price}€</span></p>
+
+                    <div className="d-flex align-items-center mt-3 mb-3">
+                      <img
+                        src={selectedFormation.teacher?.profileImage
+                          ? `${API_BASE_URL}/${selectedFormation.teacher.profileImage}`
+                          : "https://placehold.co/40x40?text=T"}
+                        alt={selectedFormation.teacher?.fullName || "Teacher"}
+                        className="rounded-circle me-2"
+                        width="40"
+                        height="40"
+                        onError={(e) => {
+                          e.target.src = "https://placehold.co/40x40?text=T";
+                        }}
+                      />
+                      <div>
+                        <p className="mb-0 fw-bold">{selectedFormation.teacher?.fullName || "Professeur"}</p>
+                        <small className="text-muted">Instructeur</small>
+                      </div>
+                    </div>
                   </div>
-                  {/* If you have sections or questions, you can add them here */}
-                </>
-              )}
+                )}
 
-              <Elements stripe={stripePromise}>
-                <CheckoutForm
-                  amount={
-                    selectedCourse
-                      ? selectedCourse.price
-                      : selectedFormation
-                      ? selectedFormation.price
-                      : selectedTest
-                      ? selectedTest.price
-                      : 0
-                  }
-                  itemId={
-                    selectedCourse
-                      ? selectedCourse._id
-                      : selectedFormation
-                      ? selectedFormation._id
-                      : selectedTest
-                      ? selectedTest._id
-                      : ''
-                  }
-                  itemType={
-                    selectedCourse
-                      ? 'course'
-                      : selectedFormation
-                      ? 'formation'
-                      : selectedTest
-                      ? 'test'
-                      : ''
-                  }
-                />
-              </Elements>
-            </Modal.Body>
-          </>
-        )}
-      </Modal>
+                {/* Show details for Test */}
+                {selectedTest && (
+                  <>
+                    <Row>
+                      <Col md={6}>
+                        {selectedTest.coverImage ? (
+                          <img
+                            src={`${API_BASE_URL}/${selectedTest.coverImage}`}
+                            alt={selectedTest.title}
+                            className="img-fluid rounded mb-3"
+                            style={{ maxHeight: '250px', width: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.src = "https://placehold.co/600x400?text=Test";
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="bg-light rounded d-flex justify-content-center align-items-center mb-3"
+                            style={{ height: '250px' }}
+                          >
+                            <p className="text-muted">Pas d'image disponible</p>
+                          </div>
+                        )}
+                      </Col>
+                      <Col md={6}>
+                        <h5>Détails du test</h5>
+                        <p><strong>Catégorie:</strong> {selectedTest.category}</p>
+                        <p><strong>Difficulté:</strong> {selectedTest.difficulty}</p>
+                        <p><strong>Durée:</strong> {selectedTest.duration} min</p>
+                        <p><strong>Prix:</strong> <span className="text-primary fw-bold">{selectedTest.price}€</span></p>
+                        <div className="d-flex align-items-center mt-3 mb-3">
+                          <img
+                            src={selectedTest.teacher?.profileImage
+                              ? `${API_BASE_URL}/${selectedTest.teacher.profileImage}`
+                              : "https://placehold.co/40x40?text=T"}
+                            alt={selectedTest.teacher?.fullName || "Teacher"}
+                            className="rounded-circle me-2"
+                            width="40"
+                            height="40"
+                            onError={(e) => {
+                              e.target.src = "https://placehold.co/40x40?text=T";
+                            }}
+                          />
+                          <div>
+                            <p className="mb-0 fw-bold">{selectedTest.teacher?.fullName || "Professeur"}</p>
+                            <small className="text-muted">Instructeur</small>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                    <div className="mt-4">
+                      <h5>Description</h5>
+                      <p>{selectedTest.description}</p>
+                    </div>
+                    {/* If you have sections or questions, you can add them here */}
+                  </>
+                )}
 
-      {/* Purchase Success Modal */}
-      <Modal
-        show={showPurchaseSuccess}
-        onHide={() => {
-          setShowPurchaseSuccess(false);
-          setSelectedCourse(null);
-          setSelectedFormation(null);
-          setSelectedTest(null);
-        }}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Achat réussi!</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="text-center mb-4">
-            <div className="mb-3">
-              <span className="text-success" style={{ fontSize: '3rem' }}>✓</span>
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm
+                    amount={
+                      selectedCourse
+                        ? selectedCourse.price
+                        : selectedFormation
+                          ? selectedFormation.price
+                          : selectedTest
+                            ? selectedTest.price
+                            : 0
+                    }
+                    itemId={
+                      selectedCourse
+                        ? selectedCourse._id
+                        : selectedFormation
+                          ? selectedFormation._id
+                          : selectedTest
+                            ? selectedTest._id
+                            : ''
+                    }
+                    itemType={
+                      selectedCourse
+                        ? 'course'
+                        : selectedFormation
+                          ? 'formation'
+                          : selectedTest
+                            ? 'test'
+                            : ''
+                    }
+                  />
+                </Elements>
+              </Modal.Body>
+            </>
+          )}
+        </Modal>
+
+        {/* Purchase Success Modal */}
+        <Modal
+          show={showPurchaseSuccess}
+          onHide={() => {
+            setShowPurchaseSuccess(false);
+            setSelectedCourse(null);
+            setSelectedFormation(null);
+            setSelectedTest(null);
+          }}
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Achat réussi!</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="text-center mb-4">
+              <div className="mb-3">
+                <span className="text-success" style={{ fontSize: '3rem' }}>✓</span>
+              </div>
+              <h5>Félicitations!</h5>
+              <p>
+                {selectedCourse && "Vous avez acheté le cours avec succès."}
+                {selectedFormation && "Vous avez acheté la formation avec succès."}
+                {selectedTest && "Vous avez acheté le test avec succès."}
+                {!selectedCourse && !selectedFormation && !selectedTest && "Votre achat a été effectué avec succès."}
+              </p>
             </div>
-            <h5>Félicitations!</h5>
-            <p>
-              {selectedCourse && "Vous avez acheté le cours avec succès."}
-              {selectedFormation && "Vous avez acheté la formation avec succès."}
-              {selectedTest && "Vous avez acheté le test avec succès."}
-              {!selectedCourse && !selectedFormation && !selectedTest && "Votre achat a été effectué avec succès."}
-            </p>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setShowPurchaseSuccess(false);
-              setSelectedCourse(null);
-              setSelectedFormation(null);
-              setSelectedTest(null);
-            }}
-          >
-            Retour au contenu
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              setShowPurchaseSuccess(false);
-              setSelectedCourse(null);
-              setSelectedFormation(null);
-              setSelectedTest(null);
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowPurchaseSuccess(false);
+                setSelectedCourse(null);
+                setSelectedFormation(null);
+                setSelectedTest(null);
+              }}
+            >
+              Retour au contenu
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setShowPurchaseSuccess(false);
+                setSelectedCourse(null);
+                setSelectedFormation(null);
+                setSelectedTest(null);
 
-              // Check user role and redirect to appropriate dashboard
-              const userRole = localStorage.getItem('userRole');
-              if (userRole === 'teacher') {
-                navigate('/dashboard-teacher');
-              } else {
-                navigate('/dashboard-student');
-              }
-            }}
-          >
-            Voir dans mon tableau de bord
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
-    <FAQ />
-    < Footer/>
+                // Check user role and redirect to appropriate dashboard
+                const userRole = localStorage.getItem('userRole');
+                if (userRole === 'teacher') {
+                  navigate('/dashboard-teacher');
+                } else {
+                  navigate('/dashboard-student');
+                }
+              }}
+            >
+              Voir dans mon tableau de bord
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+      <FAQ />
+      < Footer />
     </>
   );
 };
