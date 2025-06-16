@@ -417,7 +417,14 @@ const AddFormation = () => {
                     type="number"
                     name="price"
                     value={formationData.price}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      if (value >= 0 || e.target.value === '') {
+                        handleChange(e);
+                      }
+                    }}
+                    min="0"
+                    step="1"
                     required
                     placeholder="Ex: 1200"
                   />
@@ -430,6 +437,8 @@ const AddFormation = () => {
                     name="duration"
                     value={formationData.duration}
                     onChange={handleChange}
+                    min="0"
+                    step="1"
                     required
                     placeholder="Ex: 6"
                   />

@@ -73,9 +73,9 @@ const StudySession = () => {
             'Authorization': `Bearer ${token}`
           }
         });
-
-        if (userResponse.data.success && userResponse.data.data && userResponse.data.data.user) {
-          setCurrentUser(userResponse.data.data.user);
+        console.log('User response:', userResponse.data);
+        if (userResponse.data.success && userResponse.data.data && userResponse.data.data.fullName) {
+          setCurrentUser(userResponse.data.data.fullName);
         } else {
           console.warn('User data not available or in unexpected format');
         }
@@ -243,226 +243,221 @@ const StudySession = () => {
   }
 
   return (
-    <Container fluid className="py-4 study-session-container">
-      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1060 }}>
-        <Toast
-          show={showWelcomeToast}
-          onClose={() => setShowWelcomeToast(false)}
-          delay={5000}
-          autohide
-          bg="success"
-        >
-          <Toast.Header closeButton={true}>
-            <strong className="me-auto">Session d'étude démarrée</strong>
-          </Toast.Header>
-          <Toast.Body className="text-white">
-            <p className="mb-1">Vous êtes maintenant en session d'étude avec {partnerName}.</p>
-            <p className="mb-0">Envoyez un message pour commencer à discuter!</p>
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
+    <>
+      
 
-      <Row className="mb-4">
-        <Col>
-          <Button variant="outline-primary" onClick={handleBackClick}>
-            <ArrowLeft size={16} className="me-2" />
-            Retour au tableau de bord
-          </Button>
-        </Col>
-      </Row>
-
-      <Row className="session-header mb-4">
-        <Col>
-          <div className="d-flex justify-content-between align-items-start">
-            <div>
-              <h2>{course.title}</h2>
-              <div className="d-flex align-items-center mb-3 flex-wrap">
-                <Badge bg="primary" className="me-2 mb-2">Session d'étude</Badge>
+      {/* TOP BAR OUTSIDE CONTAINER */}
+      <div className="bg-white shadow-sm" style={{ position: 'relative', zIndex: 1020 }}>
+        <Container fluid className="py-3 header-main">
+          <Row className="align-items-center">
+            {/* Center: Title, Badges, Email, Date */}
+            <Col className="text-center">
+              <h2 className="mb-2 session-title">{course.title}</h2>
+              <div className="d-flex align-items-center flex-wrap justify-content-center mb-1">
+                <Badge bg="primary" className="me-2">Session d'étude</Badge>
                 {studySession.contentType === 'formation' ? (
-                  <Badge bg="info" className="me-2 mb-2">
+                  <Badge bg="info" className="me-2">
                     <BookCopy size={14} className="me-1" />
                     Formation
                   </Badge>
                 ) : (
-                  <Badge bg="primary" className="me-2 mb-2">
+                  <Badge bg="primary" className="me-2">
                     <BookOpen size={14} className="me-1" />
                     Cours
                   </Badge>
                 )}
-                <Badge bg="info" className="me-2 mb-2">
+                <Badge bg="info" className="me-2">
                   <Users size={14} className="me-1" />
                   {isHost ? 'Vous êtes l\'hôte' : 'Vous êtes invité'}
                 </Badge>
                 {studySession.scheduledTime && (
-                  <Badge bg="secondary" className="me-2 mb-2">
+                  <Badge bg="secondary" className="me-2">
                     <Calendar size={14} className="me-1" />
                     {formatScheduledTime(studySession.scheduledTime)}
                   </Badge>
                 )}
               </div>
-              <p className="mb-1">
-                <strong>Étudier avec:</strong> {partner.fullName} ({partner.email})
-              </p>
-              <p className="text-muted">
-                <Clock size={14} className="me-1" />
-                Session créée le {new Date(studySession.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="d-none d-md-block">
-              <Button
-                variant="success"
-                size="lg"
-                onClick={() => document.getElementById('message-input').focus()}
-              >
-                <MessageSquare size={18} className="me-2" />
-                Envoyer un message
-              </Button>
-            </div>
-          </div>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col lg={8}>
-          {/* Course Content Tabs */}
-          <Card className="mb-4 course-content-card">
-            <Card.Header>
-              <h5 className="mb-0">
-                {studySession.contentType === 'formation' ? (
-                  <>
-                    <BookCopy size={16} className="me-2 text-info" />
-                    Contenu de la formation
-                  </>
-                ) : (
-                  <>
-                    <BookOpen size={16} className="me-2 text-primary" />
-                    Contenu du cours
-                  </>
-                )}
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="course-sections">
-                {course.sections.map((section, index) => (
-                  <div key={index} className="course-section mb-3">
-                    <div
-                      className={`section-header ${activeSection === index ? 'active' : ''}`}
-                      onClick={() => handleSectionClick(index)}
-                    >
-                      <h6 className="mb-0">{section.title}</h6>
-                    </div>
-
-                    {activeSection === index && (
-                      <div className="section-content mt-2">
-                        <p>{section.description}</p>
-
-                        {section.resources && section.resources.length > 0 ? (
-                          <div className="resources-list">
-                            <h6 className="mb-2">Ressources:</h6>
-                            <div className="list-group">
-                              {section.resources.map((resource, resIndex) => (
-                                <button
-                                  key={resIndex}
-                                  className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
-                                    activeResource && activeResource.file === resource.file ? 'active' : ''
-                                  }`}
-                                  onClick={() => handleResourceClick(resource)}
-                                >
-                                  <span>{resource.name}</span>
-                                  <Badge bg={resource.type === 'video' ? 'danger' : 'info'}>
-                                    {resource.type}
-                                  </Badge>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-muted">Aucune ressource disponible pour cette section</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div>
+                <div className='text-primary'>
+                  <strong>Étudier avec:</strong> {partner.fullName} ({partner.email})
+                </div>
+                <div className="text-muted small">
+                  <Clock size={14} className="me-1" />
+                  Session créée le {new Date(studySession.createdAt).toLocaleDateString()}
+                </div>
               </div>
-            </Card.Body>
-          </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+      {/* Back Button ABOVE the header */}
+      <Container fluid className="pt-3 pb-0">
+        <Button variant="outline-primary" onClick={handleBackClick} className="d-flex align-items-center mb-2 return-btn ">
+          <ArrowLeft size={16} className="me-2" />
+          Retour au tableau de bord
+        </Button>
+      </Container>
+      {/* MAIN CONTENT */}
+      <Container fluid className="py-4 study-session-container mt-4">
+        
+        <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1060 }}>
+          <Toast
+            show={showWelcomeToast}
+            onClose={() => setShowWelcomeToast(false)}
+            delay={5000}
+            autohide
+            bg="success"
+          >
+            <Toast.Header closeButton={true}>
+              <strong className="me-auto">Session d'étude démarrée</strong>
+            </Toast.Header>
+            <Toast.Body className="text-white">
+              <p className="mb-1">Vous êtes maintenant en session d'étude avec {partnerName}.</p>
+              <p className="mb-0">Envoyez un message pour commencer à discuter!</p>
+            </Toast.Body>
+          </Toast>
+        </ToastContainer>
+        <Row className="justify-content-center">
+          <Col xs={12} md={11} lg={10} xl={9}>
+            <div className="d-flex flex-column flex-lg-row gap-4">
+              <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                {/* Course Content Tabs */}
+                <Card className="mb-4 course-content-card">
+                  <Card.Header>
+                    <h5 className="mb-0">
+                      {studySession.contentType === 'formation' ? (
+                        <>
+                          <BookCopy size={16} className="me-2 text-info" />
+                          Contenu de la formation
+                        </>
+                      ) : (
+                        <>
+                          <BookOpen size={16} className="me-2 text-primary" />
+                          Contenu du cours
+                        </>
+                      )}
+                    </h5>
+                  </Card.Header>
+                  <Card.Body>
+                    <div className="course-sections">
+                      {course.sections.map((section, index) => (
+                        <div key={index} className="course-section mb-3">
+                          <div
+                            className={`section-header ${activeSection === index ? 'active' : ''}`}
+                            onClick={() => handleSectionClick(index)}
+                          >
+                            <h6 className="mb-0">{section.title}</h6>
+                          </div>
 
-          {/* Resource Viewer */}
-          {activeResource && activeResource.type === 'video' ? (
-            <SynchronizedVideoPlayer
-              resource={activeResource}
-              socket={socket}
-              sessionId={sessionId}
-              isHost={isHost}
-            />
-          ) : (
-            <Card className="mb-4">
-              <Card.Header>
-                <h5 className="mb-0">
-                  {activeResource ? `Ressource: ${activeResource.name}` : 'Aucune ressource sélectionnée'}
-                </h5>
-              </Card.Header>
-              <Card.Body className="text-center py-5">
-                {activeResource ? (
-                  <>
-                    <p className="mb-3">
-                      Vous avez sélectionné une ressource de type {activeResource.type}.
-                    </p>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      onClick={() => {
-                        // Create an anchor element
-                        const a = document.createElement('a');
+                          {activeSection === index && (
+                            <div className="section-content mt-2">
+                              <p>{section.description}</p>
 
-                        // Extract the filename from the path
-                        const filename = activeResource.file.split('/').pop();
+                              {section.resources && section.resources.length > 0 ? (
+                                <div className="resources-list">
+                                  <h6 className="mb-2">Ressources:</h6>
+                                  <div className="list-group">
+                                    {section.resources.map((resource, resIndex) => (
+                                      <button
+                                        key={resIndex}
+                                        className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
+                                          activeResource && activeResource.file === resource.file ? 'active' : ''
+                                        }`}
+                                        onClick={() => handleResourceClick(resource)}
+                                      >
+                                        <span>{resource.name}</span>
+                                        <Badge bg={resource.type === 'video' ? 'danger' : 'info'}>
+                                          {resource.type}
+                                        </Badge>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-muted">Aucune ressource disponible pour cette section</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </Card.Body>
+                </Card>
 
-                        // Construct the correct URL
-                        const resourceUrl = `${API_BASE_URL}/uploads/courses/resources/${filename}`;
-
-                        console.log("Downloading resource from:", resourceUrl);
-
-                        a.href = resourceUrl;
-                        a.download = activeResource.name || filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
-                    >
-                      <Download size={16} className="me-2" />
-                      Télécharger la ressource
-                    </Button>
-                  </>
+                {/* Resource Viewer */}
+                {activeResource && activeResource.type === 'video' ? (
+                  <SynchronizedVideoPlayer
+                    resource={activeResource}
+                    socket={socket}
+                    sessionId={sessionId}
+                    isHost={isHost}
+                  />
                 ) : (
-                  <p className="mb-3">Sélectionnez une ressource dans le contenu du cours pour commencer à étudier ensemble.</p>
-                )}
-              </Card.Body>
-            </Card>
-          )}
-        </Col>
+                  <Card className="mb-4">
+                    <Card.Header>
+                      <h5 className="mb-0">
+                        {activeResource ? `Ressource: ${activeResource.name}` : 'Aucune ressource sélectionnée'}
+                      </h5>
+                    </Card.Header>
+                    <Card.Body className="text-center py-5">
+                      {activeResource ? (
+                        <>
+                          <div className="mb-3">
+  <p className="mb-3">
+    Vous avez sélectionné une ressource de type {activeResource.type}.
+  </p>
+  <Button
+    variant="primary"
+    size="lg"
+    onClick={() => {
+      const a = document.createElement('a');
+      const filename = activeResource.file.split('/').pop();
+      const resourceUrl = `${API_BASE_URL}/uploads/courses/resources/${filename}`;
+      a.href = resourceUrl;
+      a.download = activeResource.name || filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }}
+  >
+    <Download size={16} className="me-2" />
+    Télécharger la ressource
+  </Button>
+</div>
 
-        <Col lg={4}>
-          <div className="sticky-top" style={{ top: '20px' }}>
-            <Card className="chat-card">
-              <Card.Header className="bg-primary text-white">
-                <h5 className="mb-0 d-flex align-items-center">
-                  <MessageSquare size={18} className="me-2" />
-                  Discussion avec {partner.fullName}
-                </h5>
-              </Card.Header>
-              <Card.Body className="p-0">
-                <StudySessionChat
-                  sessionId={sessionId}
-                  socket={socket}
-                  currentUser={currentUser}
-                />
-              </Card.Body>
-            </Card>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+                        </>
+                      ) : (
+                        <p className="mb-3">Sélectionnez une ressource dans le contenu du cours pour commencer à étudier ensemble.</p>
+                      )}
+                    </Card.Body>
+                  </Card>
+                )}
+              </div>
+
+              <div className="flex-shrink-0" style={{ minWidth: 320, maxWidth: 500 }}>
+                <div className="sticky-top" style={{ top: '20px' }}>
+                  <Card className="chat-card">
+                    <Card.Header className="bg-primary ">
+                      <h5 className="mb-0 d-flex align-items-center text-white">
+                        <MessageSquare size={18} className="me-2" />
+                        Discussion avec {partner.fullName}
+                      </h5>
+                    </Card.Header>
+                    <Card.Body className="p-0">
+                      <StudySessionChat
+                        sessionId={sessionId}
+                        socket={socket}
+                        currentUser={currentUser}
+                      />
+                    </Card.Body>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </>
   );
 };
 

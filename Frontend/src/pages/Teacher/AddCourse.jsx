@@ -69,7 +69,10 @@ const AddCourse = () => {
     title: Yup.string().required('Le titre est requis'),
     description: Yup.string().required('La description est requise'),
     category: Yup.string().required('La catégorie est requise'),
-    price: Yup.number().min(0, 'Le prix ne peut pas être négatif').required('Le prix est requis'),
+    price: Yup.number()
+      .typeError('Le prix doit être un nombre')
+      .min(0, 'Le prix ne peut pas être négatif')
+      .required('Le prix est requis'),
     language: Yup.string().required('La langue est requise'),
     level: Yup.string().required('Le niveau est requis'),
   });
@@ -528,6 +531,8 @@ const handleSubmit = async (values, { setSubmitting, resetForm }) => {
                       <Form.Control
                         type="number"
                         name="price"
+                        min="0"
+                        step="1"
                         value={values.price}
                         onChange={handleChange}
                         isInvalid={touched.price && !!errors.price}

@@ -7,7 +7,19 @@ const Success = () => {
   const navigate = useNavigate();
 
   const handleCourseClick = () => {
-    navigate('/dashboard-student');
+    // Get user role from localStorage
+    const userRole = localStorage.getItem('userRole');
+
+    // Redirect based on role
+    if (userRole === 'student') {
+      navigate('/dashboard-student');
+    } else if (userRole === 'teacher') {
+      navigate('/dashboard-teacher');
+    } else {
+      // Fallback in case role is not found
+      console.error('User role not found');
+      navigate('/');
+    }
   };
 
   return (

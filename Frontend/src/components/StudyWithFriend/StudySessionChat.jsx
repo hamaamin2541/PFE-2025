@@ -1,15 +1,25 @@
+import './StudySessionChat.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, Button } from 'react-bootstrap';
 import { Send, MessageSquare } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
-import './StudySessionChat.css';
+import { FaPaperPlane } from "react-icons/fa";
 
 const StudySessionChat = ({ sessionId, socket, currentUser }) => {
   const [messages, setMessages] = useState([]);
+  const [guest, setGuest] = useState("");
+  const [host, setHost] = useState("");
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const studentData = JSON.parse(localStorage.getItem('studentData'));
+
+
+  const studentDataString = localStorage.getItem('studentData'); // Get the JSON string
+  //  // Parse it to an object
+
+  console.log(studentData.fullName); // Logs "aaaaaaaa"
 
   // Fetch existing messages when component mounts
   useEffect(() => {
@@ -21,9 +31,22 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
             'Authorization': `Bearer ${token}`
           }
         });
-
+        console.log('Fetched messages:', response.data); 
+              
         if (response.data.success && response.data.data.messages) {
+          const guest = response.data.data.guest;
+          const host = response.data.data.host;
+          const currentUser = localStorage.getItem('studentData');
+          if (currentUser === guest.fullName) {
+            setGuest(host);
+            setHost(guest);
+          }
+          else{
+            setGuest(guest);
+            setHost(host);
+          }
           setMessages(response.data.data.messages);
+
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -39,12 +62,14 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
 
     // Handle incoming messages
     const handleReceiveMessage = (data) => {
+      const name = localStorage.getItem('studentData');
       if (data.sessionId === sessionId) {
         setMessages(prevMessages => [...prevMessages, {
           sender: data.sender,
           content: data.content,
           timestamp: new Date()
         }]);
+        
       }
     };
 
@@ -89,10 +114,11 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
         if (socket) {
           socket.emit('send-message', {
             sessionId,
-            sender: currentUser,
+            sender: studentData._id,
             content: newMessage,
             timestamp: new Date()
           });
+
         }
 
         // Clear input field
@@ -120,19 +146,24 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
             <p>Commencez la discussion avec votre ami!</p>
           </div>
         ) : (
-          messages.map((message, index) => {
+          messages.map((  message, index) => {
             // Add null checks to prevent errors
-            const isCurrentUser = currentUser && message.sender && message.sender._id === currentUser._id;
-            const senderName = message.sender?.fullName || 'Utilisateur';
+            console.log('Message:', message);
+            const isCurrentUser = guest._id === message.sender || (host._id === currentUser._id && guest._id === currentUser._id);
+            const senderName = guest.fullName;
+            console.log(isCurrentUser);
 
+            
             return (
               <div
                 key={index}
                 className={`message ${isCurrentUser ? 'message-sent' : 'message-received'}`}
               >
-                <div className="message-content">
+                
                   <div className="message-sender">
-                    {!isCurrentUser && (
+                    {isCurrentUser ?  (
+                      <span>{studentData.fullName}</span>
+                    ) : (
                       <span>{senderName}</span>
                     )}
                   </div>
@@ -142,7 +173,6 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
                   <div className="message-time">
                     {formatTimestamp(message.timestamp || new Date())}
                   </div>
-                </div>
               </div>
             );
           })
@@ -150,28 +180,26 @@ const StudySessionChat = ({ sessionId, socket, currentUser }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="chat-input-container p-2">
-        <Form onSubmit={handleSendMessage}>
-          <div className="d-flex">
+      <div className="chat-input-container">
+        <Form onSubmit={handleSendMessage} className="w-100 d-flex">
             <Form.Control
-              id="message-input"
-              type="text"
-              placeholder="Tapez votre message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              disabled={isLoading}
-              className="chat-input"
-              autoComplete="off"
+                id="message-input"
+                type="text"
+                placeholder="Tapez votre message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                disabled={isLoading}
+                className="chat-input"
+                autoComplete="off"
             />
             <Button
-              type="submit"
-              variant="primary"
-              className="ms-2 send-button"
-              disabled={isLoading || !newMessage.trim()}
+                type="submit"
+                variant="primary"
+                className="send-button"
+                disabled={isLoading || !newMessage.trim()}
             >
-              <Send size={16} />
+                <FaPaperPlane />
             </Button>
-          </div>
         </Form>
       </div>
     </div>
